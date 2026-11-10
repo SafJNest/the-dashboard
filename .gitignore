@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+server/
+.vercel/
+.qwik/
+.codegraph/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+tsconfig.tsbuildinfo
+
+# Vercel
+.vercel

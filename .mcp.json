@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "qwik": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/Users/Lorenzo.Sanseverino/Documents/GitHub/the-dashboard/node_modules/@qwik.dev/mcp/dist/cli.js", "/Users/Lorenzo.Sanseverino/Documents/GitHub/the-dashboard"]
+    },
+    "codegraph": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/Users/Lorenzo.Sanseverino/Documents/GitHub/the-dashboard/node_modules/@astudioplus/codegraph-mcp/bin/codegraph-mcp.js", "--workspace", "/Users/Lorenzo.Sanseverino/Documents/GitHub/the-dashboard", "--graph-only", "--exclude", "node_modules", "--exclude", ".git", "--exclude", "dist", "--exclude", "build", "--exclude", ".vercel"],
+      "env": { "CODEGRAPH_TELEMETRY": "off" }
+    }
+  }
+}

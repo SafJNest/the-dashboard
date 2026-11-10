@@ -1,0 +1,10 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 2rem;
+}
+
+form {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
