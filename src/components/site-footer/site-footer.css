@@ -1,0 +1,132 @@
+.site-footer {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--bb-border-muted);
+  background: var(--bb-bg-sunken);
+}
+
+.site-footer__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--bb-space-10);
+  padding-top: var(--bb-space-14);
+  padding-bottom: var(--bb-space-10);
+}
+
+.site-footer__columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr));
+  gap: var(--bb-space-8);
+}
+
+.site-footer__brand,
+.site-footer__column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bb-space-3);
+}
+
+.site-footer__link {
+  color: var(--bb-fg-muted);
+  font-size: var(--bb-text-sm);
+  text-decoration: none;
+}
+
+.site-footer__link:hover {
+  color: var(--bb-fg-default);
+}
+
+.site-footer__divider {
+  width: 100%;
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--bb-border-muted);
+}
+
+.site-footer__swarm {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.footer-bee {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.625rem;
+  height: 1.25rem;
+  offset-rotate: auto;
+  animation: footer-bee-path linear infinite;
+}
+
+.footer-bee__sprite {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: footer-bee-bob 1.1s ease-in-out infinite alternate;
+}
+
+.footer-bee--one {
+  offset-path: path("M-40 120C200 20 380 220 600 110S980 30 1180 150S1520 260 1480 120S1100 -10 800 90S300 260 -40 120");
+  animation-duration: 26s;
+}
+
+.footer-bee--two {
+  offset-path: path("M300 250C500 180 520 60 760 60S1100 200 1300 90S1220 -20 900 140S500 300 300 250");
+  animation-duration: 19s;
+  animation-delay: -6s;
+}
+
+.footer-bee--three {
+  offset-path: path("M1200 230C1000 280 820 160 640 200S260 60 120 140S260 300 520 250S1000 120 1200 230");
+  animation-duration: 23s;
+  animation-delay: -11s;
+}
+
+.footer-bee--four {
+  offset-path: path("M60 40C260 120 420 10 560 60S900 220 1060 60S1380 40 1300 200S700 120 400 200S-60 100 60 40");
+  animation-duration: 31s;
+  animation-delay: -17s;
+}
+
+@keyframes footer-bee-path {
+  from {
+    offset-distance: 0%;
+  }
+
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes footer-bee-bob {
+  to {
+    transform: translateY(-4px) rotate(4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-bee,
+  .footer-bee__sprite {
+    animation: none;
+  }
+
+  .footer-bee--one {
+    offset-distance: 20%;
+  }
+
+  .footer-bee--two {
+    offset-distance: 45%;
+  }
+
+  .footer-bee--three {
+    offset-distance: 70%;
+  }
+
+  .footer-bee--four {
+    offset-distance: 90%;
+  }
+}
