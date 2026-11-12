@@ -6,10 +6,13 @@ export const onGet: RequestHandler = async (event) => {
   const { callback } = configuration(event);
   const state = randomState();
   let response: Response;
+  const startedAt = Date.now();
   try {
     response = await beebotFetch(event, '/auth/discord/authorize', { method: 'POST', body: { state, redirectUri: callback } });
-  } catch {
-    console.error('[Beebot auth] authorize request failed: connection or timeout');
+  } catch (error) {
+    const failure = error as Error & { cause?: { code?: string } };
+    const cause = failure.cause?.code ? `, cause=${failure.cause.code}` : '';
+    console.error(`[Beebot auth] authorize request failed after ${Date.now() - startedAt}ms: ${failure.name}${cause}`);
     throw event.error(503, 'Login is temporarily unavailable.');
   }
   if (!response.ok) {
