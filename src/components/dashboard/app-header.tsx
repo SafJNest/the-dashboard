@@ -1,4 +1,4 @@
-import { component$ } from '@qwik.dev/core';
+import { $, component$, useOnWindow, useSignal } from '@qwik.dev/core';
 import { Link, useLocation } from '@qwik.dev/router';
 import { HexMark } from '../hex-mark/hex-mark';
 import { Icon } from './icons';
@@ -6,11 +6,17 @@ import type { DashboardUser } from './servers';
 
 interface AppHeaderProps {
   user: DashboardUser;
+  navigating: boolean;
 }
 
-export const AppHeader = component$<AppHeaderProps>(({ user }) => {
+export const AppHeader = component$<AppHeaderProps>(({ user, navigating }) => {
   const location = useLocation();
+  const leaving = useSignal(false);
   const onMine = location.url.pathname.startsWith('/dashboard/me/');
+
+  useOnWindow('pageshow', $(() => {
+    leaving.value = false;
+  }));
 
   return (
     <header class="appbar">
@@ -43,12 +49,21 @@ export const AppHeader = component$<AppHeaderProps>(({ user }) => {
             )}
             <span>{user.name}</span>
           </span>
-          <form method="post" action="/auth/logout/">
-            <button type="submit" class="button button--ghost button--sm">Log out</button>
+          <form
+            method="post"
+            action="/auth/logout/"
+            preventdefault:submit={leaving.value}
+            onSubmit$={() => {
+              leaving.value = true;
+            }}
+          >
+            <button type="submit" class="button button--ghost button--sm" disabled={leaving.value} aria-busy={leaving.value}>
+              {leaving.value ? 'Logging out…' : 'Log out'}
+            </button>
           </form>
         </div>
       </div>
-      <div class={['nav-progress', location.isNavigating && 'nav-progress--active']} aria-hidden="true" />
+      <div class={['nav-progress', navigating && 'nav-progress--active']} aria-hidden="true" />
     </header>
   );
 });

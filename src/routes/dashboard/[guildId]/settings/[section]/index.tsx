@@ -5,9 +5,7 @@ import { BlacklistSettings } from '../../../../../components/guild/blacklist-set
 import { ExperienceSettings } from '../../../../../components/guild/experience-settings';
 import { GeneralSettings } from '../../../../../components/guild/general-settings';
 import { ModerationSettings } from '../../../../../components/guild/moderation-settings';
-import { RewardSettings } from '../../../../../components/guild/reward-settings';
 import { findSection } from '../../../../../components/guild/sections';
-import { TwitchSettings } from '../../../../../components/guild/twitch-settings';
 import { useGuild } from '../../layout';
 
 export const onGet: RequestHandler = ({ params, error }) => {
@@ -27,14 +25,10 @@ export default component$(() => {
       return <ExperienceSettings key={section} />;
     case 'level-up':
       return <AlertSettings key={section} kind="levelUp" />;
-    case 'rewards':
-      return <RewardSettings key={section} />;
     case 'moderation':
       return <ModerationSettings key={section} />;
     case 'blacklist':
       return <BlacklistSettings key={section} />;
-    case 'twitch':
-      return <TwitchSettings key={section} />;
     case 'general':
       return <GeneralSettings key={section} />;
     default:

@@ -12,7 +12,7 @@ export const ExperienceSettings = component$(() => {
 
   return (
     <SettingsForm
-      key={version.value}
+      key={`${guild.value.id}:${version.value}`}
       section="experience"
       group="Leveling"
       title="Experience"

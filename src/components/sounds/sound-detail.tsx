@@ -1,6 +1,6 @@
-import { component$, type QRL } from '@qwik.dev/core';
+import { $, component$, Pending } from '@qwik.dev/core';
 import { Link, useLocation } from '@qwik.dev/router';
-import { libraryHref, OTHER_GUILDS, UNKNOWN_GUILD, type LibraryModel } from '../../lib/sound-library';
+import { libraryHref, OTHER_GUILDS, readStats, UNKNOWN_GUILD, type LibraryEntry, type LibraryModel } from '../../lib/sound-library';
 import {
   formatAdded,
   formatAverage,
@@ -12,132 +12,83 @@ import {
   sourceRows,
   topShare,
   WEEKDAYS,
-  type SoundView,
 } from '../../lib/sound-stats';
 import { PERIOD_LABELS, type Sound, type VoteState } from '../../lib/sounds';
 import { Icon } from '../dashboard/icons';
+import { readSource, type LibrarySource } from './library-source';
+import { LoadError, PanelSkeleton, Skeleton } from './library-states';
 import { DayBars, HeatGrid, ReplaySplit, SourceSplit } from './sound-charts';
 import { GreetPicker } from './greet-picker';
+import type { Playback, PlayHandler } from './sound-library';
 import { VoteButtons } from './vote-buttons';
 
 const HISTORY_ROWS = 20;
-
-interface SoundDetailProps {
-  model: LibraryModel;
-  sound: Sound;
-  guildName: string;
-  view: SoundView;
-  votes: Record<string, VoteState>;
-  playing: string | null;
-  onPlay$: QRL<(soundId: string, url: string | null) => void>;
-}
 
 function weekdayOf(iso: string, timeZone: string) {
   const day = new Date(iso).toLocaleDateString('en-US', { timeZone, weekday: 'long' });
   return WEEKDAYS.indexOf(day);
 }
 
-export const SoundDetail = component$<SoundDetailProps>(({ model, sound, guildName, view, votes, playing, onPlay$ }) => {
-  const location = useLocation();
-  const change = formatChange(view.change);
+interface PanelProps {
+  model: LibraryModel;
+  source: LibrarySource;
+  sound: Sound;
+  guildName: string;
+  votes: Record<string, VoteState>;
+}
+
+function PanelBar({ url, model, myPlays, scopeLabel }: { url: URL; model: LibraryModel; myPlays: number | null; scopeLabel: string }) {
+  const tabHref = (tab: 'everyone' | 'mine') => libraryHref(url, { tab: tab === 'mine' ? 'mine' : null });
+  return (
+    <div class="sound-panel__bar">
+      <nav class="sound-tabs" aria-label="Sound analytics">
+        <Link href={tabHref('everyone')} scroll={false} class="sound-tabs__item" aria-current={model.tab === 'everyone' ? 'page' : undefined}>
+          Everyone
+        </Link>
+        <Link href={tabHref('mine')} scroll={false} class="sound-tabs__item" aria-current={model.tab === 'mine' ? 'page' : undefined}>
+          Your plays
+          {myPlays === null ? <Skeleton width="2ch" height="0.75rem" /> : <span class="badge">{formatCount(myPlays)}</span>}
+        </Link>
+      </nav>
+      <span class="caption">{scopeLabel}</span>
+    </div>
+  );
+}
+
+function scopeLabelOf(model: LibraryModel, guildName: string) {
   const scopeName = model.scope === 'me' && !model.guildId ? 'All servers' : `In ${model.guildId ? model.guildNames[model.guildId] : guildName}`;
-  const scopeLabel = `${scopeName} · ${model.period === 'all' ? 'all time' : `last ${PERIOD_LABELS[model.period]}`}`;
+  return `${scopeName} · ${model.period === 'all' ? 'all time' : `last ${PERIOD_LABELS[model.period]}`}`;
+}
+
+const SoundPanel = component$<PanelProps>(({ model, source, sound, guildName, votes }) => {
+  const location = useLocation();
+  const scopeLabel = scopeLabelOf(model, guildName);
+  const stats = readStats(readSource(source, location.url, true), model, location.url);
+  if (!stats || 'failed' in stats || !stats.view) {
+    return (
+      <>
+        <PanelBar url={location.url} model={model} myPlays={null} scopeLabel={scopeLabel} />
+        {stats && 'failed' in stats ? (
+          <LoadError message={`Statistics are unavailable. ${stats.message}`} retrying={source.analytics.pending} onRetry$={$(() => source.analytics.invalidate())} />
+        ) : (
+          <PanelSkeleton />
+        )}
+      </>
+    );
+  }
+  const { view, timezone } = stats;
+  const change = formatChange(view.change);
   const history = view.history;
-  const lastPlay = history[0] ? formatPlayedAt(history[0].playedAt, model.timezone) : null;
+  const lastPlay = history[0] ? formatPlayedAt(history[0].playedAt, timezone) : null;
   const mySources = sourceRows(Object.entries(history.reduce<Record<string, number>>((counts, event) => ({ ...counts, [event.source]: (counts[event.source] ?? 0) + 1 }), {})).map(([source, plays]) => ({ source, plays })));
-  const weekdayCounts = WEEKDAYS.map((_, index) => history.filter((event) => weekdayOf(event.playedAt, model.timezone) === index).length);
+  const weekdayCounts = WEEKDAYS.map((_, index) => history.filter((event) => weekdayOf(event.playedAt, timezone) === index).length);
   const weekdayMax = Math.max(1, ...weekdayCounts);
   const share = topShare(view.replay, view.myPlays);
   const guildLabel = (guildId: string | null) => (guildId === null ? OTHER_GUILDS : model.guildNames[guildId] ?? UNKNOWN_GUILD);
-  const tabHref = (tab: 'everyone' | 'mine') => libraryHref(location.url, { tab: tab === 'mine' ? 'mine' : null });
 
   return (
-    <section class="sound-detail" aria-labelledby="sound-title">
-      <div class={['card card--raised sound-head', sound.ownedByMe && 'sound-head--mine']}>
-        <div class="sound-head__top">
-          <button
-            type="button"
-            class="play sound-head__play"
-            aria-label={`${playing === sound.id ? 'Pause' : 'Play'} ${sound.name}`}
-            disabled={!sound.url}
-            onClick$={() => onPlay$(sound.id, sound.url)}
-          >
-            <Icon name={playing === sound.id ? 'pause' : 'play'} />
-          </button>
-          <h2 id="sound-title" class="sound-head__title">{sound.name}</h2>
-        </div>
-        <dl class="sound-facts">
-          <div>
-            <dt>Uploaded by</dt>
-            <dd>
-              {sound.uploader.avatarUrl ? (
-                <img class="avatar avatar--sm" src={sound.uploader.avatarUrl} alt="" width="20" height="20" />
-              ) : (
-                <span class="avatar avatar--sm" aria-hidden="true">{sound.uploader.name.slice(0, 1).toUpperCase()}</span>
-              )}
-              {sound.ownedByMe ? 'You' : sound.uploader.name}
-            </dd>
-          </div>
-          <div>
-            <dt>Server</dt>
-            <dd>{guildName}</dd>
-          </div>
-          <div>
-            <dt>Length</dt>
-            <dd class="mono">{formatLength(sound.durationMs)}</dd>
-          </div>
-          <div>
-            <dt>Added</dt>
-            <dd>{formatAdded(sound.createdAt)}</dd>
-          </div>
-          <div>
-            <dt>Visibility</dt>
-            <dd>{sound.public ? 'Public' : 'Private'}</dd>
-          </div>
-          {sound.tags.length > 0 && (
-            <div>
-              <dt>Tags</dt>
-              <dd>
-                {sound.tags.map((tag) => (
-                  <span class="badge" key={tag.id}>{tag.name}</span>
-                ))}
-              </dd>
-            </div>
-          )}
-        </dl>
-        <div class="sound-actions">
-          <VoteButtons key={sound.id} sound={sound} votes={votes} />
-          <GreetPicker key={sound.id} soundId={sound.id} soundName={sound.name} variant="button" />
-          <div class="sound-actions__end">
-            {sound.url && (
-              <a href={sound.url} class="button button--secondary" download>
-                <Icon name="download" />
-                <span>Download</span>
-              </a>
-            )}
-            {sound.canEdit && (
-              <Link href={`/dashboard/me/sounds/${sound.id}/edit/`} class="button button--secondary button--icon" aria-label={`Edit ${sound.name}`} title="Edit">
-                <Icon name="edit" />
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div class="card sound-panel">
-        <div class="sound-panel__bar">
-          <nav class="sound-tabs" aria-label="Sound analytics">
-            <Link href={tabHref('everyone')} scroll={false} class="sound-tabs__item" aria-current={model.tab === 'everyone' ? 'page' : undefined}>
-              Everyone
-            </Link>
-            <Link href={tabHref('mine')} scroll={false} class="sound-tabs__item" aria-current={model.tab === 'mine' ? 'page' : undefined}>
-              Your plays
-              <span class="badge">{formatCount(view.myPlays)}</span>
-            </Link>
-          </nav>
-          <span class="caption">{scopeLabel}</span>
-        </div>
-
+    <>
+      <PanelBar url={location.url} model={model} myPlays={view.myPlays} scopeLabel={scopeLabel} />
         {model.tab === 'everyone' ? (
           <div class="sound-panel__body">
             <div class="stat-tiles">
@@ -251,7 +202,7 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, sound, guildNa
                       </thead>
                       <tbody>
                         {history.slice(0, HISTORY_ROWS).map((event) => {
-                          const when = formatPlayedAt(event.playedAt, model.timezone);
+                          const when = formatPlayedAt(event.playedAt, timezone);
                           return (
                             <tr key={event.id}>
                               <td>
@@ -285,6 +236,111 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, sound, guildNa
             </p>
           </div>
         )}
+    </>
+  );
+});
+
+interface SoundDetailProps {
+  model: LibraryModel;
+  source: LibrarySource;
+  entry: LibraryEntry;
+  votes: Record<string, VoteState>;
+  playback: Playback;
+  onPlay$: PlayHandler;
+}
+
+export const SoundDetail = component$<SoundDetailProps>(({ model, source, entry, votes, playback, onPlay$ }) => {
+  const location = useLocation();
+  const { sound, guildName } = entry;
+  const active = playback.id === sound.id;
+  const scopeLabel = scopeLabelOf(model, guildName);
+
+  return (
+    <section id="sound-detail" class="sound-detail" aria-labelledby="sound-title">
+      <a href="#sound-list" class="sound-detail__back">Back to the list</a>
+      <div class={['card card--raised sound-head', sound.ownedByMe && 'sound-head--mine']}>
+        <div class="sound-head__top">
+          <button
+            type="button"
+            class="play sound-head__play"
+            aria-label={`${active ? 'Pause' : 'Play'} ${sound.name}`}
+            aria-busy={active && playback.loading}
+            disabled={!sound.url}
+            onClick$={() => onPlay$(sound.id, sound.url)}
+          >
+            <Icon name={active ? 'pause' : 'play'} />
+          </button>
+          <h2 id="sound-title" class="sound-head__title">{sound.name}</h2>
+        </div>
+        <dl class="sound-facts">
+          <div>
+            <dt>Uploaded by</dt>
+            <dd>
+              {sound.uploader.avatarUrl ? (
+                <img class="avatar avatar--sm" src={sound.uploader.avatarUrl} alt="" width="20" height="20" />
+              ) : (
+                <span class="avatar avatar--sm" aria-hidden="true">{sound.uploader.name.slice(0, 1).toUpperCase()}</span>
+              )}
+              {sound.ownedByMe ? 'You' : sound.uploader.name}
+            </dd>
+          </div>
+          <div>
+            <dt>Server</dt>
+            <dd>{guildName}</dd>
+          </div>
+          <div>
+            <dt>Length</dt>
+            <dd class="mono">{formatLength(sound.durationMs)}</dd>
+          </div>
+          <div>
+            <dt>Added</dt>
+            <dd>{formatAdded(sound.createdAt)}</dd>
+          </div>
+          <div>
+            <dt>Visibility</dt>
+            <dd>{sound.public ? 'Public' : 'Private'}</dd>
+          </div>
+          {sound.tags.length > 0 && (
+            <div>
+              <dt>Tags</dt>
+              <dd>
+                {sound.tags.map((tag) => (
+                  <span class="badge" key={tag.id}>{tag.name}</span>
+                ))}
+              </dd>
+            </div>
+          )}
+        </dl>
+        <div class="sound-actions">
+          <VoteButtons key={sound.id} sound={sound} votes={votes} />
+          <GreetPicker key={sound.id} soundId={sound.id} soundName={sound.name} variant="button" />
+          <div class="sound-actions__end">
+            {sound.url && (
+              <a href={sound.url} class="button button--secondary" download>
+                <Icon name="download" />
+                <span>Download</span>
+              </a>
+            )}
+            {sound.canEdit && (
+              <Link href={`/dashboard/me/sounds/${sound.id}/edit/`} class="button button--secondary button--icon" aria-label={`Edit ${sound.name}`} title="Edit">
+                <Icon name="edit" />
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div class="card sound-panel">
+        <Pending
+          fallback$={() => (
+            <>
+              <PanelBar url={location.url} model={model} myPlays={null} scopeLabel={scopeLabel} />
+              <PanelSkeleton />
+            </>
+          )}
+        >
+          <SoundPanel model={model} source={source} sound={sound} guildName={guildName} votes={votes} />
+        </Pending>
       </div>
     </section>
   );

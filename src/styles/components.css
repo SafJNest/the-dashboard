@@ -1308,6 +1308,13 @@ img.avatar {
   color: var(--bb-danger-fg);
 }
 
+.load-error__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--bb-space-2);
+}
+
 .callout__list {
   margin: var(--bb-space-1) 0 0;
   padding-left: var(--bb-space-4);
@@ -1542,4 +1549,32 @@ img.avatar {
   .choice__mark {
     animation: none;
   }
+}
+
+.skeleton {
+  display: block;
+  flex: none;
+  width: var(--skeleton-width, 100%);
+  max-width: 100%;
+  height: var(--skeleton-height, 0.75rem);
+  border-radius: var(--bb-radius-xs);
+  background: var(--bb-bg-skeleton);
+  animation: skeleton-pulse var(--bb-duration-pulse) var(--bb-ease-out) infinite alternate;
+}
+
+@keyframes skeleton-pulse {
+  to {
+    background: var(--bb-bg-skeleton-pulse);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+.play[aria-busy="true"] {
+  box-shadow: 0 0 0 var(--bb-focus-width) var(--bb-accent-line);
+  cursor: progress;
 }

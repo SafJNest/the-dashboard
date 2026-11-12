@@ -10,7 +10,7 @@ export const GeneralSettings = component$(() => {
 
   return (
     <SettingsForm
-      key={version.value}
+      key={`${guild.value.id}:${version.value}`}
       section="general"
       group="Server"
       title="Prefix & voice"

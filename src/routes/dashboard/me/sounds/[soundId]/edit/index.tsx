@@ -1,5 +1,7 @@
-import { component$ } from '@qwik.dev/core';
-import { routeAction$, routeLoader$, type DocumentHead } from '@qwik.dev/router';
+import { component$, Pending } from '@qwik.dev/core';
+import { routeAction$, routeLoader$, useLocation, type DocumentHead } from '@qwik.dev/router';
+import { DocumentRecovery } from '../../../../../../components/dashboard/document-recovery';
+import { PageSkeleton } from '../../../../../../components/dashboard/page-skeleton';
 import { SoundEditor } from '../../../../../../components/sounds/sound-editor';
 import { apiError } from '../../../../../../lib/beebot.server';
 import { BeebotClient } from '../../../../../../lib/beebot/client.server';
@@ -37,27 +39,35 @@ export const useUpdateSound = routeAction$(async (form, event): Promise<UpdateRe
   const patch: SoundPatch = { name, public: form.public === 'true', tags };
   const result = await new BeebotClient(event).updateSound(soundId, patch);
   return result.ok ? { ok: true, sound: result.data, message: null } : { ok: false, sound: null, message: `${result.message} Your changes were not saved.` };
-}, { invalidate: [useSound] });
+}, { invalidate: [] });
 
-export const useDeleteSound = routeAction$(async (_, event) => {
+export const useDeleteSound = routeAction$(async (_, event): Promise<{ ok: boolean; message: string | null }> => {
   const { soundId } = event.params;
-  if (!SOUND_ID.test(soundId)) return { message: "This sound doesn't exist, or you can't see it." };
+  if (!SOUND_ID.test(soundId)) return { ok: false, message: "This sound doesn't exist, or you can't see it." };
   const result = await new BeebotClient(event).deleteSound(soundId);
-  if (!result.ok) return { message: `${result.message} The sound was not deleted.` };
-  throw event.redirect(303, '/dashboard/me/sounds/');
+  return result.ok ? { ok: true, message: null } : { ok: false, message: `${result.message} The sound was not deleted.` };
 }, { invalidate: [] });
 
-export const useSearchTags = routeAction$(async (form, event): Promise<{ query: string; tags: SoundTag[] }> => {
+export const useSearchTags = routeAction$(async (form, event): Promise<{ query: string; tags: SoundTag[]; failed: boolean }> => {
   const query = typeof form.q === 'string' ? form.q.trim().slice(0, 32) : '';
-  if (!query) return { query, tags: [] };
+  if (!query) return { query, tags: [], failed: false };
   const result = await new BeebotClient(event).searchTags(query);
-  return { query, tags: result.ok ? result.data : [] };
+  return { query, tags: result.ok ? result.data : [], failed: !result.ok };
 }, { invalidate: [] });
 
-export default component$(() => {
+const EditorPage = component$(() => {
   const sound = useSound();
+  const location = useLocation();
+  if (sound.error) return <DocumentRecovery />;
+  if (sound.value.id !== location.params.soundId) return <PageSkeleton />;
   return <SoundEditor key={sound.value.id} sound={sound.value} />;
 });
+
+export default component$(() => (
+  <Pending fallback$={() => <PageSkeleton />}>
+    <EditorPage />
+  </Pending>
+));
 
 export const head: DocumentHead = ({ resolveValue }) => ({
   title: `${resolveValue(useSound).name} | Edit sound`,

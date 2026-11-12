@@ -1,4 +1,4 @@
-import type { RequestEvent } from '@qwik.dev/router';
+import type { RequestEvent, RequestEventLoader } from '@qwik.dev/router';
 
 type ServerEvent = Pick<RequestEvent, 'env' | 'url'>;
 type SessionEvent = ServerEvent & Pick<RequestEvent, 'cookie' | 'headers' | 'redirect'>;
@@ -172,8 +172,31 @@ export async function sessionFetch(event: SessionEvent, path: string, options: {
   return { ok: false, status, code, message: failureMessage(response.status, code, retryAfter), retryAfter };
 }
 
-export function apiError(event: Pick<RequestEvent, 'error' | 'headers'>, failure: ApiFailure) {
+export type LoadFailure = Pick<ApiFailure, 'status' | 'message' | 'retryAfter'> & { failed: true };
+
+export function apiError(event: Pick<RequestEvent, 'error' | 'headers'>, failure: Pick<ApiFailure, 'status' | 'message' | 'retryAfter'>) {
   event.headers.set('Cache-Control', 'no-store');
   if (failure.retryAfter) event.headers.set('Retry-After', String(failure.retryAfter));
   return event.error(failure.status, failure.message);
+}
+
+export function isDocumentRequest(event: Pick<RequestEvent, 'internalRequest' | 'request'>) {
+  return !event.internalRequest && (event.request.headers.get('accept') ?? '').includes('text/html');
+}
+
+export function loaderResolver(event: RequestEvent): RequestEventLoader['resolveValue'] {
+  return (event as RequestEvent & Pick<RequestEventLoader, 'resolveValue'>).resolveValue;
+}
+
+export async function awaitLoader<T>(event: Pick<RequestEvent, 'cookie' | 'headers' | 'redirect'>, value: Promise<T>): Promise<T> {
+  try {
+    return await value;
+  } catch (error) {
+    if (!event.cookie.get(SESSION_COOKIE)?.value) throw loginRedirect(event);
+    throw error;
+  }
+}
+
+export function loadFailure(event: Pick<RequestEventLoader, 'fail'>, failure: ApiFailure): LoadFailure {
+  return event.fail(failure.status, { status: failure.status, message: failure.message, retryAfter: failure.retryAfter });
 }

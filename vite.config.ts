@@ -4,5 +4,5 @@ import { qwikRouter } from '@qwik.dev/router/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [qwikMcp(), qwikRouter(), qwikVite()],
+  plugins: [qwikMcp(), qwikRouter(), qwikVite({ experimental: ['blockSSR', 'pendingBoundary'] })],
 });

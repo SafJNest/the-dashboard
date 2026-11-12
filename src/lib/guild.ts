@@ -98,6 +98,7 @@ export interface Guild {
 }
 
 export interface SettingsResult {
+  guildId: string;
   section: string;
   key: string | null;
   ok: boolean;

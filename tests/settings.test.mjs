@@ -112,3 +112,17 @@ test('role lock explains why a role cannot be assigned', () => {
   assert.equal(roleLock({ assignable: false, managed: false }, true), 'Above Beebot');
   assert.equal(roleLock({ assignable: false, managed: false }, false), 'Locked');
 });
+
+test('settings selections live in the path and legacy queries are normalized', async () => {
+  const paths = (await load('../src/lib/dashboard-path.ts')).module;
+  assert.equal(paths.settingsPath('123', 'rewards', '10'), '/dashboard/123/settings/rewards/10/');
+  assert.equal(paths.settingsSection('/dashboard/123/settings/twitch/555/'), 'twitch');
+  assert.equal(paths.selectionRedirect(new URL('https://x.test/dashboard/123/settings/rewards/?level=10&x=1'), 'level', '123', 'rewards', undefined), '/dashboard/123/settings/rewards/10/?x=1');
+  assert.equal(paths.selectionRedirect(new URL('https://x.test/dashboard/123/settings/rewards/5/?level=10'), 'level', '123', 'rewards', '5'), '/dashboard/123/settings/rewards/5/');
+  assert.equal(paths.selectionRedirect(new URL('https://x.test/dashboard/123/settings/rewards/5/'), 'level', '123', 'rewards', '5'), null);
+  assert.equal(paths.pageKey('/dashboard/123/sounds/42/'), paths.pageKey('/dashboard/123/sounds/'));
+  assert.equal(paths.pageKey('/dashboard/me/sounds/guild/123/42/'), paths.pageKey('/dashboard/me/sounds/'));
+  assert.notEqual(paths.pageKey('/dashboard/me/sounds/42/edit/'), paths.pageKey('/dashboard/me/sounds/'));
+  assert.equal(paths.pageKey('/dashboard/123/settings/rewards/10/'), paths.pageKey('/dashboard/123/settings/rewards/'));
+  assert.notEqual(paths.pageKey('/dashboard/123/settings/welcome/'), paths.pageKey('/dashboard/123/settings/leave/'));
+});

@@ -1,19 +1,21 @@
 import { $, component$, sync$, useSignal, useStyles$, useTask$ } from '@qwik.dev/core';
-import { Form } from '@qwik.dev/router';
+import { Form, Link } from '@qwik.dev/router';
 import { useAccount } from '../../routes/dashboard/layout';
 import { useDeleteSound, useSearchTags, useUpdateSound } from '../../routes/dashboard/me/sounds/[soundId]/edit/index';
 import { formatAdded, formatCount, formatLength } from '../../lib/sound-stats';
 import { MAX_TAGS, type Sound } from '../../lib/sounds';
 import { Icon } from '../dashboard/icons';
+import { SaveDock } from '../dashboard/save-dock';
 import { GreetPicker } from './greet-picker';
 import styles from './sounds.css?inline';
 
-export const SoundEditor = component$<{ sound: Sound }>(({ sound }) => {
+export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => {
   useStyles$(styles);
   const account = useAccount();
   const update = useUpdateSound();
   const remove = useDeleteSound();
   const search = useSearchTags();
+  const sound = update.value?.ok && update.value.sound ? update.value.sound : initial;
   const dialog = useSignal<HTMLDialogElement>();
   const audio = useSignal<HTMLAudioElement>();
   const playing = useSignal(false);
@@ -27,6 +29,8 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound }) => {
   const suggestions = search.value?.query === typed ? search.value.tags.filter((tag) => !tags.value.includes(tag.name)).slice(0, 6) : [];
   const listOpen = typed.length > 0 && suggestions.length > 0 && tags.value.length < MAX_TAGS;
   const result = update.value;
+  const saved = result?.ok === true;
+  const detailHref = `/dashboard/me/sounds/${sound.id}/`;
 
   useTask$(({ track, cleanup }) => {
     const value = track(() => query.value.trim());
@@ -75,10 +79,17 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound }) => {
   return (
     <div class="container sound-editor">
       <nav class="sound-editor__crumbs" aria-label="Breadcrumb">
-        <a href={`/dashboard/me/sounds/${sound.id}/`} class="crumb">
-          <Icon name="back" />
-          <span>My sounds</span>
-        </a>
+        {saved ? (
+          <a href={detailHref} class="crumb">
+            <Icon name="back" />
+            <span>My sounds</span>
+          </a>
+        ) : (
+          <Link href={detailHref} class="crumb">
+            <Icon name="back" />
+            <span>My sounds</span>
+          </Link>
+        )}
         <span class="crumb-sep" aria-hidden="true">/</span>
         <span>{sound.name}</span>
       </nav>
@@ -201,7 +212,13 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound }) => {
                     </div>
                   )}
                 </div>
-                <p class="hint">Type to see existing tags. Press Enter to add.</p>
+                <p class="hint" role="status">
+                  {typed && search.value?.query === typed && search.value.failed
+                    ? 'Tag suggestions are unavailable right now. You can still add tags.'
+                    : typed && search.isRunning
+                      ? 'Looking for tags…'
+                      : 'Type to see existing tags. Press Enter to add.'}
+                </p>
               </div>
               {result?.ok && !dirty.value && (
                 <p class="toast settings-status" role="status">
@@ -209,19 +226,7 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound }) => {
                   <span>Changes saved</span>
                 </p>
               )}
-              <div class="settings-dock" hidden={!dirty.value}>
-                <div class="savebar" role="region" aria-label="Unsaved changes">
-                  <span>You have unsaved changes</span>
-                  <div class="savebar__actions">
-                    <button type="button" class="button button--ghost button--sm" onClick$={reset}>
-                      Reset
-                    </button>
-                    <button type="submit" class="button button--primary button--sm" disabled={update.isRunning}>
-                      {update.isRunning ? 'Saving…' : 'Save changes'}
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <SaveDock dirty={dirty} action={update} onReset$={reset} />
             </Form>
           ) : (
             <div class="callout callout--info" role="note">
@@ -255,9 +260,15 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound }) => {
                 <strong>{formatCount(sound.dislikes)}</strong>
               </div>
             </div>
-            <a href={`/dashboard/me/sounds/${sound.id}/`} class="button button--secondary button--sm sound-editor__stats-link">
-              Full analytics
-            </a>
+            {saved ? (
+              <a href={detailHref} class="button button--secondary button--sm sound-editor__stats-link">
+                Full analytics
+              </a>
+            ) : (
+              <Link href={detailHref} class="button button--secondary button--sm sound-editor__stats-link">
+                Full analytics
+              </Link>
+            )}
           </section>
 
           <section class="card settings-card" aria-labelledby="sound-actions">
@@ -288,19 +299,26 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound }) => {
 
       {sound.canDelete && (
         <dialog ref={dialog} class="card card--raised confirm" aria-labelledby="delete-title">
-          <Form action={remove} class="confirm__body" reloadDocument>
+          <Form
+            action={remove}
+            class="confirm__body"
+            onSubmitCompleted$={(event) => {
+              if (event.detail.value?.ok) window.location.assign('/dashboard/me/sounds/');
+            }}
+          >
             <h2 id="delete-title" class="chart-block__title">Delete “{sound.name}”?</h2>
             <p class="text-muted">It will stop working everywhere, including greets. This can't be undone.</p>
+            {remove.value?.ok && <p class="caption" role="status">Sound deleted. Opening your library…</p>}
             {remove.value?.message && (
               <p class="callout callout--danger" role="alert">
                 {remove.value.message}
               </p>
             )}
             <div class="confirm__actions">
-              <button type="button" class="button button--ghost button--sm" onClick$={() => dialog.value?.close()}>
+              <button type="button" class="button button--ghost button--sm" disabled={remove.isRunning || remove.value?.ok} onClick$={() => dialog.value?.close()}>
                 Cancel
               </button>
-              <button type="submit" class="button button--danger button--sm" disabled={remove.isRunning}>
+              <button type="submit" class="button button--danger button--sm" disabled={remove.isRunning || remove.value?.ok}>
                 {remove.isRunning ? 'Deleting…' : 'Delete'}
               </button>
             </div>

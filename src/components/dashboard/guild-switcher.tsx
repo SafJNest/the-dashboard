@@ -1,4 +1,5 @@
 import { $, component$, useOnDocument, useSignal } from '@qwik.dev/core';
+import { Link } from '@qwik.dev/router';
 import { GuildAvatar } from './guild-avatar';
 import { Icon } from './icons';
 import type { DashboardGuild } from './servers';
@@ -31,10 +32,17 @@ export const GuildSwitcher = component$<GuildSwitcherProps>(({ current, guilds, 
       <ul class="listbox switcher__menu">
         {guilds.map((guild) => (
           <li key={guild.id}>
-            <a href={`/dashboard/${guild.id}/${path}`} class="option" aria-current={guild.id === current.id ? 'page' : undefined}>
+            <Link
+              href={`/dashboard/${guild.id}/${path}`}
+              class="option"
+              aria-current={guild.id === current.id ? 'page' : undefined}
+              onClick$={() => {
+                if (menu.value) menu.value.open = false;
+              }}
+            >
               <GuildAvatar name={guild.name} iconUrl={guild.iconUrl} size="sm" />
               <span class="option__title">{guild.name}</span>
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

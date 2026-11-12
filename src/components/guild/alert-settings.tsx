@@ -100,11 +100,12 @@ interface AlertSettingsProps {
 export const AlertSettings = component$<AlertSettingsProps>(({ kind, itemKey }) => {
   const guild = useGuild();
   const version = useSignal(0);
-  const alert = findAlert(guild.value, kind, itemKey) ?? emptyAlert();
+  const current = findAlert(guild.value, kind, itemKey);
+  const alert = current?.exists ? current : emptyAlert();
 
   return (
     <AlertForm
-      key={version.value}
+      key={`${guild.value.id}:${itemKey ?? ''}:${version.value}`}
       kind={kind}
       itemKey={itemKey}
       alert={alert}

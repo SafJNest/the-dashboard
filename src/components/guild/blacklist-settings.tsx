@@ -11,7 +11,7 @@ export const BlacklistSettings = component$(() => {
 
   return (
     <SettingsForm
-      key={version.value}
+      key={`${guild.value.id}:${version.value}`}
       section="blacklist"
       group="Moderation"
       title="Blacklist"

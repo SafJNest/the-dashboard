@@ -3,6 +3,7 @@ import { Form } from '@qwik.dev/router';
 import type { SettingsProblem } from '../../lib/guild';
 import { useGuild, useSaveSettings } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
+import { SaveDock } from '../dashboard/save-dock';
 
 interface SectionIntroProps {
   group: string;
@@ -34,20 +35,23 @@ interface SettingsFormProps extends SectionIntroProps {
 }
 
 export const SettingsForm = component$<SettingsFormProps>((props) => {
+  const guild = useGuild();
   const save = useSaveSettings();
   const dirty = useSignal(false);
-  const result = save.value?.section === props.section && (save.value.key ?? '') === (props.itemKey ?? '') ? save.value : null;
+  const result = save.value?.guildId === guild.value.id && save.value.section === props.section && (save.value.key ?? '') === (props.itemKey ?? '') ? save.value : null;
   const problems = props.problems ?? [];
 
   return (
     <Form
       action={save}
       class="settings-form"
+      data-saving={save.isRunning ? '' : undefined}
       onInput$={(event) => {
         if ((event.target as HTMLInputElement).name) dirty.value = true;
       }}
       onSubmitCompleted$={(event) => {
-        if (event.detail.value?.ok) dirty.value = false;
+        const value = event.detail.value;
+        if (value?.ok && value.guildId === guild.value.id && value.section === props.section && (value.key ?? '') === (props.itemKey ?? '')) dirty.value = false;
       }}
     >
       <input type="hidden" name="section" value={props.section} />
@@ -98,19 +102,7 @@ export const SettingsForm = component$<SettingsFormProps>((props) => {
           <span>Changes saved</span>
         </p>
       )}
-      <div class="settings-dock" hidden={!dirty.value}>
-        <div class="savebar" role="region" aria-label="Unsaved changes">
-          <span>You have unsaved changes</span>
-          <div class="savebar__actions">
-            <button type="button" class="button button--ghost button--sm" onClick$={props.onReset$}>
-              Reset
-            </button>
-            <button type="submit" class="button button--primary button--sm" disabled={save.isRunning}>
-              {save.isRunning ? 'Saving…' : 'Save changes'}
-            </button>
-          </div>
-        </div>
-      </div>
+      <SaveDock dirty={dirty} action={save} onReset$={props.onReset$} />
     </Form>
   );
 });

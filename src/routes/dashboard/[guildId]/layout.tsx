@@ -1,10 +1,14 @@
 import { component$, Slot } from '@qwik.dev/core';
 import { Link, routeAction$, routeLoader$, useLocation, type DocumentHead } from '@qwik.dev/router';
+import { DocumentRecovery } from '../../../components/dashboard/document-recovery';
 import { GuildSwitcher } from '../../../components/dashboard/guild-switcher';
 import { Icon } from '../../../components/dashboard/icons';
+import { PageSkeleton } from '../../../components/dashboard/page-skeleton';
 import { findSection } from '../../../components/guild/sections';
 import { apiError, GUILD_NOT_AVAILABLE } from '../../../lib/beebot.server';
 import { BeebotClient } from '../../../lib/beebot/client.server';
+import { settingsSection } from '../../../lib/dashboard-path';
+import { peekValue } from '../../../lib/loader-value';
 import type { SettingsResult } from '../../../lib/guild';
 import { buildSettingsBody, readSettingsResult } from '../../../lib/settings';
 import { GUILD_ID } from '../../../lib/sounds';
@@ -21,8 +25,8 @@ export const useGuild = routeLoader$(async (event) => {
 export const useSaveSettings = routeAction$(async (form, event): Promise<SettingsResult> => {
   const section = typeof form.section === 'string' ? form.section : '';
   const key = typeof form.key === 'string' && form.key ? form.key : null;
-  const failure = (message: string): SettingsResult => ({ section, key, ok: false, errors: [], message });
   const { guildId } = event.params;
+  const failure = (message: string): SettingsResult => ({ guildId, section, key, ok: false, errors: [], message });
   if (!GUILD_ID.test(guildId)) return failure(GUILD_NOT_AVAILABLE);
   let request: ReturnType<typeof buildSettingsBody>;
   try {
@@ -35,6 +39,7 @@ export const useSaveSettings = routeAction$(async (form, event): Promise<Setting
   const result = readSettingsResult(response.data);
   const ok = !result.failed;
   return {
+    guildId,
     section,
     key,
     ok,
@@ -47,11 +52,16 @@ export default component$(() => {
   const guild = useGuild();
   const account = useAccount();
   const location = useLocation();
-  const settingsPath = `/dashboard/${guild.value.id}/settings/`;
-  const soundsPath = `/dashboard/${guild.value.id}/sounds/`;
+  if (guild.error) return <DocumentRecovery />;
+  const { guildId } = location.params;
+  const loaded = peekValue(guild);
+  const stale = loaded?.id !== guildId;
+  const current = (stale ? account.value.guilds.find((item) => item.id === guildId) : loaded) ?? { id: guildId, name: 'Server', iconUrl: null };
+  const settingsPath = `/dashboard/${guildId}/settings/`;
+  const soundsPath = `/dashboard/${guildId}/sounds/`;
   const inSettings = location.url.pathname.startsWith(settingsPath);
   const inSounds = location.url.pathname.startsWith(soundsPath);
-  const section = findSection(location.params.section)?.slug;
+  const section = findSection(settingsSection(location.url.pathname))?.slug;
   const switchPath = inSounds ? 'sounds/' : `settings/${section ? `${section}/` : ''}`;
 
   return (
@@ -63,9 +73,9 @@ export default component$(() => {
             <span>All servers</span>
           </Link>
           <span class="crumb-sep" aria-hidden="true">/</span>
-          <GuildSwitcher current={guild.value} guilds={account.value.guilds} path={switchPath} />
+          <GuildSwitcher current={current} guilds={account.value.guilds} path={switchPath} />
         </div>
-        <nav class="ctxtabs" aria-label={guild.value.name}>
+        <nav class="ctxtabs" aria-label={current.name}>
           <Link href={settingsPath} class="ctxtab" aria-current={inSettings ? 'page' : undefined}>
             <Icon name="settings" />
             <span>Settings</span>
@@ -86,7 +96,7 @@ export default component$(() => {
           </Link>
         </nav>
       </div>
-      <Slot />
+      {stale ? <PageSkeleton /> : <Slot />}
     </>
   );
 });

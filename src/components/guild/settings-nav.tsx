@@ -2,11 +2,12 @@ import { component$ } from '@qwik.dev/core';
 import { Link, useLocation } from '@qwik.dev/router';
 import { useGuild } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
+import { settingsSection } from '../../lib/dashboard-path';
 import { SETTINGS_GROUPS } from './sections';
 
 export const SettingsNav = component$(() => {
   const guild = useGuild();
-  const current = useLocation().params.section;
+  const current = settingsSection(useLocation().url.pathname);
   const base = `/dashboard/${guild.value.id}/settings/`;
 
   return (

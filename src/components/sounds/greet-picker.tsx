@@ -18,7 +18,7 @@ export const GreetPicker = component$<GreetPickerProps>(({ soundId, soundName, v
   const global = greets[GLOBAL_GREET];
   const usedIn = guilds.filter((guild) => greets[guild.id]?.id === soundId).map((guild) => guild.name);
   const places = [...(global?.id === soundId ? ['Global'] : []), ...usedIn];
-  const failure = save.value && !save.value.ok ? save.value : null;
+  const failure = save.value && !save.value.ok && save.value.target === soundId ? save.value : null;
   const label = variant === 'field' ? places.join(' · ') || 'Not used as greet' : places.length ? `Greet · ${places.length === 1 ? places[0] : `${places.length} places`}` : 'Set as greet';
 
   useOnDocument('click', $((event) => {
@@ -31,7 +31,7 @@ export const GreetPicker = component$<GreetPickerProps>(({ soundId, soundName, v
   }));
 
   const change = $(async (key: string, input: HTMLInputElement) => {
-    const { value } = await save.submit({ key, soundId: input.checked ? soundId : '' });
+    const { value } = await save.submit({ key, target: soundId, soundId: input.checked ? soundId : '' });
     if (!value.ok) input.checked = !input.checked;
   });
 

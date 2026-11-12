@@ -1,6 +1,6 @@
 import { Link } from '@qwik.dev/router';
 import { dayBars, formatCompact, formatCount, formatDay, heatRows, linePath, replayRows, sourceRows } from '../../lib/sound-stats';
-import type { RankedSound } from '../../lib/sound-library';
+import { soundHref, type RankedSound } from '../../lib/sound-library';
 import type { DayPlays, HeatCell, ReplayBucket, SourcePlays } from '../../lib/sounds';
 
 export function DayBars({ days, label }: { days: DayPlays[]; label: string }) {
@@ -155,7 +155,7 @@ export function LineChart({ days, label }: { days: DayPlays[]; label: string }) 
   );
 }
 
-export function RankList({ items, unit, hrefFor }: { items: RankedSound[]; unit: string; hrefFor: (id: string) => string }) {
+export function RankList({ items, unit, url, basePath }: { items: RankedSound[]; unit: string; url: URL; basePath: string }) {
   if (!items.length) return <p class="caption">Nothing to rank yet.</p>;
   const max = items[0].value;
   return (
@@ -163,7 +163,7 @@ export function RankList({ items, unit, hrefFor }: { items: RankedSound[]; unit:
       {items.map((item, index) => (
         <li key={item.id}>
           <span class="mono text-subtle">{index + 1}</span>
-          <Link href={hrefFor(item.id)} scroll={false} class="rank__name">
+          <Link href={soundHref({ basePath }, url, item.id)} scroll={false} class="rank__name">
             <span>{item.name}</span>
             <span class="caption">{item.detail}</span>
           </Link>

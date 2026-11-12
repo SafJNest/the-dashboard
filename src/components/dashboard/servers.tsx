@@ -1,4 +1,5 @@
 import { component$ } from '@qwik.dev/core';
+import { Link } from '@qwik.dev/router';
 import { GuildAvatar } from './guild-avatar';
 
 export interface DashboardUser {
@@ -28,14 +29,14 @@ export const Servers = component$<ServersProps>(({ guilds }) => (
       <ul class="dashboard__guilds">
         {guilds.map((guild) => (
           <li key={guild.id}>
-            <a href={`/dashboard/${guild.id}/settings/`} class="card dashboard__guild">
+            <Link href={`/dashboard/${guild.id}/settings/`} class="card dashboard__guild">
               <GuildAvatar name={guild.name} iconUrl={guild.iconUrl} size="lg" />
               <div class="dashboard__guild-text">
                 <strong class="dashboard__guild-name">{guild.name}</strong>
                 <p class="caption">{guild.owner ? 'Owner' : 'Manager'}</p>
               </div>
               <span class="dashboard__manage">Manage</span>
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

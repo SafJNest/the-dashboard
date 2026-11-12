@@ -559,6 +559,26 @@ a.ctxtab:hover,
   }
 }
 
+.dashboard__recovery,
+.page-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bb-space-4);
+  padding-top: var(--bb-space-8);
+  padding-bottom: var(--bb-space-14);
+}
+
+a[q\:link][aria-busy="true"] {
+  cursor: progress;
+  animation: link-pending var(--bb-duration-pulse) var(--bb-ease-out) infinite alternate;
+}
+
+@keyframes link-pending {
+  to {
+    opacity: 0.6;
+  }
+}
+
 .nav-progress {
   position: absolute;
   z-index: 4;
@@ -591,15 +611,13 @@ a.ctxtab:hover,
   transition: opacity var(--bb-duration-base) var(--bb-ease-out);
 }
 
-.dashboard[aria-busy="true"] > :not(.appbar, .guild-bar) {
+.dashboard[aria-busy="true"]:not(:has(.settings-form[data-saving])) > :not(.appbar, .guild-bar) {
   opacity: 0.55;
   transition-delay: var(--bb-duration-slow);
 }
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: var(--bb-duration-base);
-  animation-timing-function: var(--bb-ease-out);
+.dashboard:has(.settings-form[data-saving]) .nav-progress--active {
+  opacity: 0;
 }
 
 @keyframes nav-progress {
@@ -613,14 +631,14 @@ a.ctxtab:hover,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  a[q\:link][aria-busy="true"] {
+    animation: none;
+    opacity: 0.75;
+  }
+
   .nav-progress::before {
     width: 100%;
     animation: none;
     background: var(--bb-accent);
-  }
-
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation: none;
   }
 }

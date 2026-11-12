@@ -48,7 +48,7 @@ export interface SoundSearch {
   limit?: number;
 }
 
-const SOUND_NOT_FOUND = "This sound doesn't exist, or you can't see it.";
+export const SOUND_NOT_FOUND = "This sound doesn't exist, or you can't see it.";
 const INVALID: ApiFailure = { ok: false, status: 502, code: 'invalid_response', message: INVALID_RESPONSE, retryAfter: null };
 
 export class BeebotClient {

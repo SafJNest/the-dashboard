@@ -1,5 +1,6 @@
 import { component$ } from '@qwik.dev/core';
-import { Link, useLocation } from '@qwik.dev/router';
+import { Link } from '@qwik.dev/router';
+import { settingsPath } from '../../lib/dashboard-path';
 import { useGuild } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
 import { AlertSettings } from './alert-settings';
@@ -12,13 +13,28 @@ const INTRO = {
   command: '/reward',
 };
 
-export const RewardSettings = component$(() => {
+export const RewardSettings = component$<{ level?: string }>(({ level }) => {
   const guild = useGuild();
-  const location = useLocation();
   const { reward } = guild.value.settings;
   const levels = Object.keys(reward).sort((a, b) => Number(a) - Number(b));
-  const requested = location.url.searchParams.get('level');
-  const selected = requested && reward[requested] ? requested : levels[0];
+  const selected = level ?? levels[0];
+
+  if (level !== undefined && !reward[level]) {
+    return (
+      <div class="settings-form">
+        <header class="settings-head">
+          <SectionIntro {...INTRO} />
+        </header>
+        <div class="callout callout--danger" role="alert">
+          <Icon name="warning" />
+          <div class="load-error__body">
+            <p>Level {level} has no reward.</p>
+            <Link href={settingsPath(guild.value.id, 'rewards')} class="button button--secondary button--sm">Show all rewards</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!selected) {
     return (
@@ -39,15 +55,15 @@ export const RewardSettings = component$(() => {
       <section q:slot="lead" class="card settings-card" aria-labelledby="reward-tiers">
         <h2 id="reward-tiers" class="heading heading--sm">Tiers</h2>
         <ul class="item-picker">
-          {levels.map((level) => {
-            const item = reward[level];
-            const role = guild.value.roles.find((entry) => entry.id === item.roleIds[0]);
+          {levels.map((item) => {
+            const entry = reward[item];
+            const role = guild.value.roles.find((candidate) => candidate.id === entry.roleIds[0]);
             return (
-              <li key={level}>
-                <Link href={`?level=${level}`} class="item-picker__link" aria-current={level === selected ? 'true' : undefined}>
-                  <span class="badge badge--accent">LVL {level}</span>
+              <li key={item}>
+                <Link href={settingsPath(guild.value.id, 'rewards', item)} scroll={false} class="item-picker__link" aria-current={item === selected ? 'page' : undefined}>
+                  <span class="badge badge--accent">LVL {item}</span>
                   <span class="item-picker__label">{role ? role.name : 'No roles'}</span>
-                  {!item.valid && <span class="badge badge--warning">Fix</span>}
+                  {!entry.valid && <span class="badge badge--warning">Fix</span>}
                 </Link>
               </li>
             );

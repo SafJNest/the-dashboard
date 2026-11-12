@@ -1,22 +1,41 @@
 import { component$ } from '@qwik.dev/core';
-import { routeLoader$, useLocation } from '@qwik.dev/router';
+import type { RequestHandler } from '@qwik.dev/router';
 import { SoundLibrary } from '../../../../../components/sounds/sound-library';
-import { apiError } from '../../../../../lib/beebot.server';
-import { BeebotClient } from '../../../../../lib/beebot/client.server';
-import { myLibraryModel } from '../../../../../lib/sound-library';
-import { readPeriod } from '../../../../../lib/sounds';
+import { apiError, awaitLoader, isDocumentRequest, loaderResolver } from '../../../../../lib/beebot.server';
+import { SOUND_NOT_FOUND } from '../../../../../lib/beebot/client.server';
+import { mySoundsPath, soundHref } from '../../../../../lib/sound-library';
+import { useMySoundAnalytics, useMySounds } from '../../../../../lib/sound-loaders';
+import { GUILD_ID } from '../../../../../lib/sounds';
+import { useAccount } from '../../../layout';
 
-export const useMySounds = routeLoader$(async (event) => {
-  const period = readPeriod(event.url.searchParams.get('period'));
-  const client = new BeebotClient(event);
-  const [library, analytics] = await Promise.all([client.mySounds(period), client.mySoundAnalytics(period)]);
-  if (!library.ok) throw apiError(event, library);
-  if (!analytics.ok) throw apiError(event, analytics);
-  return { period, library: library.data, analytics: analytics.data };
-}, { search: ['period'], serializationStrategy: 'always', cacheControl: { private: true, maxAge: 300 } });
+export { useMySoundAnalytics, useMySounds };
+
+const GUILD_NOT_IN_LIBRARY = "You haven't uploaded sounds in this server.";
+
+export const onGet: RequestHandler = async (event) => {
+  if (!isDocumentRequest(event)) return;
+  const resolveValue = loaderResolver(event);
+  const { guildId, soundId } = event.params;
+  const legacyGuild = event.url.searchParams.get('guild');
+  if (legacyGuild !== null) {
+    const url = new URL(event.url);
+    url.searchParams.delete('guild');
+    const filter = guildId ?? (GUILD_ID.test(legacyGuild) ? legacyGuild : null);
+    const base = { basePath: mySoundsPath(filter) };
+    throw event.redirect(301, soundId ? soundHref(base, url, soundId) : `${base.basePath}${url.search}`);
+  }
+  if (guildId !== undefined && !GUILD_ID.test(guildId)) throw event.error(404, GUILD_NOT_IN_LIBRARY);
+  resolveValue(useMySoundAnalytics).catch(() => undefined);
+  resolveValue(useAccount).catch(() => undefined);
+  const data = await awaitLoader(event, resolveValue(useMySounds));
+  if (data.failed) throw apiError(event, data);
+  const groups = data.library.guilds;
+  if (guildId !== undefined && !groups.some((group) => group.guildId === guildId)) throw event.error(404, GUILD_NOT_IN_LIBRARY);
+  if (soundId && !groups.some((group) => group.sounds.some((sound) => sound.id === soundId))) throw event.error(404, SOUND_NOT_FOUND);
+};
 
 export default component$(() => {
-  const data = useMySounds();
-  const location = useLocation();
-  return <SoundLibrary model={myLibraryModel(data.value, location.url, location.params.soundId)} />;
+  const library = useMySounds();
+  const analytics = useMySoundAnalytics();
+  return <SoundLibrary source={{ scope: 'me', library, analytics }} />;
 });

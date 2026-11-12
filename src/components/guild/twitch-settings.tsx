@@ -1,5 +1,6 @@
 import { component$ } from '@qwik.dev/core';
-import { Link, useLocation } from '@qwik.dev/router';
+import { Link } from '@qwik.dev/router';
+import { settingsPath } from '../../lib/dashboard-path';
 import { alertBadge } from '../../lib/guild';
 import { useGuild } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
@@ -13,13 +14,28 @@ const INTRO = {
   command: '/twitch link · /twitch menu',
 };
 
-export const TwitchSettings = component$(() => {
+export const TwitchSettings = component$<{ streamerId?: string }>(({ streamerId }) => {
   const guild = useGuild();
-  const location = useLocation();
   const { twitch } = guild.value.settings;
   const streamers = Object.keys(twitch);
-  const requested = location.url.searchParams.get('streamer');
-  const selected = requested && twitch[requested] ? requested : streamers[0];
+  const selected = streamerId ?? streamers[0];
+
+  if (streamerId !== undefined && !twitch[streamerId]) {
+    return (
+      <div class="settings-form">
+        <header class="settings-head">
+          <SectionIntro {...INTRO} />
+        </header>
+        <div class="callout callout--danger" role="alert">
+          <Icon name="warning" />
+          <div class="load-error__body">
+            <p>Streamer {streamerId} isn't linked to this server.</p>
+            <Link href={settingsPath(guild.value.id, 'twitch')} class="button button--secondary button--sm">Show all streamers</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!selected) {
     return (
@@ -44,7 +60,7 @@ export const TwitchSettings = component$(() => {
             const badge = alertBadge(twitch[streamer]);
             return (
               <li key={streamer}>
-                <Link href={`?streamer=${streamer}`} class="item-picker__link" aria-current={streamer === selected ? 'true' : undefined}>
+                <Link href={settingsPath(guild.value.id, 'twitch', streamer)} scroll={false} class="item-picker__link" aria-current={streamer === selected ? 'page' : undefined}>
                   <Icon name="twitch" />
                   <span class="item-picker__label mono">{streamer}</span>
                   <span class={['badge', badge.tone && `badge--${badge.tone}`]}>{badge.label}</span>
