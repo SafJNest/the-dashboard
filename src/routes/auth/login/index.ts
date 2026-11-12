@@ -12,7 +12,9 @@ export const onGet: RequestHandler = async (event) => {
   } catch (error) {
     const failure = error as Error & { cause?: { code?: string } };
     const cause = failure.cause?.code ? `, cause=${failure.cause.code}` : '';
-    console.error(`[Beebot auth] authorize request failed after ${Date.now() - startedAt}ms: ${failure.name}${cause}`);
+    const apiKey = event.env.get('BEEBOT_API_KEY');
+    const message = (apiKey ? failure.message.replaceAll(apiKey, '[redacted]') : failure.message).replace(/[\r\n]/g, ' ');
+    console.error(`[Beebot auth] authorize request failed after ${Date.now() - startedAt}ms: ${failure.name}${cause}: ${message}`);
     throw event.error(503, 'Login is temporarily unavailable.');
   }
   if (!response.ok) {
