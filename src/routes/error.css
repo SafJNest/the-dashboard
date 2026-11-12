@@ -1,0 +1,17 @@
+.error-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--bb-space-4);
+  max-width: 40rem;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: var(--bb-space-14) var(--bb-gutter);
+}
+
+.error-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bb-space-3);
+  margin-top: var(--bb-space-4);
+}

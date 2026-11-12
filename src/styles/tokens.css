@@ -22,6 +22,11 @@
   --bb-violet-9: #a78bfa;
   --bb-blue-9: #6cb6ff;
   --bb-green-9: #3ddc97;
+  --bb-orange-9: #ff8a3d;
+  --bb-orange-11: #ffa86b;
+  --bb-red-9: #ff5c5c;
+  --bb-red-11: #ff8585;
+  --bb-blue-11: #9ccfff;
   --bb-discord-blurple: #5865f2;
 
   --bb-bg-canvas: var(--bb-ink-1);
@@ -32,6 +37,8 @@
   --bb-bg-hover: rgb(255 255 255 / 0.05);
   --bb-bg-active: rgb(255 255 255 / 0.09);
   --bb-bg-atmosphere: var(--bb-violet-4);
+  --bb-bg-inset: var(--bb-ink-0);
+  --bb-bg-bar: color-mix(in oklab, var(--bb-bg-canvas) 82%, transparent);
 
   --bb-fg-default: var(--bb-ink-12);
   --bb-fg-muted: var(--bb-ink-11);
@@ -52,6 +59,17 @@
   --bb-accent-line: rgb(255 196 0 / 0.22);
   --bb-focus-ring: var(--bb-yellow-9);
 
+  --bb-success-fg: var(--bb-green-9);
+  --bb-warning-fg: var(--bb-orange-11);
+  --bb-warning-muted: rgb(255 138 61 / 0.12);
+  --bb-danger: var(--bb-red-9);
+  --bb-danger-fg: var(--bb-red-11);
+  --bb-danger-muted: rgb(255 92 92 / 0.12);
+  --bb-danger-hover: rgb(255 92 92 / 0.2);
+  --bb-info-fg: var(--bb-blue-11);
+  --bb-info-muted: rgb(108 182 255 / 0.12);
+  --bb-role-default: var(--bb-ink-10);
+
   --bb-honey-light: var(--bb-yellow-12);
   --bb-honey: var(--bb-yellow-9);
   --bb-honey-dark: var(--bb-honey-deep);
@@ -68,6 +86,8 @@
   --bb-discord-mention-fg: #c9cdfb;
 
   --bb-shadow-raised: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 8px 24px rgb(0 0 0 / 0.35);
+  --bb-shadow-overlay: 0 0 0 1px rgb(255 255 255 / 0.08), 0 24px 64px rgb(0 0 0 / 0.55);
+  --bb-blur-bar: blur(14px) saturate(140%);
   --bb-glow-sm: 0 0 12px rgb(255 196 0 / 0.28);
   --bb-glow-md: 0 0 32px rgb(255 196 0 / 0.3);
 
@@ -115,12 +135,15 @@
   --bb-space-30: 7.5rem;
   --bb-space-35: 8.75rem;
 
+  --bb-control-xs: 1.5rem;
   --bb-control-sm: 2rem;
   --bb-control-md: 2.5rem;
   --bb-control-lg: 3rem;
   --bb-container: 75rem;
   --bb-gutter: clamp(1rem, 4vw, 4rem);
+  --bb-guild-bar-height: 3.25rem;
 
+  --bb-radius-xs: 0.25rem;
   --bb-radius-sm: 0.5rem;
   --bb-radius-md: 0.75rem;
   --bb-radius-lg: 1rem;
@@ -131,5 +154,7 @@
 
   --bb-duration-fast: 120ms;
   --bb-duration-base: 200ms;
+  --bb-duration-slow: 400ms;
   --bb-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --bb-ease-spring: cubic-bezier(0.3, 1.3, 0.5, 1);
 }

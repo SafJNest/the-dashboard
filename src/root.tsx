@@ -3,7 +3,7 @@ import { DocumentHeadTags, RouterOutlet, useQwikRouter } from '@qwik.dev/router'
 import './global.css';
 
 export default component$(() => {
-  useQwikRouter();
+  useQwikRouter({ viewTransition: true });
   return (
     <>
       <head>

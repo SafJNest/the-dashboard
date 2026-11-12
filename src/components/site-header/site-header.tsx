@@ -32,9 +32,9 @@ export const SiteHeader = component$<SiteHeaderProps>(({ inviteUrl }) => {
         ))}
       </nav>
       <div class="site-header__actions">
-        <Link href="/dashboard/" class="button button--ghost">
+        <a href="/dashboard/" class="button button--ghost">
           Log in
-        </Link>
+        </a>
         {inviteUrl ? (
           <a href={inviteUrl} class="button button--primary">
             Add to Discord

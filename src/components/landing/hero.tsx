@@ -1,5 +1,4 @@
 import { component$ } from '@qwik.dev/core';
-import { Link } from '@qwik.dev/router';
 
 interface HeroProps {
   inviteUrl: string | null;
@@ -130,9 +129,9 @@ export const Hero = component$<HeroProps>(({ inviteUrl }) => (
             Add Beebot to Discord
           </button>
         )}
-        <Link href="/dashboard/" class="button button--secondary button--lg">
+        <a href="/dashboard/" class="button button--secondary button--lg">
           Manage your hives
-        </Link>
+        </a>
       </div>
     </div>
   </section>
