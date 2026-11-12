@@ -116,7 +116,7 @@ export async function beebotFetch(event: ServerEvent, path: string, options: { m
     method: options.method || 'GET', headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     signal: AbortSignal.timeout(15000),
-    redirect: 'error',
+    redirect: 'manual',
   });
 }
 
