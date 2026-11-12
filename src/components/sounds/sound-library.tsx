@@ -1,9 +1,10 @@
 import { $, component$, Pending, useComputed$, useSignal, useStore, useStyles$, useTask$, type QRL } from '@qwik.dev/core';
 import { isBrowser } from '@qwik.dev/core/build';
 import { Link, useLocation } from '@qwik.dev/router';
-import { libraryHref, readLibrary, readStats } from '../../lib/sound-library';
+import { DEFAULT_VIEW, readLibrary, readStats, type LibraryView } from '../../lib/sound-library';
+import { peekValue } from '../../lib/loader-value';
 import { formatChange, formatCount } from '../../lib/sound-stats';
-import { PERIOD_LABELS, PERIODS, readPeriod, type VoteState } from '../../lib/sounds';
+import { PERIOD_COOKIE, PERIOD_LABELS, PERIODS, type Period, type VoteState } from '../../lib/sounds';
 import { readSource, type LibrarySource } from './library-source';
 import { ChartsSkeleton, LoadError, Skeleton, SummarySkeleton, WorkSkeleton } from './library-states';
 import { LineChart, RankList } from './sound-charts';
@@ -19,9 +20,9 @@ export interface Playback {
 
 export type PlayHandler = QRL<(soundId: string, url: string | null) => void>;
 
-const SummaryStrip = component$<{ source: LibrarySource }>(({ source }) => {
+const SummaryStrip = component$<{ source: LibrarySource; view: LibraryView }>(({ source, view }) => {
   const location = useLocation();
-  const state = readLibrary(readSource(source, location.url, false), location.url, location.params);
+  const state = readLibrary(readSource(source, view.period, false), location.params, view);
   if (state.status === 'stale') return <SummarySkeleton />;
   if (state.status === 'failed') return null;
   const { model, updating } = state;
@@ -57,14 +58,15 @@ const SummaryStrip = component$<{ source: LibrarySource }>(({ source }) => {
 
 interface LibraryWorkProps {
   source: LibrarySource;
+  view: LibraryView;
   playback: Playback;
   votes: Record<string, VoteState>;
   onPlay$: PlayHandler;
 }
 
-const LibraryWork = component$<LibraryWorkProps>(({ source, playback, votes, onPlay$ }) => {
+const LibraryWork = component$<LibraryWorkProps>(({ source, view, playback, votes, onPlay$ }) => {
   const location = useLocation();
-  const state = readLibrary(readSource(source, location.url, false), location.url, location.params);
+  const state = readLibrary(readSource(source, view.period, false), location.params, view);
   if (state.status === 'stale') return <WorkSkeleton />;
   if (state.status === 'failed') {
     return <LoadError message={state.failure.message} retrying={source.library.pending} onRetry$={$(() => source.library.invalidate())} />;
@@ -75,21 +77,21 @@ const LibraryWork = component$<LibraryWorkProps>(({ source, playback, votes, onP
       <div class="card sounds__empty" role="alert">
         <p class="heading heading--sm">This server isn't in your library</p>
         <p class="text-muted">You haven't uploaded sounds there, or the server is no longer available.</p>
-        <Link href={libraryHref(location.url, {}, model.rootPath)} class="button button--secondary">All servers</Link>
+        <Link href={model.rootPath} class="button button--secondary">All servers</Link>
       </div>
     );
   }
   return (
     <div class="sounds__work">
-      <SoundList model={model} source={source} playback={playback} onPlay$={onPlay$} />
+      <SoundList model={model} view={view} playback={playback} onPlay$={onPlay$} />
       {model.missing ? (
         <div class="card sounds__empty" role="alert">
           <p class="heading heading--sm">Sound not found</p>
           <p class="text-muted">This sound doesn't exist in this library, or you can't see it anymore.</p>
-          <Link href={libraryHref(location.url, {}, model.basePath)} scroll={false} class="button button--secondary">Back to the library</Link>
+          <Link href={model.basePath} scroll={false} class="button button--secondary">Back to the library</Link>
         </div>
       ) : model.selected ? (
-        <SoundDetail model={model} source={source} entry={model.selected} votes={votes} playback={playback} onPlay$={onPlay$} />
+        <SoundDetail model={model} source={source} view={view} entry={model.selected} votes={votes} playback={playback} onPlay$={onPlay$} />
       ) : (
         <div class="card sounds__empty">
           <p class="heading heading--sm">No sounds yet</p>
@@ -100,12 +102,12 @@ const LibraryWork = component$<LibraryWorkProps>(({ source, playback, votes, onP
   );
 });
 
-const OverviewCharts = component$<{ source: LibrarySource; title: string }>(({ source, title }) => {
+const OverviewCharts = component$<{ source: LibrarySource; view: LibraryView; title: string }>(({ source, view, title }) => {
   const location = useLocation();
-  const load = readSource(source, location.url, true);
-  const state = readLibrary(load, location.url, location.params);
+  const load = readSource(source, view.period, true);
+  const state = readLibrary(load, location.params, view);
   if (state.status !== 'ready') return <ChartsSkeleton />;
-  const stats = readStats(load, state.model, location.url);
+  const stats = readStats(load, state.model, view);
   if (!stats) return <ChartsSkeleton />;
   if ('failed' in stats) {
     return <LoadError message={`Statistics are unavailable. ${stats.message}`} retrying={source.analytics.pending} onRetry$={$(() => source.analytics.invalidate())} />;
@@ -126,23 +128,23 @@ const OverviewCharts = component$<{ source: LibrarySource; title: string }>(({ s
             <h3 class="chart-block__title">Top sounds</h3>
             <span class="caption">plays</span>
           </div>
-          <RankList items={stats.overview.top} unit="plays" url={location.url} basePath={state.model.basePath} />
+          <RankList items={stats.overview.top} unit="plays" basePath={state.model.basePath} />
         </div>
         <div class="card chart-block">
           <div class="chart-block__head">
             <h3 class="chart-block__title">Most liked</h3>
             <span class="caption">likes</span>
           </div>
-          <RankList items={stats.overview.liked} unit="likes" url={location.url} basePath={state.model.basePath} />
+          <RankList items={stats.overview.liked} unit="likes" basePath={state.model.basePath} />
         </div>
       </div>
     </div>
   );
 });
 
-const LibraryOverview = component$<{ source: LibrarySource }>(({ source }) => {
+const LibraryOverview = component$<{ source: LibrarySource; view: LibraryView }>(({ source, view }) => {
   const location = useLocation();
-  const state = readLibrary(readSource(source, location.url, false), location.url, location.params);
+  const state = readLibrary(readSource(source, view.period, false), location.params, view);
   if (state.status === 'failed') return null;
   if (state.status === 'stale') return <ChartsSkeleton />;
   const { model } = state;
@@ -156,7 +158,7 @@ const LibraryOverview = component$<{ source: LibrarySource }>(({ source }) => {
         <span class="caption">{text}</span>
       </div>
       <Pending fallback$={() => <ChartsSkeleton />}>
-        <OverviewCharts source={source} title={title} />
+        <OverviewCharts source={source} view={view} title={title} />
       </Pending>
     </section>
   );
@@ -164,12 +166,12 @@ const LibraryOverview = component$<{ source: LibrarySource }>(({ source }) => {
 
 export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) => {
   useStyles$(styles);
-  const location = useLocation();
   const votes = useStore<Record<string, VoteState>>({});
+  const view = useStore<LibraryView>({ ...DEFAULT_VIEW });
   const audio = useSignal<HTMLAudioElement>();
   const playback = useStore<Playback>({ id: null, loading: false, failed: null });
   const attempt = useSignal(0);
-  const period = readPeriod(location.url.searchParams.get('period'));
+  const period = view.period ?? peekValue<{ period: Period }>(source.library)?.period ?? null;
 
   const stop = $(() => {
     const element = audio.value;
@@ -190,6 +192,14 @@ export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) =
     if (!isBrowser) return;
     stop();
     cleanup(() => stop());
+  });
+
+  const choosePeriod = $((next: Period) => {
+    if (next === period) return;
+    view.period = next;
+    document.cookie = `${PERIOD_COOKIE}=${next}; Path=/dashboard/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+    source.library.invalidate();
+    source.analytics.invalidate();
   });
 
   const togglePlay = $(async (soundId: string, url: string | null) => {
@@ -222,29 +232,23 @@ export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) =
       <h1 class="visually-hidden">{source.scope === 'guild' ? `${source.guildName} sounds` : 'My sounds'}</h1>
       <div class="sounds__summary">
         <Pending fallback$={() => <SummarySkeleton />}>
-          <SummaryStrip source={source} />
+          <SummaryStrip source={source} view={view} />
         </Pending>
-        <nav class="filter-tabs sounds__period" aria-label="Period">
+        <div class="filter-tabs sounds__period" role="group" aria-label="Period">
           {PERIODS.map((item) => (
-            <Link
-              key={item}
-              href={libraryHref(location.url, { period: item === '30d' ? null : item })}
-              scroll={false}
-              class="filter-tabs__item"
-              aria-current={period === item ? 'page' : undefined}
-            >
+            <button key={item} type="button" class="filter-tabs__item" aria-pressed={period === item} onClick$={() => choosePeriod(item)}>
               {PERIOD_LABELS[item]}
-            </Link>
+            </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       <Pending fallback$={() => <WorkSkeleton />}>
-        <LibraryWork source={source} playback={playback} votes={votes} onPlay$={togglePlay} />
+        <LibraryWork source={source} view={view} playback={playback} votes={votes} onPlay$={togglePlay} />
       </Pending>
 
       <Pending fallback$={() => <ChartsSkeleton />}>
-        <LibraryOverview source={source} />
+        <LibraryOverview source={source} view={view} />
       </Pending>
 
       <audio

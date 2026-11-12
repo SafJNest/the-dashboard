@@ -155,7 +155,7 @@ export function LineChart({ days, label }: { days: DayPlays[]; label: string }) 
   );
 }
 
-export function RankList({ items, unit, url, basePath }: { items: RankedSound[]; unit: string; url: URL; basePath: string }) {
+export function RankList({ items, unit, basePath }: { items: RankedSound[]; unit: string; basePath: string }) {
   if (!items.length) return <p class="caption">Nothing to rank yet.</p>;
   const max = items[0].value;
   return (
@@ -163,7 +163,7 @@ export function RankList({ items, unit, url, basePath }: { items: RankedSound[];
       {items.map((item, index) => (
         <li key={item.id}>
           <span class="mono text-subtle">{index + 1}</span>
-          <Link href={soundHref({ basePath }, url, item.id)} scroll={false} class="rank__name">
+          <Link href={soundHref({ basePath }, item.id)} scroll={false} class="rank__name">
             <span>{item.name}</span>
             <span class="caption">{item.detail}</span>
           </Link>

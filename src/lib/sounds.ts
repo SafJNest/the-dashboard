@@ -1,6 +1,7 @@
 export const PERIODS = ['7d', '30d', '90d', 'all'] as const;
 export type Period = (typeof PERIODS)[number];
 export const DEFAULT_PERIOD: Period = '30d';
+export const PERIOD_COOKIE = 'beebot_period';
 export const PERIOD_LABELS: Record<Period, string> = { '7d': '7d', '30d': '30d', '90d': '90d', all: 'All time' };
 
 export const GLOBAL_GREET = '0';

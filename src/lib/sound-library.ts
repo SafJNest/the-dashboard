@@ -1,6 +1,6 @@
 import type { LoadFailure } from './beebot.server';
 import { mergeDays, viewFromGuildStats, viewFromSoundAnalytics, type SoundView } from './sound-stats';
-import { readPeriod, type DayPlays, type GuildSoundAnalytics, type GuildSoundLibrary, type LibrarySummary, type MySoundAnalytics, type MySoundLibrary, type Period, type Sound } from './sounds';
+import { type DayPlays, type GuildSoundAnalytics, type GuildSoundLibrary, type LibrarySummary, type MySoundAnalytics, type MySoundLibrary, type Period, type Sound } from './sounds';
 
 export type Owner = 'all' | 'mine' | 'others';
 export type DetailTab = 'everyone' | 'mine';
@@ -38,10 +38,18 @@ export interface LibraryModel {
   sort: SortOrder;
 }
 
+export interface LibraryView {
+  owner: Owner;
+  sort: SortOrder;
+  tab: DetailTab;
+  period: Period | null;
+}
+
+export const DEFAULT_VIEW: LibraryView = { owner: 'all', sort: 'name', tab: 'everyone', period: null };
+
 export interface LibraryStats {
   period: Period;
   timezone: string;
-  plays: Record<string, number>;
   view: SoundView | null;
   overview: { days: DayPlays[]; top: RankedSound[]; liked: RankedSound[] };
 }
@@ -73,18 +81,6 @@ export const LOAD_ERROR = "Couldn't load this data. Check your connection and tr
 export const OTHER_GUILDS = 'Other servers';
 export const MY_SOUNDS_PATH = '/dashboard/me/sounds/';
 
-export function readOwner(value: string | null): Owner {
-  return value === 'mine' || value === 'others' ? value : 'all';
-}
-
-export function readTab(value: string | null): DetailTab {
-  return value === 'mine' ? 'mine' : 'everyone';
-}
-
-export function readSort(value: string | null): SortOrder {
-  return value === 'plays' ? 'plays' : 'name';
-}
-
 export function guildSoundsPath(guildId: string) {
   return `/dashboard/${guildId}/sounds/`;
 }
@@ -93,18 +89,8 @@ export function mySoundsPath(guildId: string | null) {
   return guildId ? `${MY_SOUNDS_PATH}guild/${guildId}/` : MY_SOUNDS_PATH;
 }
 
-export function libraryHref(url: URL, changes: Record<string, string | null>, path = url.pathname) {
-  const params = new URLSearchParams(url.search);
-  for (const [key, value] of Object.entries(changes)) {
-    if (value === null) params.delete(key);
-    else params.set(key, value);
-  }
-  const search = params.toString();
-  return `${path}${search ? `?${search}` : ''}`;
-}
-
-export function soundHref(model: Pick<LibraryModel, 'basePath'>, url: URL, soundId: string) {
-  return libraryHref(url, {}, `${model.basePath}${soundId}/`);
+export function soundHref(model: Pick<LibraryModel, 'basePath'>, soundId: string) {
+  return `${model.basePath}${soundId}/`;
 }
 
 function compareIds(a: string, b: string) {
@@ -115,9 +101,9 @@ function byName(a: LibraryEntry, b: LibraryEntry) {
   return a.sound.name.localeCompare(b.sound.name, 'en') || compareIds(a.sound.id, b.sound.id);
 }
 
-export function sortEntries(entries: LibraryEntry[], sort: SortOrder, plays: Record<string, number> | null) {
-  if (sort !== 'plays' || !plays) return entries;
-  return [...entries].sort((a, b) => (plays[b.sound.id] ?? 0) - (plays[a.sound.id] ?? 0) || byName(a, b));
+function sortEntries(entries: LibraryEntry[], sort: SortOrder) {
+  if (sort !== 'plays') return entries;
+  return [...entries].sort((a, b) => b.sound.plays - a.sound.plays || byName(a, b));
 }
 
 function select(entries: LibraryEntry[], all: LibraryEntry[], soundId: string | undefined) {
@@ -134,11 +120,11 @@ function rank(entries: { sound: Sound; detail: string; value: number }[]): Ranke
     .map(({ sound, detail, value }) => ({ id: sound.id, name: sound.name, detail, value }));
 }
 
-export function guildLibraryModel(data: { period: Period; library: GuildSoundLibrary }, url: URL, soundId: string | undefined, guildName: string): LibraryModel {
+export function guildLibraryModel(data: { period: Period; library: GuildSoundLibrary }, soundId: string | undefined, guildName: string, view = DEFAULT_VIEW): LibraryModel {
   const { library } = data;
   const all = library.sounds.map((sound) => ({ sound, guildName })).sort(byName);
-  const owner = readOwner(url.searchParams.get('owner'));
-  const entries = owner === 'all' ? all : all.filter((entry) => entry.sound.ownedByMe === (owner === 'mine'));
+  const { owner } = view;
+  const entries = sortEntries(owner === 'all' ? all : all.filter((entry) => entry.sound.ownedByMe === (owner === 'mine')), view.sort);
   const path = guildSoundsPath(library.guildId);
   return {
     scope: 'guild',
@@ -155,19 +141,19 @@ export function guildLibraryModel(data: { period: Period; library: GuildSoundLib
     guilds: [],
     guildNames: { [library.guildId]: guildName },
     ...select(entries, all, soundId),
-    tab: readTab(url.searchParams.get('tab')),
-    sort: readSort(url.searchParams.get('sort')),
+    tab: view.tab,
+    sort: view.sort,
   };
 }
 
-export function myLibraryModel(data: { period: Period; library: MySoundLibrary }, url: URL, soundId: string | undefined, guildId: string | undefined): LibraryModel {
+export function myLibraryModel(data: { period: Period; library: MySoundLibrary }, soundId: string | undefined, guildId: string | undefined, view = DEFAULT_VIEW): LibraryModel {
   const { library } = data;
   const guildNames = Object.fromEntries(library.guilds.map((group) => [group.guildId, group.name ?? UNKNOWN_GUILD]));
   const all = library.guilds.flatMap((group) => group.sounds.map((sound) => ({ sound, guildName: guildNames[group.guildId] }))).sort(byName);
   const filter = guildId ?? null;
   const guildMissing = filter !== null && !(filter in guildNames);
   const scoped = new Set(library.guilds.find((group) => group.guildId === filter)?.sounds.map((sound) => sound.id));
-  const entries = filter ? all.filter((entry) => scoped.has(entry.sound.id)) : all;
+  const entries = sortEntries(filter ? all.filter((entry) => scoped.has(entry.sound.id)) : all, view.sort);
   return {
     scope: 'me',
     rootPath: MY_SOUNDS_PATH,
@@ -183,8 +169,8 @@ export function myLibraryModel(data: { period: Period; library: MySoundLibrary }
     guilds: library.guilds.map((group) => ({ id: group.guildId, name: guildNames[group.guildId], count: group.sounds.length })),
     guildNames,
     ...(guildMissing ? { selected: null, missing: false } : select(entries, all, soundId)),
-    tab: readTab(url.searchParams.get('tab')),
-    sort: readSort(url.searchParams.get('sort')),
+    tab: view.tab,
+    sort: view.sort,
   };
 }
 
@@ -200,7 +186,6 @@ export function guildLibraryStats(model: LibraryModel, data: { period: Period; a
   return {
     period: data.period,
     timezone: analytics.timezone,
-    plays: Object.fromEntries(analytics.sounds.map((entry) => [entry.soundId, entry.plays])),
     view: model.selected ? viewFromGuildStats(stats.get(model.selected.sound.id)) : null,
     overview: { days: analytics.playsPerDay, top: ranked(analytics.topSounds), liked: ranked(analytics.mostLiked) },
   };
@@ -214,7 +199,6 @@ export function myLibraryStats(model: LibraryModel, data: { period: Period; anal
   return {
     period: data.period,
     timezone: analytics.timezone,
-    plays: Object.fromEntries(views.map(({ entry, view }) => [entry.sound.id, view.plays])),
     view: model.selected ? viewOf(model.selected.sound) : null,
     overview: {
       days: mergeDays(views.map(({ view }) => view.playsPerDay)),
@@ -228,19 +212,19 @@ function expectedGuild(load: LibraryLoad) {
   return load.scope === 'guild' ? load.guildId : null;
 }
 
-export function readLibrary(load: LibraryLoad, url: URL, params: Record<string, string | undefined>): LibraryState {
+export function readLibrary(load: LibraryLoad, params: Record<string, string | undefined>, view = DEFAULT_VIEW): LibraryState {
   const data = load.library;
   if (data.guildId !== expectedGuild(load)) return { status: 'stale' };
   if (data.failed) return { status: 'failed', failure: data };
   const model = load.scope === 'guild'
-    ? guildLibraryModel(data as Loaded<'library', GuildSoundLibrary>, url, params.soundId, load.guildName)
-    : myLibraryModel(data as Loaded<'library', MySoundLibrary>, url, params.soundId, params.guildId);
-  return { status: 'ready', model, updating: data.period !== readPeriod(url.searchParams.get('period')) };
+    ? guildLibraryModel(data as Loaded<'library', GuildSoundLibrary>, params.soundId, load.guildName, view)
+    : myLibraryModel(data as Loaded<'library', MySoundLibrary>, params.soundId, params.guildId, view);
+  return { status: 'ready', model, updating: view.period !== null && data.period !== view.period };
 }
 
-export function readStats(load: LibraryLoad, model: LibraryModel, url: URL): LibraryStats | LoadFailure | null {
+export function readStats(load: LibraryLoad, model: LibraryModel, view = DEFAULT_VIEW): LibraryStats | LoadFailure | null {
   const data = load.analytics;
-  if (!data || data.guildId !== expectedGuild(load) || data.period !== readPeriod(url.searchParams.get('period'))) return null;
+  if (!data || data.guildId !== expectedGuild(load) || data.period !== (view.period ?? model.period)) return null;
   if (data.failed) return data;
   return load.scope === 'guild'
     ? guildLibraryStats(model, data as Loaded<'analytics', GuildSoundAnalytics>)

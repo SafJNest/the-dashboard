@@ -1,5 +1,5 @@
 import { LOAD_ERROR, type GuildLibraryLoad, type GuildStatsLoad, type LibraryLoad, type MyLibraryLoad, type MyStatsLoad } from '../../lib/sound-library';
-import { readPeriod } from '../../lib/sounds';
+import { DEFAULT_PERIOD, type Period } from '../../lib/sounds';
 
 interface LoadSignal<T> {
   readonly value: T;
@@ -12,15 +12,15 @@ export type LibrarySource =
   | { scope: 'guild'; guildId: string; guildName: string; library: LoadSignal<GuildLibraryLoad>; analytics: LoadSignal<GuildStatsLoad> }
   | { scope: 'me'; library: LoadSignal<MyLibraryLoad>; analytics: LoadSignal<MyStatsLoad> };
 
-function read<T>(signal: LoadSignal<T>, url: URL, guildId: string | null): T {
+function read<T>(signal: LoadSignal<T>, period: Period | null, guildId: string | null): T {
   if (!signal.error) return signal.value;
-  return { failed: true, status: 503, message: LOAD_ERROR, retryAfter: null, period: readPeriod(url.searchParams.get('period')), guildId } as T;
+  return { failed: true, status: 503, message: LOAD_ERROR, retryAfter: null, period: period ?? DEFAULT_PERIOD, guildId } as T;
 }
 
-export function readSource(source: LibrarySource, url: URL, withStats: boolean): LibraryLoad {
+export function readSource(source: LibrarySource, period: Period | null, withStats: boolean): LibraryLoad {
   if (source.scope === 'guild') {
     const { guildId } = source;
-    return { scope: 'guild', guildId, guildName: source.guildName, library: read(source.library, url, guildId), analytics: withStats ? read(source.analytics, url, guildId) : undefined };
+    return { scope: 'guild', guildId, guildName: source.guildName, library: read(source.library, period, guildId), analytics: withStats ? read(source.analytics, period, guildId) : undefined };
   }
-  return { scope: 'me', library: read(source.library, url, null), analytics: withStats ? read(source.analytics, url, null) : undefined };
+  return { scope: 'me', library: read(source.library, period, null), analytics: withStats ? read(source.analytics, period, null) : undefined };
 }

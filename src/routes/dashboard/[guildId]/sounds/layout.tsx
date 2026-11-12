@@ -11,6 +11,7 @@ export { useGuildSoundAnalytics, useGuildSoundLibrary };
 
 export const onGet: RequestHandler = async (event) => {
   if (!isDocumentRequest(event)) return;
+  if (event.url.search) throw event.redirect(301, event.url.pathname);
   const resolveValue = loaderResolver(event);
   resolveValue(useGuildSoundAnalytics).catch(() => undefined);
   resolveValue(useAccount).catch(() => undefined);

@@ -1,12 +1,10 @@
-import { $, component$, Pending, useOnDocument, useSignal, type QRL } from '@qwik.dev/core';
-import { Link, useLocation } from '@qwik.dev/router';
+import { $, component$, useOnDocument, useSignal, type QRL } from '@qwik.dev/core';
+import { Link } from '@qwik.dev/router';
 import { useAccount } from '../../routes/dashboard/layout';
-import { libraryHref, mySoundsPath, readStats, sortEntries, soundHref, type LibraryEntry, type LibraryModel, type Owner, type SortOrder } from '../../lib/sound-library';
+import { mySoundsPath, soundHref, type LibraryEntry, type LibraryModel, type LibraryView, type Owner, type SortOrder } from '../../lib/sound-library';
 import { formatCompact, formatLength } from '../../lib/sound-stats';
 import { GuildAvatar } from '../dashboard/guild-avatar';
 import { Icon } from '../dashboard/icons';
-import { readSource, type LibrarySource } from './library-source';
-import { Skeleton } from './library-states';
 import type { Playback, PlayHandler } from './sound-library';
 
 const PAGE = 40;
@@ -21,7 +19,6 @@ const SORTS: { value: SortOrder; label: string }[] = [
 ];
 
 const GuildPicker = component$<{ model: LibraryModel }>(({ model }) => {
-  const location = useLocation();
   const account = useAccount();
   const menu = useSignal<HTMLDetailsElement>();
   const current = model.guilds.find((guild) => guild.id === model.guildId);
@@ -49,7 +46,7 @@ const GuildPicker = component$<{ model: LibraryModel }>(({ model }) => {
       </summary>
       <ul class="listbox switcher__menu">
         <li>
-          <Link href={libraryHref(location.url, {}, mySoundsPath(null))} scroll={false} class="option" aria-current={!current ? 'page' : undefined} onClick$={close}>
+          <Link href={mySoundsPath(null)} scroll={false} class="option" aria-current={!current ? 'page' : undefined} onClick$={close}>
             <span class="avatar avatar--sm avatar--square sound-list__all" aria-hidden="true">∗</span>
             <span class="option__title">All servers</span>
             <span class="caption">{model.ownerCounts.all}</span>
@@ -57,7 +54,7 @@ const GuildPicker = component$<{ model: LibraryModel }>(({ model }) => {
         </li>
         {model.guilds.map((guild) => (
           <li key={guild.id}>
-            <Link href={libraryHref(location.url, {}, mySoundsPath(guild.id))} scroll={false} class="option" aria-current={guild.id === model.guildId ? 'page' : undefined} onClick$={close}>
+            <Link href={mySoundsPath(guild.id)} scroll={false} class="option" aria-current={guild.id === model.guildId ? 'page' : undefined} onClick$={close}>
               <GuildAvatar name={guild.name} iconUrl={iconOf(guild.id)} size="sm" />
               <span class="option__title">{guild.name}</span>
               <span class="caption">{guild.count}</span>
@@ -70,16 +67,14 @@ const GuildPicker = component$<{ model: LibraryModel }>(({ model }) => {
 });
 
 interface SoundRowsProps {
-  url: URL;
   model: LibraryModel;
   entries: LibraryEntry[];
   limit: number;
-  plays: Record<string, number> | null;
   playback: Playback;
   onPlay$: PlayHandler;
 }
 
-function SoundRows({ url, model, entries, limit, plays, playback, onPlay$ }: SoundRowsProps) {
+function SoundRows({ model, entries, limit, playback, onPlay$ }: SoundRowsProps) {
   const selectedId = model.selected?.sound.id;
   return (
     <>
@@ -97,7 +92,7 @@ function SoundRows({ url, model, entries, limit, plays, playback, onPlay$ }: Sou
             >
               <Icon name={active ? 'pause' : 'play'} />
             </button>
-            <Link href={soundHref(model, url, sound.id)} scroll={false} class="sound-row__main" aria-current={sound.id === selectedId ? 'true' : undefined}>
+            <Link href={soundHref(model, sound.id)} scroll={false} class="sound-row__main" aria-current={sound.id === selectedId ? 'true' : undefined}>
               <span class="sound-row__name">{sound.name}</span>
               <span class="sound-row__meta">
                 {model.scope === 'guild' && sound.ownedByMe && <span class="sound-row__mine">Yours</span>}
@@ -106,16 +101,10 @@ function SoundRows({ url, model, entries, limit, plays, playback, onPlay$ }: Sou
                 </span>
               </span>
             </Link>
-            {plays ? (
-              <span class="sound-row__plays" aria-label={`${plays[sound.id] ?? 0} plays`}>
-                <Icon name="play" />
-                {formatCompact(plays[sound.id] ?? 0)}
-              </span>
-            ) : (
-              <span class="sound-row__plays">
-                <Skeleton width="3ch" height="0.625rem" />
-              </span>
-            )}
+            <span class="sound-row__plays" aria-label={`${sound.plays} plays in total`} title="Plays in total">
+              <Icon name="play" />
+              {formatCompact(sound.plays)}
+            </span>
           </div>
         );
       })}
@@ -123,36 +112,14 @@ function SoundRows({ url, model, entries, limit, plays, playback, onPlay$ }: Sou
   );
 }
 
-interface StatRowsProps extends Omit<SoundRowsProps, 'plays' | 'url'> {
-  source: LibrarySource;
-}
-
-const StatRows = component$<StatRowsProps>(({ source, model, entries, limit, playback, onPlay$ }) => {
-  const location = useLocation();
-  const stats = readStats(readSource(source, location.url, true), model, location.url);
-  const plays = stats && !('failed' in stats) ? stats.plays : null;
-  const sorted = sortEntries(entries, model.sort, plays);
-  return (
-    <>
-      {model.sort === 'plays' && !plays && (
-        <p class="caption sound-list__note" role="status">
-          {stats ? 'Plays are unavailable right now, so sounds stay in name order.' : 'Sorting by plays…'}
-        </p>
-      )}
-      <SoundRows url={location.url} model={model} entries={sorted} limit={limit} plays={plays} playback={playback} onPlay$={onPlay$} />
-    </>
-  );
-});
-
 interface SoundListProps {
   model: LibraryModel;
-  source: LibrarySource;
+  view: LibraryView;
   playback: Playback;
   onPlay$: QRL<(soundId: string, url: string | null) => void>;
 }
 
-export const SoundList = component$<SoundListProps>(({ model, source, playback, onPlay$ }) => {
-  const location = useLocation();
+export const SoundList = component$<SoundListProps>(({ model, view, playback, onPlay$ }) => {
   const query = useSignal('');
   const limit = useSignal(PAGE);
   const search = query.value.trim().toLowerCase();
@@ -180,43 +147,46 @@ export const SoundList = component$<SoundListProps>(({ model, source, playback, 
         </label>
         <div class="sound-list__filters">
           {model.scope === 'guild' ? (
-            <nav class="filter-tabs" aria-label="Uploaded by">
+            <div class="filter-tabs" role="group" aria-label="Uploaded by">
               {OWNERS.map((owner) => (
-                <Link
+                <button
                   key={owner.value}
-                  href={libraryHref(location.url, { owner: owner.value === 'all' ? null : owner.value }, model.basePath)}
-                  scroll={false}
+                  type="button"
                   class="filter-tabs__item"
-                  aria-current={model.owner === owner.value ? 'page' : undefined}
+                  aria-pressed={model.owner === owner.value}
+                  onClick$={() => {
+                    view.owner = owner.value;
+                    limit.value = PAGE;
+                  }}
                 >
                   {owner.label}
                   <span class="filter-tabs__count">{model.ownerCounts[owner.value]}</span>
-                </Link>
+                </button>
               ))}
-            </nav>
+            </div>
           ) : (
             <GuildPicker model={model} />
           )}
-          <nav class="filter-tabs sound-list__sort" aria-label="Sort by">
+          <div class="filter-tabs sound-list__sort" role="group" aria-label="Sort by">
             <Icon name="sort" />
             {SORTS.map((sort) => (
-              <Link
+              <button
                 key={sort.value}
-                href={libraryHref(location.url, { sort: sort.value === 'name' ? null : sort.value })}
-                scroll={false}
+                type="button"
                 class="filter-tabs__item"
-                aria-current={model.sort === sort.value ? 'page' : undefined}
+                aria-pressed={model.sort === sort.value}
+                onClick$={() => {
+                  view.sort = sort.value;
+                }}
               >
                 {sort.label}
-              </Link>
+              </button>
             ))}
-          </nav>
+          </div>
         </div>
       </div>
       <div class="sound-list__body">
-        <Pending fallback$={() => <SoundRows url={location.url} model={model} entries={entries} limit={limit.value} plays={null} playback={playback} onPlay$={onPlay$} />}>
-          <StatRows source={source} model={model} entries={entries} limit={limit.value} playback={playback} onPlay$={onPlay$} />
-        </Pending>
+        <SoundRows model={model} entries={entries} limit={limit.value} playback={playback} onPlay$={onPlay$} />
         {entries.length > shown && (
           <div class="sound-list__more">
             <button

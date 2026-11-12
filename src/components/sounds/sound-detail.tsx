@@ -1,6 +1,6 @@
 import { $, component$, Pending } from '@qwik.dev/core';
-import { Link, useLocation } from '@qwik.dev/router';
-import { libraryHref, OTHER_GUILDS, readStats, UNKNOWN_GUILD, type LibraryEntry, type LibraryModel } from '../../lib/sound-library';
+import { Link } from '@qwik.dev/router';
+import { OTHER_GUILDS, readStats, UNKNOWN_GUILD, type DetailTab, type LibraryEntry, type LibraryModel, type LibraryView } from '../../lib/sound-library';
 import {
   formatAdded,
   formatAverage,
@@ -32,24 +32,36 @@ function weekdayOf(iso: string, timeZone: string) {
 interface PanelProps {
   model: LibraryModel;
   source: LibrarySource;
+  view: LibraryView;
   sound: Sound;
   guildName: string;
   votes: Record<string, VoteState>;
 }
 
-function PanelBar({ url, model, myPlays, scopeLabel }: { url: URL; model: LibraryModel; myPlays: number | null; scopeLabel: string }) {
-  const tabHref = (tab: 'everyone' | 'mine') => libraryHref(url, { tab: tab === 'mine' ? 'mine' : null });
+const TABS: { value: DetailTab; label: string }[] = [
+  { value: 'everyone', label: 'Everyone' },
+  { value: 'mine', label: 'Your plays' },
+];
+
+function PanelBar({ view, model, myPlays, scopeLabel }: { view: LibraryView; model: LibraryModel; myPlays: number | null; scopeLabel: string }) {
   return (
     <div class="sound-panel__bar">
-      <nav class="sound-tabs" aria-label="Sound analytics">
-        <Link href={tabHref('everyone')} scroll={false} class="sound-tabs__item" aria-current={model.tab === 'everyone' ? 'page' : undefined}>
-          Everyone
-        </Link>
-        <Link href={tabHref('mine')} scroll={false} class="sound-tabs__item" aria-current={model.tab === 'mine' ? 'page' : undefined}>
-          Your plays
-          {myPlays === null ? <Skeleton width="2ch" height="0.75rem" /> : <span class="badge">{formatCount(myPlays)}</span>}
-        </Link>
-      </nav>
+      <div class="sound-tabs" role="group" aria-label="Sound analytics">
+        {TABS.map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            class="sound-tabs__item"
+            aria-pressed={model.tab === tab.value}
+            onClick$={() => {
+              view.tab = tab.value;
+            }}
+          >
+            {tab.label}
+            {tab.value === 'mine' && (myPlays === null ? <Skeleton width="2ch" height="0.75rem" /> : <span class="badge">{formatCount(myPlays)}</span>)}
+          </button>
+        ))}
+      </div>
       <span class="caption">{scopeLabel}</span>
     </div>
   );
@@ -60,14 +72,13 @@ function scopeLabelOf(model: LibraryModel, guildName: string) {
   return `${scopeName} · ${model.period === 'all' ? 'all time' : `last ${PERIOD_LABELS[model.period]}`}`;
 }
 
-const SoundPanel = component$<PanelProps>(({ model, source, sound, guildName, votes }) => {
-  const location = useLocation();
+const SoundPanel = component$<PanelProps>(({ model, source, view: options, sound, guildName, votes }) => {
   const scopeLabel = scopeLabelOf(model, guildName);
-  const stats = readStats(readSource(source, location.url, true), model, location.url);
+  const stats = readStats(readSource(source, options.period, true), model, options);
   if (!stats || 'failed' in stats || !stats.view) {
     return (
       <>
-        <PanelBar url={location.url} model={model} myPlays={null} scopeLabel={scopeLabel} />
+        <PanelBar view={options} model={model} myPlays={null} scopeLabel={scopeLabel} />
         {stats && 'failed' in stats ? (
           <LoadError message={`Statistics are unavailable. ${stats.message}`} retrying={source.analytics.pending} onRetry$={$(() => source.analytics.invalidate())} />
         ) : (
@@ -88,7 +99,7 @@ const SoundPanel = component$<PanelProps>(({ model, source, sound, guildName, vo
 
   return (
     <>
-      <PanelBar url={location.url} model={model} myPlays={view.myPlays} scopeLabel={scopeLabel} />
+      <PanelBar view={options} model={model} myPlays={view.myPlays} scopeLabel={scopeLabel} />
         {model.tab === 'everyone' ? (
           <div class="sound-panel__body">
             <div class="stat-tiles">
@@ -243,14 +254,14 @@ const SoundPanel = component$<PanelProps>(({ model, source, sound, guildName, vo
 interface SoundDetailProps {
   model: LibraryModel;
   source: LibrarySource;
+  view: LibraryView;
   entry: LibraryEntry;
   votes: Record<string, VoteState>;
   playback: Playback;
   onPlay$: PlayHandler;
 }
 
-export const SoundDetail = component$<SoundDetailProps>(({ model, source, entry, votes, playback, onPlay$ }) => {
-  const location = useLocation();
+export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, entry, votes, playback, onPlay$ }) => {
   const { sound, guildName } = entry;
   const active = playback.id === sound.id;
   const scopeLabel = scopeLabelOf(model, guildName);
@@ -334,12 +345,12 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, entry,
         <Pending
           fallback$={() => (
             <>
-              <PanelBar url={location.url} model={model} myPlays={null} scopeLabel={scopeLabel} />
+              <PanelBar view={view} model={model} myPlays={null} scopeLabel={scopeLabel} />
               <PanelSkeleton />
             </>
           )}
         >
-          <SoundPanel model={model} source={source} sound={sound} guildName={guildName} votes={votes} />
+          <SoundPanel model={model} source={source} view={view} sound={sound} guildName={guildName} votes={votes} />
         </Pending>
       </div>
     </section>

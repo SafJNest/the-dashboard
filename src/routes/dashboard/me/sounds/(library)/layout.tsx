@@ -17,12 +17,9 @@ export const onGet: RequestHandler = async (event) => {
   const resolveValue = loaderResolver(event);
   const { guildId, soundId } = event.params;
   const legacyGuild = event.url.searchParams.get('guild');
-  if (legacyGuild !== null) {
-    const url = new URL(event.url);
-    url.searchParams.delete('guild');
-    const filter = guildId ?? (GUILD_ID.test(legacyGuild) ? legacyGuild : null);
-    const base = { basePath: mySoundsPath(filter) };
-    throw event.redirect(301, soundId ? soundHref(base, url, soundId) : `${base.basePath}${url.search}`);
+  if (event.url.search) {
+    const base = { basePath: mySoundsPath(guildId ?? (legacyGuild && GUILD_ID.test(legacyGuild) ? legacyGuild : null)) };
+    throw event.redirect(301, soundId ? soundHref(base, soundId) : base.basePath);
   }
   if (guildId !== undefined && !GUILD_ID.test(guildId)) throw event.error(404, GUILD_NOT_IN_LIBRARY);
   resolveValue(useMySoundAnalytics).catch(() => undefined);

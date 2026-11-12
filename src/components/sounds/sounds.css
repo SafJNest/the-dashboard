@@ -79,8 +79,11 @@
   gap: var(--bb-space-2);
   height: 1.875rem;
   padding: 0 var(--bb-space-3);
+  border: 0;
   border-radius: var(--bb-radius-pill);
+  background: transparent;
   color: var(--bb-fg-muted);
+  cursor: pointer;
   font: var(--bb-weight-medium) var(--bb-text-sm) / 1 var(--bb-font-ui);
   text-decoration: none;
   white-space: nowrap;
@@ -93,7 +96,8 @@
   color: var(--bb-fg-default);
 }
 
-.filter-tabs__item[aria-current="page"] {
+.filter-tabs__item[aria-current="page"],
+.filter-tabs__item[aria-pressed="true"] {
   background: var(--bb-accent-muted);
   box-shadow: inset 0 0 0 1px var(--bb-accent-border);
   color: var(--bb-fg-accent);
@@ -161,10 +165,6 @@
   align-items: center;
   gap: var(--bb-space-1);
   color: var(--bb-fg-subtle);
-}
-
-.sound-list__note {
-  padding: var(--bb-space-2) 0.625rem;
 }
 
 .sound-list__sort svg {
@@ -641,17 +641,21 @@
   align-items: center;
   gap: var(--bb-space-2);
   height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--bb-fg-muted);
+  cursor: pointer;
   font: var(--bb-weight-medium) var(--bb-text-md) / 1 var(--bb-font-ui);
   text-decoration: none;
 }
 
 .sound-tabs__item:hover,
-.sound-tabs__item[aria-current="page"] {
+.sound-tabs__item[aria-pressed="true"] {
   color: var(--bb-fg-default);
 }
 
-.sound-tabs__item[aria-current="page"]::after {
+.sound-tabs__item[aria-pressed="true"]::after {
   content: "";
   position: absolute;
   right: 0;

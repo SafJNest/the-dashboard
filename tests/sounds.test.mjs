@@ -136,49 +136,51 @@ test('library model needs only the library and keeps a stable name order', () =>
     period: '30d', guildId: '123',
     library: { guildId: '123', counts: { all: 3, mine: 2, others: 1 }, tags: [], summary: { period: '30d', plays: 0, previousPlays: null, playsChangePercent: null, listeners: 0, likes: 0, myPlays: 0 }, sounds: [sound, mineSound, twin] },
   };
-  const base = library.guildLibraryModel(data, new URL('https://x.test/dashboard/123/sounds/'), undefined, 'Night Shift');
+  const base = library.guildLibraryModel(data, undefined, 'Night Shift');
   assert.deepEqual(base.entries.map((entry) => entry.sound.id), ['42', '7', '43']);
   assert.equal(base.selected.sound.id, '42');
   assert.equal(base.sort, 'name');
 
-  const mine = library.guildLibraryModel(data, new URL('https://x.test/dashboard/123/sounds/?owner=mine'), undefined, 'Night Shift');
+  const mine = library.guildLibraryModel(data, undefined, 'Night Shift', { owner: 'mine', sort: 'name', tab: 'everyone', period: null });
   assert.deepEqual(mine.entries.map((entry) => entry.sound.id), ['7', '43']);
   assert.equal(mine.selected.sound.id, '7');
   assert.deepEqual(mine.ownerCounts, { all: 3, mine: 2, others: 1 });
 
-  const filtered = library.guildLibraryModel(data, new URL('https://x.test/dashboard/123/sounds/42/?owner=mine'), '42', 'Night Shift');
+  const filtered = library.guildLibraryModel(data, '42', 'Night Shift', { owner: 'mine', sort: 'plays', tab: 'mine', period: null });
+  assert.equal(filtered.sort, 'plays');
+  assert.equal(filtered.tab, 'mine');
   assert.equal(filtered.selected.sound.id, '42');
   assert.equal(filtered.missing, false);
 
-  const missing = library.guildLibraryModel(data, new URL('https://x.test/dashboard/123/sounds/999/'), '999', 'Night Shift');
+  const missing = library.guildLibraryModel(data, '999', 'Night Shift');
   assert.equal(missing.selected, null);
   assert.equal(missing.missing, true);
 
   const analytics = { guildId: '123', period: '30d', timezone: 'Europe/Rome', summary: {}, playsPerDay: [], topSounds: [{ soundId: '43', value: 3 }], mostLiked: [], users: [], sounds: [{ soundId: '43', ...aggregate(9), likes: 0, dislikes: 0, my: { plays: 0, history: [], nextCursor: null } }] };
   const stats = library.guildLibraryStats(base, { period: '30d', analytics });
   assert.deepEqual(stats.overview.top, [{ id: '43', name: 'bonk', detail: 'you', value: 3 }]);
-  assert.deepEqual(library.sortEntries(base.entries, 'plays', stats.plays).map((entry) => entry.sound.id), ['43', '42', '7']);
-  assert.equal(library.sortEntries(base.entries, 'plays', null), base.entries);
+  const byPlays = library.guildLibraryModel({ ...data, library: { ...data.library, sounds: [sound, { ...mineSound, plays: 9000 }, { ...twin, plays: 1 }] } }, undefined, 'Night Shift', { owner: 'all', sort: 'plays', tab: 'everyone', period: null });
+  assert.deepEqual(byPlays.entries.map((entry) => entry.sound.id), ['43', '42', '7']);
+  assert.equal(byPlays.selected.sound.id, '43');
 
-  assert.equal(library.soundHref(base, new URL('https://x.test/dashboard/123/sounds/?owner=mine&tab=mine'), '43'), '/dashboard/123/sounds/43/?owner=mine&tab=mine');
-  assert.equal(library.libraryHref(new URL('https://x.test/a/1/?owner=mine'), { owner: null }, '/a/'), '/a/');
+  assert.equal(library.soundHref(base, '43'), '/dashboard/123/sounds/43/');
 });
 
 test('library state separates stale, updating and failed results', () => {
   const sound = parseSound(rawSound);
   const libraryData = { guildId: '123', counts: { all: 1, mine: 0, others: 1 }, tags: [], summary: { period: '30d', plays: 0, previousPlays: null, playsChangePercent: null, listeners: 0, likes: 0, myPlays: 0 }, sounds: [sound] };
   const load = (data, guildId = '123') => ({ scope: 'guild', guildId, guildName: 'Night Shift', library: data });
-  const url = new URL('https://x.test/dashboard/123/sounds/');
-  assert.equal(library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }), url, {}).status, 'ready');
-  assert.equal(library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }, '456'), url, {}).status, 'stale');
-  assert.equal(library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }), new URL('https://x.test/dashboard/123/sounds/?period=7d'), {}).updating, true);
-  const failed = library.readLibrary(load({ failed: true, status: 503, message: 'Down', retryAfter: null, period: '30d', guildId: '123' }), url, {});
+  const later = { owner: 'all', sort: 'name', tab: 'everyone', period: '7d' };
+  assert.equal(library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }), {}).status, 'ready');
+  assert.equal(library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }, '456'), {}).status, 'stale');
+  assert.equal(library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }), {}, later).updating, true);
+  const failed = library.readLibrary(load({ failed: true, status: 503, message: 'Down', retryAfter: null, period: '30d', guildId: '123' }), {});
   assert.equal(failed.status, 'failed');
   assert.equal(failed.failure.message, 'Down');
-  const ready = library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }), url, {});
+  const ready = library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }), {});
   const stats = { period: '30d', guildId: '123', analytics: { guildId: '123', period: '30d', timezone: 'UTC', summary: {}, playsPerDay: [], topSounds: [], mostLiked: [], users: [], sounds: [] } };
-  assert.equal(library.readStats({ ...load(null), analytics: stats }, ready.model, new URL('https://x.test/dashboard/123/sounds/?period=7d')), null);
-  assert.equal(library.readStats({ ...load(null), analytics: stats }, ready.model, url).timezone, 'UTC');
+  assert.equal(library.readStats({ ...load(null), analytics: stats }, ready.model, later), null);
+  assert.equal(library.readStats({ ...load(null), analytics: stats }, ready.model).timezone, 'UTC');
 });
 
 test('the personal library filters by the guild in the path', () => {
@@ -188,14 +190,14 @@ test('the personal library filters by the guild in the path', () => {
     period: '30d', guildId: null,
     library: { counts: { all: 2 }, tags: [], summary: { period: '30d', plays: 0, previousPlays: null, playsChangePercent: null, listeners: 0, likes: 0, myPlays: 0 }, guilds: [{ guildId: '123', name: 'Night Shift', sounds: [sound] }, { guildId: '789', name: null, sounds: [other] }] },
   };
-  const all = library.myLibraryModel(data, new URL('https://x.test/dashboard/me/sounds/'), undefined, undefined);
+  const all = library.myLibraryModel(data, undefined, undefined);
   assert.deepEqual(all.entries.map((entry) => entry.sound.id), ['42', '50']);
   assert.equal(all.basePath, '/dashboard/me/sounds/');
-  const scoped = library.myLibraryModel(data, new URL('https://x.test/dashboard/me/sounds/guild/123/'), undefined, '123');
+  const scoped = library.myLibraryModel(data, undefined, '123');
   assert.deepEqual(scoped.entries.map((entry) => entry.sound.id), ['42']);
   assert.equal(scoped.basePath, '/dashboard/me/sounds/guild/123/');
-  assert.equal(library.soundHref(scoped, new URL('https://x.test/dashboard/me/sounds/guild/123/?period=7d'), '42'), '/dashboard/me/sounds/guild/123/42/?period=7d');
-  const unknown = library.myLibraryModel(data, new URL('https://x.test/dashboard/me/sounds/guild/555/'), undefined, '555');
+  assert.equal(library.soundHref(scoped, '42'), '/dashboard/me/sounds/guild/123/42/');
+  const unknown = library.myLibraryModel(data, undefined, '555');
   assert.equal(unknown.guildMissing, true);
   assert.equal(unknown.selected, null);
   assert.equal(all.guilds.find((group) => group.id === '789').name, 'Unavailable server');
