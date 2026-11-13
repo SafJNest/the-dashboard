@@ -1,15 +1,11 @@
 import { component$, type QRL } from '@qwik.dev/core';
-import { Icon } from '../dashboard/icons';
+import { Bee } from '../bee/bee';
+import { Skeleton } from '../skeleton/skeleton';
+
+export { Skeleton };
 
 const TILES = ['Plays', 'Listeners', 'Likes', 'Your plays'];
 const ROWS = Array.from({ length: 8 }, (_, index) => index);
-
-export function Skeleton({ width, height }: { width?: string; height?: string }) {
-  const style: Record<string, string> = {};
-  if (width) style['--skeleton-width'] = width;
-  if (height) style['--skeleton-height'] = height;
-  return <span class="skeleton" style={style} aria-hidden="true" />;
-}
 
 export function SummarySkeleton() {
   return (
@@ -132,7 +128,9 @@ interface LoadErrorProps {
 
 export const LoadError = component$<LoadErrorProps>(({ message, retrying, onRetry$ }) => (
   <div class="callout callout--danger load-error" role="alert">
-    <Icon name="warning" />
+    <span class="load-error__bee bee-host" aria-hidden="true">
+      <Bee flight="tile" size={26} dizzy />
+    </span>
     <div class="load-error__body">
       <p>{message}</p>
       {onRetry$ && (

@@ -6,6 +6,7 @@ import { peekValue } from '../../lib/loader-value';
 import { formatChange, formatCount } from '../../lib/sound-stats';
 import { PERIOD_COOKIE, PERIOD_LABELS, PERIODS, type Period, type VoteState } from '../../lib/sounds';
 import { readSource, type LibrarySource } from './library-source';
+import { EmptyState } from '../empty-state/empty-state';
 import { ChartsSkeleton, LoadError, Skeleton, SummarySkeleton, WorkSkeleton } from './library-states';
 import { LineChart, RankList } from './sound-charts';
 import { SoundDetail } from './sound-detail';
@@ -16,6 +17,7 @@ export interface Playback {
   id: string | null;
   loading: boolean;
   failed: string | null;
+  duration: number | null;
 }
 
 export type PlayHandler = QRL<(soundId: string, url: string | null) => void>;
@@ -74,10 +76,11 @@ const LibraryWork = component$<LibraryWorkProps>(({ source, view, playback, vote
   const { model } = state;
   if (model.guildMissing) {
     return (
-      <div class="card sounds__empty" role="alert">
-        <p class="heading heading--sm">This server isn't in your library</p>
-        <p class="text-muted">You haven't uploaded sounds there, or the server is no longer available.</p>
-        <Link href={model.rootPath} class="button button--secondary">All servers</Link>
+      <div class="card sounds__empty">
+        <EmptyState icon="servers" title="This server isn't in your library" role="alert">
+          You haven't uploaded sounds there, or the server is no longer available.
+          <Link q:slot="actions" href={model.rootPath} class="button button--secondary">All servers</Link>
+        </EmptyState>
       </div>
     );
   }
@@ -85,17 +88,19 @@ const LibraryWork = component$<LibraryWorkProps>(({ source, view, playback, vote
     <div class="sounds__work">
       <SoundList model={model} view={view} playback={playback} onPlay$={onPlay$} />
       {model.missing ? (
-        <div class="card sounds__empty" role="alert">
-          <p class="heading heading--sm">Sound not found</p>
-          <p class="text-muted">This sound doesn't exist in this library, or you can't see it anymore.</p>
-          <Link href={model.basePath} scroll={false} class="button button--secondary">Back to the library</Link>
+        <div class="card sounds__empty">
+          <EmptyState icon="sounds" title="Sound not found" role="alert">
+            This sound doesn't exist in this library, or you can't see it anymore.
+            <Link q:slot="actions" href={model.basePath} scroll={false} class="button button--secondary">Back to the library</Link>
+          </EmptyState>
         </div>
       ) : model.selected ? (
         <SoundDetail model={model} source={source} view={view} entry={model.selected} votes={votes} playback={playback} onPlay$={onPlay$} />
       ) : (
         <div class="card sounds__empty">
-          <p class="heading heading--sm">No sounds yet</p>
-          <p class="text-muted">{model.scope === 'guild' ? 'Nobody has uploaded a sound to this server yet.' : "You haven't uploaded any sound yet."}</p>
+          <EmptyState icon="sounds" title="No sounds yet" flight="patrol">
+            {model.scope === 'guild' ? 'Nobody has uploaded a sound to this server yet.' : "You haven't uploaded any sound yet."}
+          </EmptyState>
         </div>
       )}
     </div>
@@ -169,7 +174,7 @@ export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) =
   const votes = useStore<Record<string, VoteState>>({});
   const view = useStore<LibraryView>({ ...DEFAULT_VIEW });
   const audio = useSignal<HTMLAudioElement>();
-  const playback = useStore<Playback>({ id: null, loading: false, failed: null });
+  const playback = useStore<Playback>({ id: null, loading: false, failed: null, duration: null });
   const attempt = useSignal(0);
   const period = view.period ?? peekValue<{ period: Period }>(source.library)?.period ?? null;
 
@@ -183,6 +188,7 @@ export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) =
     }
     playback.id = null;
     playback.loading = false;
+    playback.duration = null;
   });
 
   const scope = useComputed$(() => (source.scope === 'guild' ? source.guildId : 'me'));
@@ -217,6 +223,7 @@ export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) =
     playback.id = soundId;
     playback.loading = true;
     playback.failed = null;
+    playback.duration = null;
     try {
       await element.play();
     } catch {
@@ -254,8 +261,9 @@ export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) =
       <audio
         ref={audio}
         preload="none"
-        onPlaying$={() => {
+        onPlaying$={(_, element) => {
           playback.loading = false;
+          if (Number.isFinite(element.duration)) playback.duration = element.duration;
         }}
         onWaiting$={() => {
           if (playback.id) playback.loading = true;

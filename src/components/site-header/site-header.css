@@ -1,45 +1,73 @@
 .site-header {
-  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--bb-space-6);
-  padding: var(--bb-space-4) var(--bb-gutter);
+  gap: var(--bb-space-4) var(--bb-space-6);
+  min-height: 4rem;
+  padding: var(--bb-space-2) var(--bb-gutter);
+}
+
+.site-header__end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--bb-space-2);
+  margin-left: auto;
 }
 
 .site-header__nav {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bb-space-1);
+}
+
+.site-header__link {
+  display: inline-flex;
   align-items: center;
   gap: var(--bb-space-2);
+  height: var(--bb-control-md);
+  padding: 0 var(--bb-space-3);
+  border-radius: var(--bb-radius-pill);
+  color: var(--bb-fg-muted);
+  font-size: var(--bb-text-md);
+  font-weight: var(--bb-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.site-header__actions {
-  display: flex;
-  gap: var(--bb-space-2);
+.site-header__link:hover {
+  background: var(--bb-bg-hover);
+  color: var(--bb-fg-default);
 }
 
-.site-header__actions .button:disabled {
+.site-header__link[aria-current="page"] {
+  color: var(--bb-fg-default);
+}
+
+.site-header__link[aria-current="page"]::before {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--bb-accent);
+  box-shadow: var(--bb-glow-sm);
+}
+
+.site-header__separator {
+  width: 1px;
+  height: 1.25rem;
+  margin-inline: var(--bb-space-2);
+  background: var(--bb-border-default);
+}
+
+.site-header__end .button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
 
-@media (max-width: 52rem) {
-  .site-header {
-    row-gap: var(--bb-space-2);
-  }
-
-  .site-header__nav {
-    order: 3;
-    flex-wrap: nowrap;
-    width: calc(100% + 2 * var(--bb-space-3));
-    margin-inline: calc(var(--bb-space-3) * -1);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .site-header__nav::-webkit-scrollbar {
+@media (max-width: 40rem) {
+  .site-header__separator {
     display: none;
   }
 }

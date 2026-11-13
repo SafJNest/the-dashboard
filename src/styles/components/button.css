@@ -1,0 +1,87 @@
+.button {
+  --button-bg: var(--bb-bg-raised);
+  --button-bg-hover: var(--bb-bg-overlay);
+  --button-fg: var(--bb-fg-default);
+  --button-border: var(--bb-border-default);
+  --button-height: var(--bb-control-md);
+  --button-padding: var(--bb-space-5);
+  --button-glow: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--bb-space-2);
+  height: var(--button-height);
+  padding: 0 var(--button-padding);
+  border: 1px solid var(--button-border);
+  border-radius: var(--bb-radius-pill);
+  background: var(--button-bg);
+  color: var(--button-fg);
+  font: var(--bb-weight-medium) var(--bb-text-md) / 1 var(--bb-font-ui);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--bb-duration-fast) var(--bb-ease-out),
+    box-shadow var(--bb-duration-base) var(--bb-ease-out),
+    transform var(--bb-duration-fast) var(--bb-ease-out);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.button:hover {
+  background: var(--button-bg-hover);
+  box-shadow: var(--button-glow);
+  color: var(--button-fg);
+}
+
+.button--primary {
+  --button-bg: var(--bb-accent);
+  --button-bg-hover: var(--bb-accent-hover);
+  --button-fg: var(--bb-fg-on-accent);
+  --button-border: transparent;
+  --button-glow: var(--bb-glow-md);
+
+  font-weight: var(--bb-weight-semibold);
+}
+
+.button--secondary {
+  --button-bg: transparent;
+  --button-bg-hover: var(--bb-bg-hover);
+  --button-border: var(--bb-border-strong);
+}
+
+.button--ghost {
+  --button-bg: transparent;
+  --button-bg-hover: var(--bb-bg-hover);
+  --button-border: transparent;
+  --button-fg: var(--bb-fg-muted);
+}
+
+.button--lg {
+  --button-height: var(--bb-control-lg);
+  --button-padding: var(--bb-space-6);
+
+  font-size: var(--bb-text-lg);
+}
+
+.button svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  box-shadow: none;
+}
+
+.button--sm {
+  --button-height: var(--bb-control-sm);
+  --button-padding: var(--bb-space-3);
+
+  font-size: var(--bb-text-sm);
+}

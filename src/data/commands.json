@@ -1,0 +1,1813 @@
+{
+    "connect": {
+        "alias": [
+            "join",
+            "comeherebroda"
+        ],
+        "help": "Connect the bot to your current voice channel.",
+        "category": "Audio",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": false
+    },
+    "disconnect": {
+        "alias": [
+            "bye",
+            "fuckoff"
+        ],
+        "help": "Disconnect the bot from it's current voice channel (or mention user).",
+        "category": "Audio",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "member",
+                "description": "Member to disconnect",
+                "required": false
+            }
+        ]
+    },
+    "listuser": {
+        "alias": [
+            "papyrususer",
+            "paperuser",
+            "listoideuser"
+        ],
+        "help": "Show all the sounds of a user (or yourself if left blank).",
+        "category": "Audio",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": false
+    },
+    "playyoutube": {
+        "alias": [
+            "y",
+            "py",
+            "yt"
+        ],
+        "help": "Play a video from youtube.",
+        "category": "Audio Queue",
+        "arguments": "[link/name video]",
+        "cooldown": "2",
+        "text": true,
+        "slash": false
+    },
+    "playyoutubeforce": {
+        "alias": [
+            "yf",
+            "pyf",
+            "ytf"
+        ],
+        "help": "Play a video from youtube ignoring the current queue.",
+        "longhelp": "Play a video from youtube.",
+        "category": "Audio Queue",
+        "arguments": "[link/name video]",
+        "cooldown": "2",
+        "text": true,
+        "slash": false
+    },
+    "playsound": {
+        "alias": [
+            "p",
+            "ps"
+        ],
+        "help": "Play a custom sound.",
+        "longhelp": "Play a custom sound.\nYou can upload a sound using **/upload**",
+        "category": "Audio",
+        "arguments": "[CommandName] [soundName]",
+        "text": true,
+        "slash": false
+    },
+    "tts": {
+        "alias": [
+            "t"
+        ],
+        "help": "Text to speech.",
+        "category": "Audio",
+        "arguments": "[CommandName] [text]",
+        "cooldown": "2",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "text",
+                "description": "Text to be read",
+                "required": true
+            },
+            {
+                "name": "voice",
+                "description": "Reader's voice (also language)",
+                "required": false
+            }
+        ]
+    },
+    "soundboard": {
+        "alias": [
+            "sb"
+        ],
+        "help": "Create, select and manage soundboards.",
+        "longhelp": "A soundboard is a message with buttons that allows you to play sounds. You can create, select and manage soundboards.",
+        "category": "Audio",
+        "text": true,
+        "slash": true,
+        "children": {
+            "create": {
+                "help": "Create a new soundboard.",
+                "longhelp": "You can create a soundboard up to 25 sounds.\nTo save it insert a name, otherwise would be temporary.",
+                "options": [
+                    {
+                        "name": "name",
+                        "description": "Leave blank to not save the soundboard.",
+                        "required": false
+                    },
+                    {
+                        "name": "thumbnail",
+                        "description": "Thumbnail for the soundboard.",
+                        "required": false
+                    }
+                ]
+            },
+            "play": {
+                "help": "Play an existing soundboard.",
+                "options": [
+                    {
+                        "name": "name",
+                        "description": "Soundboard to play",
+                        "required": true
+                    }
+                ]
+            },
+            "add": {
+                "help": "Add a sound to an existing soundboard.",
+                "options": [
+                    {
+                        "name": "soundboard_name",
+                        "description": "Soundboard to add the sound(s) to.",
+                        "required": true
+                    }
+                ]
+            },
+            "remove": {
+                "help": "Remove a sound from an existing soundboard.",
+                "options": [
+                    {
+                        "name": "name",
+                        "description": "Name of soundboard to change",
+                        "required": true
+                    },
+                    {
+                        "name": "sound_remove",
+                        "description": "Sound to remove",
+                        "required": true
+                    }
+                ]
+            },
+            "delete": {
+                "help": "Delete an existing soundboard.",
+                "options": [
+                    {
+                        "name": "name",
+                        "description": "Soundboard to delete",
+                        "required": true
+                    }
+                ]
+            },
+            "thumbnail": {
+                "help": "Set the thumbnail of an existing soundboard.",
+                "options": [
+                    {
+                        "name": "soundboard_name",
+                        "description": "Soundboard to add the sound(s) to.",
+                        "required": true
+                    },
+                    {
+                        "name": "thumbnail",
+                        "description": "Thumbnail for the soundboard.",
+                        "required": true
+                    }
+                ]
+            }
+        }
+    },
+    "sound": {
+        "help": "Upload, download and manage your sounds.",
+        "category": "Audio",
+        "text": false,
+        "slash": true,
+        "children": {
+            "customize": {
+                "help": "Modify a custom sound",
+                "longhelp": "Allow to modify the name, manage tags and if a sound is public or not.\nN.B. You can only modify your sounds.",
+                "options": [
+                    {
+                        "name": "user_sound",
+                        "description": "Sound to modify (name or id)",
+                        "required": true
+                    }
+                ]
+            },
+            "delete": {
+                "help": "Delete a sound from the soundboard.",
+                "options": [
+                    {
+                        "name": "user_sound",
+                        "description": "Sound to delete",
+                        "required": true
+                    }
+                ]
+            },
+            "download": {
+                "help": "Download a sound from the soundboard.",
+                "options": [
+                    {
+                        "name": "sound",
+                        "description": "Sound to download",
+                        "required": true
+                    }
+                ]
+            },
+            "upload": {
+                "help": "Upload a sound to the soundboard.",
+                "longhelp": "Upload a sound to the soundboard.\nThe supported format are .mp3 and .opus, up to 1MB.\nYou can also insert 5 tags for an easier search.",
+                "options": [
+                    {
+                        "name": "name",
+                        "description": "Sound name",
+                        "required": true
+                    },
+                    {
+                        "name": "file",
+                        "description": "Sound file (mp3 or opus)",
+                        "required": true
+                    },
+                    {
+                        "name": "public",
+                        "description": "true or false",
+                        "required": false
+                    },
+                    {
+                        "name": "tag-1",
+                        "description": "Tag",
+                        "required": false
+                    },
+                    {
+                        "name": "tag-2",
+                        "description": "Tag",
+                        "required": false
+                    },
+                    {
+                        "name": "tag-3",
+                        "description": "Tag",
+                        "required": false
+                    },
+                    {
+                        "name": "tag-4",
+                        "description": "Tag",
+                        "required": false
+                    },
+                    {
+                        "name": "tag-5",
+                        "description": "Tag",
+                        "required": false
+                    }
+                ]
+            }
+        }
+    },
+    "stop": {
+        "alias": [
+            "stp",
+            "donteventhinkaboutit"
+        ],
+        "help": "Stop the bot from playing.",
+        "category": "Audio Queue",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true
+    },
+    "pause": {
+        "help": "Pause the playing audio.",
+        "category": "Audio Queue",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true
+    },
+    "resume": {
+        "help": "Resume the playing audio.",
+        "category": "Audio Queue",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true
+    },
+    "player": {
+        "alias": [
+            "pl"
+        ],
+        "help": "Show the current player.",
+        "category": "Audio Queue",
+        "arguments": "[CommandName]",
+        "cooldown": "2",
+        "text": true,
+        "slash": true
+    },
+    "queue": {
+        "alias": [
+            "q"
+        ],
+        "help": "Show the current queue.",
+        "category": "Audio Queue",
+        "arguments": "[CommandName]",
+        "cooldown": "2",
+        "text": true,
+        "slash": true
+    },
+    "skip": {
+        "alias": [
+            "s",
+            "skipper"
+        ],
+        "help": "Skip the current track.",
+        "category": "Audio Queue",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true
+    },
+    "previous": {
+        "alias": [
+            "prev"
+        ],
+        "help": "Go back to the previous track.",
+        "category": "Audio Queue",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true
+    },
+    "list": {
+        "help": "Show the sounds uploaded to the soundboard.",
+        "category": "Audio",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true,
+        "children": {
+            "user": {
+                "help": "Show all the sounds of a user.",
+                "options": [
+                    {
+                        "name": "user",
+                        "description": "User to get the list of",
+                        "required": true
+                    }
+                ]
+            },
+            "guild": {
+                "help": "Show all the sounds uploaded in this guild."
+            }
+        }
+    },
+    "play": {
+        "help": "Play a sound from the soundboard or a video from youtube.",
+        "category": "Audio Queue",
+        "text": false,
+        "slash": true,
+        "children": {
+            "sound": {
+                "help": "Play a sound from the soundboard.",
+                "options": [
+                    {
+                        "name": "sound",
+                        "description": "Sound to play",
+                        "required": true
+                    }
+                ]
+            },
+            "youtube": {
+                "help": "Play a video from youtube.",
+                "cooldown": "2",
+                "options": [
+                    {
+                        "name": "video",
+                        "description": "Video/Playlist link or video name",
+                        "required": true
+                    },
+                    {
+                        "name": "timing",
+                        "description": "When to play the track",
+                        "required": false
+                    }
+                ]
+            }
+        }
+    },
+    "greet": {
+        "help": "Set/Unset your greet sound.",
+        "longhelp": "set or unset your greet sound from the soundboard. You can specify if the greet is going to be guild specific or global\nYou can use your sounds or the public ones.",
+        "category": "Audio",
+        "text": false,
+        "slash": true,
+        "children": {
+            "set": {
+                "help": "Set your greet sound.",
+                "options": [
+                    {
+                        "name": "sound",
+                        "description": "Sound to use",
+                        "required": true
+                    },
+                    {
+                        "name": "global",
+                        "description": "true for global, false for guild only, false by default",
+                        "required": false
+                    }
+                ]
+            },
+            "unset": {
+                "help": "Unset your greet sound.",
+                "options": [
+                    {
+                        "name": "global",
+                        "description": "true for global, false for guild only, false by default",
+                        "required": false
+                    }
+                ]
+            },
+            "view": {
+                "help": "View and manage your greet sounds."
+            }
+        }
+    },
+    "jumpto": {
+        "alias": [
+            "jump",
+            "jt",
+            "j"
+        ],
+        "help": "Jump to a specific track in the queue.",
+        "category": "Audio Queue",
+        "arguments": "[CommandName]",
+        "cooldown": "2",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "position",
+                "description": "Select a song from the queue",
+                "required": true
+            }
+        ]
+    },
+    "search": {
+        "help": "Search youtube for videos.",
+        "longhelp": "Currently, you can only search for youtube videos or sounds from the soundboard.",
+        "category": "Audio",
+        "text": false,
+        "slash": true,
+        "children": {
+            "sound": {
+                "help": "Search a sound from the soundboard.",
+                "longhelp": "Search a sound from the soundboard.\nYou can also search for a specific user or using tags.",
+                "options": [
+                    {
+                        "name": "query",
+                        "description": "What are you looking for",
+                        "required": true
+                    },
+                    {
+                        "name": "author",
+                        "description": "Who uploaded the sound",
+                        "required": false
+                    }
+                ]
+            },
+            "youtube": {
+                "help": "Search youtube for videos.",
+                "cooldown": "2",
+                "options": [
+                    {
+                        "name": "query",
+                        "description": "Video name",
+                        "required": true
+                    }
+                ]
+            }
+        }
+    },
+    "playlist": {
+        "help": "Manage custom playlists.",
+        "category": "Audio",
+        "text": false,
+        "slash": true,
+        "children": {
+            "create": {
+                "help": "Create a new custom playlist.",
+                "options": [
+                    {
+                        "name": "name",
+                        "description": "Name of the playlist to create",
+                        "required": true
+                    },
+                    {
+                        "name": "load",
+                        "description": "Load the current queue in the newly created playlist",
+                        "required": false
+                    }
+                ]
+            },
+            "addsong": {
+                "help": "Add a song to one of your custom playlists.",
+                "options": [
+                    {
+                        "name": "playlist-name",
+                        "description": "Name of your playlist to add a track to",
+                        "required": true
+                    },
+                    {
+                        "name": "url",
+                        "description": "URL of the track to add to the playlist",
+                        "required": true
+                    }
+                ]
+            },
+            "addqueue": {
+                "help": "Add the current queue to one of your custom playlists.",
+                "options": [
+                    {
+                        "name": "playlist-name",
+                        "description": "Name of the custom playlist",
+                        "required": true
+                    }
+                ]
+            },
+            "play": {
+                "help": "Add on of your custom playlists to the queue.",
+                "options": [
+                    {
+                        "name": "playlist-name",
+                        "description": "Name of the custom playlist",
+                        "required": true
+                    },
+                    {
+                        "name": "timing",
+                        "description": "When to play the track",
+                        "required": false
+                    }
+                ]
+            },
+            "removesong": {
+                "help": "Remove a song from one of your custom playlists.",
+                "options": [
+                    {
+                        "name": "playlist-name",
+                        "description": "Name of the custom playlist",
+                        "required": true
+                    },
+                    {
+                        "name": "playlist-song",
+                        "description": "Name of the song to remove",
+                        "required": true
+                    }
+                ]
+            },
+            "delete": {
+                "help": "Delete one of your custom playlists.",
+                "options": [
+                    {
+                        "name": "name",
+                        "description": "Name of the playlist to delete",
+                        "required": true
+                    }
+                ]
+            },
+            "list": {
+                "help": "List your custom playlists."
+            },
+            "view": {
+                "help": "View the songs in one of your custom playlists.",
+                "options": [
+                    {
+                        "name": "playlist-name",
+                        "description": "Name of the custom playlist",
+                        "required": true
+                    }
+                ]
+            },
+            "order": {
+                "help": "Modify the order of your songs in one playlist.",
+                "options": [
+                    {
+                        "name": "playlist-name",
+                        "description": "Name of the custom playlist",
+                        "required": true
+                    },
+                    {
+                        "name": "playlist-song",
+                        "description": "Name of the song to order",
+                        "required": true
+                    },
+                    {
+                        "name": "playlist-order",
+                        "description": "Position or song to replace",
+                        "required": true
+                    },
+                    {
+                        "name": "order",
+                        "description": "How to order the songs",
+                        "required": true
+                    }
+                ]
+            }
+        }
+    },
+    "channelinfo": {
+        "alias": [
+            "infochannel",
+            "ci",
+            "ic",
+            "channel"
+        ],
+        "help": "Show information of a channel.",
+        "category": "Server Management",
+        "arguments": "[channelinfo] [#channel/channel ID]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "channel",
+                "description": "Channel to get information on",
+                "required": false
+            }
+        ]
+    },
+    "clear": {
+        "help": "Delete messages in a channel (max 99).",
+        "category": "Server Management",
+        "arguments": "[clear] [numberMessages]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "value",
+                "description": "Number of messages to delete (max 100)",
+                "required": true
+            }
+        ]
+    },
+    "emojiinfo": {
+        "alias": [
+            "em",
+            "eminf"
+        ],
+        "help": "Show information of an emoji.",
+        "category": "Server Management",
+        "arguments": "[emoji] [emojiName, emoji]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "name",
+                "description": "Emoji/Sticker to get information on",
+                "required": true
+            }
+        ]
+    },
+    "serverinfo": {
+        "alias": [
+            "servinfo",
+            "serinf"
+        ],
+        "help": "Show information of the server.",
+        "longhelp": "Show information of a member.",
+        "category": "Server Management",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "rolecharnumber",
+                "description": "Max number of charachters the roles filed can be (1 to 1024)",
+                "required": false
+            }
+        ]
+    },
+    "memberinfo": {
+        "alias": [
+            "usinf",
+            "uinfo",
+            "userinfo",
+            "userstats",
+            "stats"
+        ],
+        "help": "Show information of a member.",
+        "category": "Server Management",
+        "arguments": "[userinfo] [@user]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "user",
+                "description": "User to get information on",
+                "required": false
+            },
+            {
+                "name": "rolecharnumber",
+                "description": "Max number of charachters the roles filed can be (1 to 1024)",
+                "required": false
+            }
+        ]
+    },
+    "leaderboard": {
+        "help": "Show the server's leaderboard.",
+        "category": "Server Management",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "limit",
+                "description": "positions limit",
+                "required": false
+            }
+        ]
+    },
+    "voice": {
+        "help": "Set a default tts voice.",
+        "category": "Settings",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "voice",
+                "description": "Voice name",
+                "required": true
+            }
+        ]
+    },
+    "prefix": {
+        "alias": [],
+        "help": "Change the prefix",
+        "category": "Settings",
+        "arguments": "[CommandName] [new Prefix]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "prefix",
+                "description": "New Prefix",
+                "required": true
+            }
+        ]
+    },
+    "welcome": {
+        "help": "Create a welcome message for this guild.",
+        "longhelp": "Allow to set a 'welcome message' that would be sent every time a user join the server. Its necessary to set a channel, if not the system one would be used.\nThe bot allows you to choose if the message will be sent in the channel, in the user's DM or both.\n\nTo mention the user write #user, the role write #role",
+        "category": "Settings",
+        "text": false,
+        "slash": true
+    },
+    "reward": {
+        "help": "Create a reward for this guild.",
+        "longhelp": "Allow to set a reward for the leveling up system. A message will be sent every time a user reach a certain level and one or more roles will be given.\nThe message will be sent in the current channel.\nYou can also choose if the message will be sent in the channel, in the user's DM or both.\n\nTo mention the user write #user, the level write #level, the role write #role.",
+        "category": "Settings",
+        "text": false,
+        "slash": true
+    },
+    "leave": {
+        "help": "Create a leave message for this guild.",
+        "longhelp": "Allow to set a 'leave message' that would be sent every time a user leaves the server. Its necessary to set a channel, if not the system one would be used.\nThe bot allows you to choose if the message will be sent in the channel, in the user's DM or both.\n\nTo mention the user write #user",
+        "category": "Settings",
+        "text": false,
+        "slash": true
+    },
+    "levelup": {
+        "help": "Change the level up message's text.",
+        "longhelp": "These are the commands to manage the levelup system in your guild.\nYou can set a 'level up message' to be sent every time a user levels up.The message will be sent in the current channel.\nYou can also choose if the message will be sent in the channel, in the user's DM or both.\n\nTo mention the user write #user, the level write #level`.\n\n[The levelup system is enabled by default]",
+        "category": "Settings",
+        "text": false,
+        "slash": true
+    },
+    "boost": {
+        "help": "Create a boost message for this guild.",
+        "longhelp": "Allow to set a 'boost server message' to be sent every time a user boost the server.\nIts necessary to set also a channel otherwise will be used the default system channel.\nYou can also choose if the message will be sent in the channel, in the user's DM or both.\n\nTo mention the user write #user",
+        "category": "Settings",
+        "text": false,
+        "slash": true
+    },
+    "ban": {
+        "alias": [
+            "sgozz",
+            "destroy",
+            "annihilate",
+            "radiateDeath",
+            "drinkRadithorForAYear",
+            "ohthemisery"
+        ],
+        "help": "Ban a member.",
+        "category": "Member Management",
+        "arguments": "[ban] [@user] (reason)",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "member",
+                "description": "Member to ban",
+                "required": true
+            },
+            {
+                "name": "reason",
+                "description": "Reason of the ban",
+                "required": false
+            }
+        ]
+    },
+    "image": {
+        "alias": [
+            "img"
+        ],
+        "help": "Show the imagine of a user.",
+        "category": "Member Management",
+        "arguments": "[image] [@user]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "user",
+                "description": "User from which to take the profile picture",
+                "required": true
+            }
+        ]
+    },
+    "kick": {
+        "alias": [
+            "lightdeath",
+            "espulsione",
+            "takethetrashout"
+        ],
+        "help": "Kick a member.",
+        "category": "Member Management",
+        "arguments": "[kick] [@user]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "member",
+                "description": "Member to kick",
+                "required": true
+            },
+            {
+                "name": "reason",
+                "description": "Reason of the kick",
+                "required": false
+            }
+        ]
+    },
+    "nickname": {
+        "alias": [
+            "modnick",
+            "nick"
+        ],
+        "help": "Change the nickname for a member.",
+        "category": "Member Management",
+        "arguments": "[CommandName] [member] [new nick]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "member",
+                "description": "Member to change the nickname of",
+                "required": true
+            },
+            {
+                "name": "nickname",
+                "description": "New nickname",
+                "required": true
+            }
+        ]
+    },
+    "mute": {
+        "alias": [
+            "dontlistentothesound"
+        ],
+        "help": "Mute a member.",
+        "category": "Member Management",
+        "arguments": "[mute] [@user]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "member",
+                "description": "Member to mute",
+                "required": true
+            }
+        ]
+    },
+    "permissions": {
+        "alias": [
+            "perms",
+            "permission"
+        ],
+        "help": "Show all permissions of a member.",
+        "category": "Member Management",
+        "arguments": "[permissions] [@user]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "member",
+                "description": "Member to get the permission of",
+                "required": true
+            }
+        ]
+    },
+    "unban": {
+        "alias": [
+            "unsgozz",
+            "undestroy",
+            "unannihilate",
+            "unradiateDeath",
+            "sban",
+            "pardon"
+        ],
+        "help": "Unban a member.",
+        "category": "Member Management",
+        "arguments": "[unbun] [@user]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "user",
+                "description": "User (ID) to ban , omit to get the ban list",
+                "required": false
+            }
+        ]
+    },
+    "unmute": {
+        "alias": [
+            "listentothesound"
+        ],
+        "help": "Unmute a member.",
+        "category": "Member Management",
+        "arguments": "[unmute] [@user]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "member",
+                "description": "Member to unmute",
+                "required": true
+            }
+        ]
+    },
+    "move": {
+        "help": "Move a member from a voice channel to another one.\nIts possible to move multiple users at once.",
+        "category": "Member Management",
+        "text": false,
+        "slash": true,
+        "children": {
+            "channel": {
+                "help": "Move all the users in a voice channel to another channel/user",
+                "options": [
+                    {
+                        "name": "room",
+                        "description": "Room to move",
+                        "required": true
+                    },
+                    {
+                        "name": "destroom",
+                        "description": "Destination Room",
+                        "required": false
+                    },
+                    {
+                        "name": "destuser",
+                        "description": "Destination user",
+                        "required": false
+                    },
+                    {
+                        "name": "swap",
+                        "description": "Swap the users in the rooms you are moving",
+                        "required": false
+                    }
+                ]
+            },
+            "user": {
+                "help": "Move a user to another channel/user",
+                "options": [
+                    {
+                        "name": "user",
+                        "description": "User to move",
+                        "required": true
+                    },
+                    {
+                        "name": "destroom",
+                        "description": "Destination Room",
+                        "required": false
+                    },
+                    {
+                        "name": "destuser",
+                        "description": "Destination User",
+                        "required": false
+                    }
+                ]
+            }
+        }
+    },
+    "blacklist": {
+        "help": "Manage the blacklist for this guild.",
+        "longhelp": "The 'Blacklist' feature in Discord enhances server security.\nIt keeps track of banned users across servers. Admins set a minimum ban count, and if it's exceeded, notifications alert the servers with the command enabled.\nThis helps ensure a safer and more secure server environment by identifying problematic users.",
+        "category": "Member Management",
+        "text": false,
+        "slash": true
+    },
+    "calculator": {
+        "alias": [
+            "c",
+            "calc",
+            "calculate"
+        ],
+        "help": "Does several mathematical operation.",
+        "category": "Math",
+        "arguments": "[calc] [expression] (+, -, *, /, cos, sin, pi, e, ln)",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "n",
+                "description": "Number",
+                "required": true
+            }
+        ]
+    },
+    "dice": {
+        "alias": [
+            "aleaiactaest",
+            "roll"
+        ],
+        "help": "Roll one or more dice.",
+        "category": "Math",
+        "arguments": "[dice] (number) ([number] (side))",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "text",
+                "description": "/help dice for more information",
+                "required": true
+            }
+        ]
+    },
+    "prime": {
+        "help": "Calculate a prime number using Fermat's little theorem.",
+        "category": "Math",
+        "cooldown": "10",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "value",
+                "description": "Number of bits of the prime to generate",
+                "required": true
+            }
+        ]
+    },
+    "alias": {
+        "alias": [
+            "ilyas"
+        ],
+        "help": "boh",
+        "category": "Miscellaneous",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": false
+    },
+    "bug": {
+        "help": "Report a bug to the developer.",
+        "category": "Miscellaneous",
+        "cooldown": "100",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "command",
+                "description": "Name of the bugged command",
+                "required": true
+            },
+            {
+                "name": "text",
+                "description": "Describe the bug",
+                "required": true
+            }
+        ]
+    },
+    "help": {
+        "alias": [
+            "command",
+            "commands",
+            "info"
+        ],
+        "help": "Show information about commands.",
+        "category": "Miscellaneous",
+        "arguments": "[help][nome comando]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "command",
+                "description": "Name of the command you want information on",
+                "required": false
+            }
+        ]
+    },
+    "invitebot": {
+        "alias": [
+            "invite",
+            "inbot"
+        ],
+        "help": "Get the invite link for the bot.",
+        "category": "Miscellaneous",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true
+    },
+    "msg": {
+        "help": "Send a private message to a user.",
+        "category": "Miscellaneous",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "user",
+                "description": "The user you want to message",
+                "required": true
+            },
+            {
+                "name": "msg",
+                "description": "The message you want to send",
+                "required": true
+            },
+            {
+                "name": "anonym",
+                "description": "True to send the message anonymously",
+                "required": true
+            }
+        ]
+    },
+    "weather": {
+        "help": "Get the weather of a location.",
+        "longhelp": "Get the weather of a location. The results are from weatherApi.com. You can write the location as coordinates, city name, US zip, UK postcode, Canada postal code, metar, iata and Ip address.",
+        "category": "Miscellaneous",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "location",
+                "description": "The location of the weather (in english).",
+                "required": true
+            }
+        ]
+    },
+    "apod": {
+        "help": "Get the Astronomy Picture of the Day (NASA).",
+        "category": "Miscellaneous",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "date",
+                "description": "The date of the APOD (YYYY-MM-DD).",
+                "required": false
+            }
+        ]
+    },
+    "specialchar": {
+        "help": "Show all special characters.",
+        "category": "Miscellaneous",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "command",
+                "description": "Name of the bugged command",
+                "required": true
+            }
+        ]
+    },
+    "printcache": {
+        "alias": [
+            "cache"
+        ],
+        "help": "Print cached guild information.",
+        "category": "Owner",
+        "arguments": "[prefixlist]",
+        "text": true,
+        "slash": false
+    },
+    "shutdown": {
+        "alias": [
+            "kill"
+        ],
+        "help": "Shutdown a bot.",
+        "category": "Owner",
+        "arguments": "[prefixlist]",
+        "text": true,
+        "slash": false
+    },
+    "restart": {
+        "alias": [
+            "reboot"
+        ],
+        "help": "Restart a bot.",
+        "category": "Owner",
+        "arguments": "[prefixlist]",
+        "text": true,
+        "slash": false
+    },
+    "query": {
+        "alias": [
+            "sql",
+            "queroide",
+            "dib",
+            "esqel"
+        ],
+        "help": "Run a query to the bot's database",
+        "category": "Owner",
+        "arguments": "[prefixlist]",
+        "text": true,
+        "slash": false
+    },
+    "listguild": {
+        "alias": [
+            "lg",
+            "guilds"
+        ],
+        "help": "List the guilds the bot is in.",
+        "category": "Owner",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": false
+    },
+    "ping": {
+        "alias": [
+            "pingpong",
+            "latency"
+        ],
+        "help": "Ping the bot.",
+        "category": "Miscellaneous",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": true
+    },
+    "ram": {
+        "alias": [
+            "usage"
+        ],
+        "help": "Show the ram usage of the bot.",
+        "category": "Owner",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": false
+    },
+    "chat": {
+        "help": "chat command tests.",
+        "category": "Owner",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": false
+    },
+    "twitch": {
+        "help": "Keep track of your favorite streamers.",
+        "longhelp": "The twitch commands help you to keep track of your favorite streamers and to get information about them.",
+        "category": "Miscellaneous",
+        "text": false,
+        "slash": true,
+        "children": {
+            "link": {
+                "help": "Link a streamer",
+                "longhelp": "Link a streamer to this guild. The bot will send a notification when the streamer goes live. Its necessary to set a channel, if not the system one would be used.\nThe bot allows you to choose if the message will be sent in the channel, in the user's DM or both (in this case must select a role to filter the user).\n\nTo mention the streamer #streamer",
+                "options": [
+                    {
+                        "name": "streamer",
+                        "description": "Streamer's username",
+                        "required": true
+                    },
+                    {
+                        "name": "message",
+                        "description": "The message that would be sent when the live goes on",
+                        "required": true
+                    },
+                    {
+                        "name": "channel",
+                        "description": "Channel where the message would be sent (leave out to use the guild's system channel).",
+                        "required": false
+                    },
+                    {
+                        "name": "sendtype",
+                        "description": "How the message would be sent",
+                        "required": false
+                    },
+                    {
+                        "name": "private_message",
+                        "description": "If empty would be use the same message (Must enable the private option (private or both)",
+                        "required": false
+                    },
+                    {
+                        "name": "role",
+                        "description": "Role that will be pinged when the live goes on (also for send the private message)",
+                        "required": false
+                    }
+                ]
+            },
+            "unlink": {
+                "help": "Unlink a streamer",
+                "longhelp": "Unlink a streamer, the alert will be deleted.",
+                "options": [
+                    {
+                        "name": "streamer",
+                        "description": "Streamer's username",
+                        "required": true
+                    }
+                ]
+            },
+            "menu": {
+                "help": "twitch menu",
+                "longhelp": "The twitch menu is a useful command to help you to manage your (this guild) linked streamers."
+            },
+            "user": {
+                "help": "Get information on a streamer",
+                "options": [
+                    {
+                        "name": "streamer",
+                        "description": "Streamer's username",
+                        "required": true
+                    }
+                ]
+            },
+            "message": {
+                "help": "Change a streamer's live alert message.",
+                "options": [
+                    {
+                        "name": "streamer",
+                        "description": "Streamer's username to change alert message",
+                        "required": true
+                    },
+                    {
+                        "name": "message",
+                        "description": "Message that would be sent when a streamer is live",
+                        "required": true
+                    },
+                    {
+                        "name": "sendtype",
+                        "description": "How the message would be sent",
+                        "required": false
+                    },
+                    {
+                        "name": "private_message",
+                        "description": "If empty would be use the same message (Must enable the private option (private or both)",
+                        "required": false
+                    }
+                ]
+            }
+        }
+    },
+    "qrcode": {
+        "help": "Make a qr code with the given text.",
+        "category": "Miscellaneous",
+        "arguments": "[CommandName] [text]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "text",
+                "description": "The text to convert to a qr code.",
+                "required": false
+            }
+        ]
+    },
+    "jelly": {
+        "alias": [
+            "soundfx",
+            "reminderbot",
+            "jude",
+            "jude southworth",
+            "jellywx"
+        ],
+        "help": "Evoca il dio dei falliti.",
+        "category": "Owner",
+        "arguments": "[CommandName]",
+        "text": true,
+        "slash": false
+    },
+    "vandalizeserver": {
+        "alias": [
+            "vandalize",
+            "vanda"
+        ],
+        "help": "Vandalizza un server, usa con cura.",
+        "category": "Owner",
+        "arguments": "[CommandName] [server]",
+        "text": true,
+        "slash": false
+    },
+    "randommove": {
+        "alias": [
+            "rm",
+            "fakerandom"
+        ],
+        "help": "Move a member randomly between voice channels.",
+        "category": "Owner",
+        "arguments": "[CommandName] [id/@user] [n volte]",
+        "text": true,
+        "slash": false
+    },
+    "champion": {
+        "help": "Show the best build and runes for a champion.",
+        "category": "League Of Legends",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "champion",
+                "description": "Champion Name",
+                "required": true
+            },
+            {
+                "name": "role",
+                "description": "Champion Role",
+                "required": true
+            },
+            {
+                "name": "queue",
+                "description": "Queue",
+                "required": false
+            },
+            {
+                "name": "opponent",
+                "description": "Opponent Champion",
+                "required": false
+            },
+            {
+                "name": "duo",
+                "description": "Duo Champion",
+                "required": false
+            }
+        ]
+    },
+    "champions": {
+        "help": "Show a leaderboard of champions.",
+        "category": "League Of Legends",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "queue",
+                "description": "Queue",
+                "required": false
+            },
+            {
+                "name": "role",
+                "description": "Champion Role",
+                "required": false
+            },
+            {
+                "name": "sort",
+                "description": "Sort",
+                "required": false
+            },
+            {
+                "name": "opponent",
+                "description": "Opponent Champion",
+                "required": false
+            }
+        ]
+    },
+    "augment": {
+        "help": "Show information about an augment.",
+        "category": "League Of Legends",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "augment",
+                "description": "Augment name or ID",
+                "required": true
+            }
+        ]
+    },
+    "item": {
+        "help": "Show information about an item.",
+        "category": "League Of Legends",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "item",
+                "description": "Item name",
+                "required": true
+            }
+        ]
+    },
+    "summoner": {
+        "alias": [
+            "sum"
+        ],
+        "help": "Show information about a summoner.",
+        "longhelp": "Show information about a summoner.\nYou can also link your account so you don't have to specify it using the other league commands.",
+        "category": "League Of Legends",
+        "arguments": "[CommandName] [summonerName]",
+        "text": true,
+        "slash": true,
+        "children": {
+            "link": {
+                "help": "Link a summoner to your discord account.",
+                "options": [
+                    {
+                        "name": "summoner",
+                        "description": "Name and tag of the summoner you want to link",
+                        "required": true
+                    }
+                ]
+            },
+            "profile": {
+                "help": "Show statistics for a summoner.",
+                "options": [
+                    {
+                        "name": "summoner",
+                        "description": "Name and tag of the summoner you want to get information on",
+                        "required": false
+                    },
+                    {
+                        "name": "user",
+                        "description": "Discord user you want to get information on (if riot account is connected)",
+                        "required": false
+                    }
+                ]
+            },
+            "unlink": {
+                "help": "Unlink a summoner from your discord account.",
+                "options": [
+                    {
+                        "name": "personal_summoner",
+                        "description": "Accont to unlink",
+                        "required": true
+                    }
+                ]
+            },
+            "track": {
+                "help": "Track a summoner.",
+                "options": [
+                    {
+                        "name": "personal_summoner",
+                        "description": "Accont to unlink",
+                        "required": true
+                    },
+                    {
+                        "name": "track",
+                        "description": "Enable or disable tracking",
+                        "required": false
+                    }
+                ]
+            },
+            "champion": {
+                "help": "See a summoner's champion pool.",
+                "options": [
+                    {
+                        "name": "summoner",
+                        "description": "Name and tag of the summoner you want to link",
+                        "required": false
+                    }
+                ]
+            },
+            "overview": {
+                "help": "See an overview for a summoner",
+                "options": [
+                    {
+                        "name": "summoner",
+                        "description": "Name and tag of the summoner you want to link",
+                        "required": false
+                    }
+                ]
+            }
+        }
+    },
+    "livegame": {
+        "alias": [
+            "live"
+        ],
+        "help": "Show the summoners in the game of a given summoner and their ranks.",
+        "category": "League Of Legends",
+        "arguments": "[CommandName] [summonerName]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "summoner",
+                "description": "Name and tag of the summoner you want to get information on",
+                "required": false
+            },
+            {
+                "name": "user",
+                "description": "Discord user you want to get information on (if riot account is connected)",
+                "required": false
+            }
+        ]
+    },
+    "opgg": {
+        "alias": [
+            "im",
+            "infomatch"
+        ],
+        "help": "Show information about the last 5 games of a summoner.",
+        "category": "League Of Legends",
+        "arguments": "[CommandName] [summonerName] (n games to analyze)",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "summoner",
+                "description": "Name and tag of the summoner you want to get information on",
+                "required": false
+            },
+            {
+                "name": "user",
+                "description": "Discord user you want to get information on (if riot account is connected)",
+                "required": false
+            }
+        ]
+    },
+    "region": {
+        "help": "Select the default league of legends region.",
+        "longhelp": "Select the default league of legends region.\nAll the other league commands will use this region if you don't specify it. (EUW default)",
+        "category": "League Of Legends",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "channel",
+                "description": "If empty the region will be use in the guild, select to override for the channel",
+                "required": false
+            }
+        ]
+    },
+    "ultimatebravery": {
+        "alias": [
+            "ub",
+            "bravery"
+        ],
+        "help": "Show a random build for a champion.",
+        "category": "League Of Legends",
+        "arguments": "[CommandName] [champion]",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "champion",
+                "description": "Filter for a specific champion",
+                "required": false
+            },
+            {
+                "name": "lane",
+                "description": "Filter for a specific lane",
+                "required": false
+            }
+        ]
+    },
+    "test": {
+        "alias": [
+            "wip"
+        ],
+        "help": "Owner diagnostics; API key generation and revocation are restricted to Untouchables and Epria. `test gc` requests JVM garbage collection; `test fix-timeline <puuid>` rebuilds stored match timelines; `test fix-timeline-patch <patch>` rebuilds timelines for every match in a patch; `test retrieveallgames <summoner>` and `test retrieveallgamesfast <summoner>` queue match history import as background Riot work; `test export-match-search` rebuilds the Mongo match_facets projection; `test regenerate champion [patch]` (also `champions`) discovers played build queues in the selected patch, forces statistics and invalidates Redis before rebuilding builds; defaults to the current patch, as does the daily 23:00 background job; `test regenerate aggregates [all|leaderboard-counts|rank-distribution|top-regions|division-counts|record-counts|metrics]` queues separate background aggregate rebuild jobs by type.",
+        "category": "Owner",
+        "arguments": "[gc | diagnostic | regenerate champion [patch] | regenerate aggregates [type] | pushsamplegame [GameQueueType] | retrieveallgames <summoner> | retrieveallgamesfast <summoner> | fix-timeline <puuid> | fix-timeline-patch <patch> | export-match-search]",
+        "text": true,
+        "slash": false
+    },
+    "championstats": {
+        "help": "Generate the complete champion stats matrix for a patch and queue.",
+        "category": "Owner",
+        "arguments": "<patch> <queue>",
+        "text": true,
+        "slash": false
+    },
+    "tracker": {
+        "help": "Show tracker scheduler and database worker status.",
+        "category": "Owner",
+        "arguments": "[prefixlist]",
+        "text": true,
+        "slash": false
+    },
+    "omegle": {
+        "help": "Talk to strangers like omegle.",
+        "category": "Miscellaneous",
+        "text": false,
+        "slash": true,
+        "children": {
+            "connect": {
+                "help": "Connect to a random stranger.",
+                "options": [
+                    {
+                        "name": "autoreconnect",
+                        "description": "reconnect automatically on disconnect (default false)",
+                        "required": false
+                    },
+                    {
+                        "name": "anonymous",
+                        "description": "don't show names and pictures of users (default false)",
+                        "required": false
+                    }
+                ]
+            },
+            "disconnect": {
+                "help": "Disconnect from the conversation."
+            }
+        }
+    },
+    "automatedaction": {
+        "help": "Automated actions.",
+        "category": "Server Management",
+        "text": false,
+        "slash": true,
+        "options": [
+            {
+                "name": "action",
+                "description": "Select the action",
+                "required": true
+            },
+            {
+                "name": "infractions",
+                "description": "The number of infractions to trigger the action",
+                "required": true
+            },
+            {
+                "name": "action_role",
+                "description": "Role that will be given (only if you select role as action)",
+                "required": false
+            },
+            {
+                "name": "action_time",
+                "description": "3d1h2m4s. How long your action will last (not use to be permannt)",
+                "required": false
+            },
+            {
+                "name": "infractions_time",
+                "description": "3d1h2m4s. Period of time to trigger the action",
+                "required": false
+            }
+        ]
+    },
+    "warn": {
+        "alias": [
+            "avverti",
+            "avv"
+        ],
+        "help": "Warn a member.",
+        "category": "Server Management",
+        "arguments": "[warn] [@user] (reason)",
+        "text": true,
+        "slash": true,
+        "options": [
+            {
+                "name": "user",
+                "description": "User to warn",
+                "required": true
+            },
+            {
+                "name": "reason",
+                "description": "Reason",
+                "required": false
+            }
+        ]
+    },
+    "spotify": {
+        "help": "Your Spotify in your favourite bot",
+        "category": "Miscellaneous",
+        "text": false,
+        "slash": true,
+        "children": {
+            "albums": {
+                "help": "Top Spotify albums."
+            },
+            "tracks": {
+                "help": "Top Spotify tracks.",
+                "options": [
+                    {
+                        "name": "time_range",
+                        "description": "The time range for the tracks",
+                        "required": false
+                    }
+                ]
+            },
+            "upload": {
+                "help": "Upload your Spotify history.",
+                "options": [
+                    {
+                        "name": "zip",
+                        "description": "Send the .zip file",
+                        "required": true
+                    }
+                ]
+            },
+            "link": {
+                "help": "Link your Spotify account to the bot.",
+                "longhelp": "Link your Spotify account to the bot. You will be able to use the other Spotify commands."
+            }
+        }
+    }
+}

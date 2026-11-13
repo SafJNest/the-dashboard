@@ -1,5 +1,6 @@
 import { component$ } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
+import { EmptyState } from '../empty-state/empty-state';
 import { GuildAvatar } from './guild-avatar';
 
 export interface DashboardUser {
@@ -41,7 +42,11 @@ export const Servers = component$<ServersProps>(({ guilds }) => (
         ))}
       </ul>
     ) : (
-      <p class="text-muted">You don't have any servers you own or can manage.</p>
+      <div class="card">
+        <EmptyState icon="servers" title="No servers to manage yet">
+          Beebot lists the servers you own or where you have Manage Server.
+        </EmptyState>
+      </div>
     )}
   </main>
 ));

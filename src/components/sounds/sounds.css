@@ -399,6 +399,89 @@
   white-space: nowrap;
 }
 
+@property --played {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+.sound-wave {
+  --wave-base: var(--bb-fg-subtle);
+  --wave-baseline: 68%;
+  position: relative;
+  height: var(--bb-space-14);
+  container-type: inline-size;
+  transition: --played var(--bb-duration-slow) var(--bb-ease-out);
+}
+
+.sound-wave__bars {
+  --wave-color: var(--wave-base);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: calc(var(--bb-space-1) / 2);
+}
+
+.sound-wave__bars--played {
+  --wave-color: var(--bb-accent);
+  clip-path: inset(0 calc((1 - var(--played)) * 100%) 0 0);
+}
+
+.sound-wave__bars > span {
+  flex: 1;
+  min-width: 1px;
+  background: linear-gradient(
+    var(--wave-color) 0 var(--wave-baseline),
+    transparent var(--wave-baseline) calc(var(--wave-baseline) + 1px),
+    color-mix(in srgb, var(--wave-color) 35%, transparent) calc(var(--wave-baseline) + 1px)
+  );
+  transform: scaleY(var(--h));
+  transform-origin: 50% var(--wave-baseline);
+  transition: transform var(--bb-duration-slow) var(--bb-ease-out) calc(var(--i) * 1.5ms);
+}
+
+.sound-wave--loading .sound-wave__bars > span {
+  animation: sound-wave-synth var(--bb-duration-pulse) ease-in-out calc(var(--i) * -24ms) infinite alternate;
+}
+
+.sound-wave--idle {
+  opacity: 0.5;
+}
+
+.sound-wave--playing {
+  animation: sound-wave-progress var(--duration) linear forwards;
+}
+
+.sound-wave--buffering {
+  animation-play-state: paused;
+}
+
+@container (max-width: 40rem) {
+  .sound-wave__bars > span:nth-child(2n) {
+    display: none;
+  }
+}
+
+@keyframes sound-wave-synth {
+  from {
+    transform: scaleY(calc(var(--h) * 0.25));
+  }
+
+  to {
+    transform: scaleY(var(--h));
+  }
+}
+
+@keyframes sound-wave-progress {
+  from {
+    --played: 0;
+  }
+
+  to {
+    --played: 1;
+  }
+}
+
 .sound-facts {
   display: flex;
   flex-wrap: wrap;
@@ -1205,6 +1288,14 @@
   .greet__pop,
   .tag-box__list {
     animation: none;
+  }
+
+  .sound-wave--loading .sound-wave__bars > span {
+    animation: none;
+  }
+
+  .sound-wave__bars > span {
+    transition: none;
   }
 }
 

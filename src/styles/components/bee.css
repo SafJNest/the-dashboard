@@ -1,0 +1,45 @@
+.bee-wing {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: bee-flap 120ms ease-in-out infinite alternate;
+}
+
+.bee-wing--front {
+  fill: var(--bb-bee-wing);
+}
+
+.bee-wing--back {
+  fill: var(--bb-bee-wing);
+  opacity: 0.65;
+}
+
+.bee-body {
+  fill: var(--bb-bee-body);
+}
+
+.bee-stripes {
+  stroke: var(--bb-bee-stripe);
+  stroke-width: 1.7;
+}
+
+.bee-head {
+  fill: var(--bb-bee-stripe);
+}
+
+.bee-sting {
+  stroke: var(--bb-bee-stripe);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+@keyframes bee-flap {
+  to {
+    transform: scaleY(0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bee-wing {
+    animation: none;
+  }
+}

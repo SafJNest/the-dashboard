@@ -4,6 +4,7 @@ import { settingsPath } from '../../lib/dashboard-path';
 import { alertBadge } from '../../lib/guild';
 import { useGuild } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
+import { EmptyState } from '../empty-state/empty-state';
 import { AlertSettings } from './alert-settings';
 import { SectionIntro } from './settings-form';
 
@@ -43,10 +44,11 @@ export const TwitchSettings = component$<{ streamerId?: string }>(({ streamerId 
         <header class="settings-head">
           <SectionIntro {...INTRO} />
         </header>
-        <p class="callout callout--info">
-          <Icon name="info" />
-          <span>No streamers linked yet. Link one in Discord with <span class="mono">/twitch link</span>, then edit the alert here.</span>
-        </p>
+        <div class="card">
+          <EmptyState icon="twitch" title="No streamers linked yet">
+            Link one in Discord with <span class="mono">/twitch link</span>, then edit the alert here.
+          </EmptyState>
+        </div>
       </div>
     );
   }

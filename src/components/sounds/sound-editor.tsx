@@ -7,6 +7,7 @@ import { MAX_TAGS, type Sound } from '../../lib/sounds';
 import { Icon } from '../dashboard/icons';
 import { SaveDock } from '../dashboard/save-dock';
 import { GreetPicker } from './greet-picker';
+import { Toast } from '../toast/toast';
 import styles from './sounds.css?inline';
 
 export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => {
@@ -221,10 +222,7 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
                 </p>
               </div>
               {result?.ok && !dirty.value && (
-                <p class="toast settings-status" role="status">
-                  <Icon name="check" />
-                  <span>Changes saved</span>
-                </p>
+                <Toast class="settings-status" title="Changes saved" />
               )}
               <SaveDock dirty={dirty} action={update} onReset$={reset} />
             </Form>

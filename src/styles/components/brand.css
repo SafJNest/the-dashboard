@@ -1,0 +1,29 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bb-space-3);
+  color: var(--bb-fg-default);
+  font-family: var(--bb-font-display);
+  font-size: var(--bb-text-lg);
+  font-weight: var(--bb-weight-semibold);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--bb-fg-default);
+}
+
+.brand__mark {
+  width: 1.375rem;
+  height: 1.5rem;
+}
+
+.hex-mark__outline {
+  fill: none;
+  stroke: var(--bb-accent-border);
+  stroke-width: 1.5;
+}
+
+.hex-mark__core {
+  fill: var(--bb-accent);
+}

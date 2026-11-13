@@ -1,0 +1,40 @@
+.page-skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--bb-space-8);
+  padding-top: var(--bb-space-8);
+  padding-bottom: var(--bb-space-14);
+}
+
+.page-skeleton__side {
+  display: flex;
+  flex: 1 1 15rem;
+  flex-direction: column;
+  gap: var(--bb-space-1);
+  max-width: 17.5rem;
+  padding: var(--bb-space-3);
+}
+
+.page-skeleton__row {
+  display: flex;
+  align-items: center;
+  gap: var(--bb-space-3);
+  height: 2.5rem;
+  padding: 0 var(--bb-space-3);
+}
+
+.page-skeleton__main {
+  display: flex;
+  flex: 999 1 35rem;
+  flex-direction: column;
+  gap: var(--bb-space-3);
+  min-width: 0;
+}
+
+.page-skeleton__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bb-space-3);
+  margin-top: var(--bb-space-4);
+}

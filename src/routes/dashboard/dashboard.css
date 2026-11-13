@@ -1,5 +1,21 @@
 .dashboard {
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
+}
+
+.dashboard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(var(--bb-dot) 1px, transparent 1.3px);
+  background-size: var(--bb-dot-size) var(--bb-dot-size);
+  mask-image:
+    linear-gradient(to bottom, transparent 0, #000 var(--bb-dot-fade-top), #000 65%, transparent 100%),
+    linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+  mask-composite: intersect;
+  pointer-events: none;
 }
 
 .appbar,
@@ -42,9 +58,9 @@
   align-items: center;
   gap: 0.125rem;
   padding: var(--bb-space-1);
-  border: 1px solid var(--bb-border-muted);
+  border: 1px solid var(--bb-border-glass);
   border-radius: var(--bb-radius-pill);
-  background: var(--bb-bg-inset);
+  background: var(--bb-bg-glass);
 }
 
 .appbar__link {
@@ -266,6 +282,12 @@ a.ctxtab:hover,
   flex: 1 1 15rem;
   min-width: 0;
   max-width: 17.5rem;
+  padding: var(--bb-space-2) var(--bb-space-2) var(--bb-space-3);
+  border: 1px solid var(--bb-border-glass);
+  border-radius: var(--bb-radius-lg);
+  background: var(--bb-bg-glass);
+  box-shadow: var(--bb-shadow-glass);
+  backdrop-filter: var(--bb-blur-glass);
 }
 
 .settings__main {
@@ -348,14 +370,8 @@ a.ctxtab:hover,
   gap: var(--bb-space-3);
 }
 
-.settings-dock {
-  position: sticky;
-  bottom: var(--bb-space-6);
-  z-index: 2;
-}
-
 .settings-status {
-  align-self: flex-start;
+  align-self: flex-end;
 }
 
 .settings-overview {
@@ -388,7 +404,7 @@ a.ctxtab:hover,
 
 .settings-overview__card:hover {
   border-color: var(--bb-border-strong);
-  background: var(--bb-bg-raised);
+  background: var(--bb-bg-glass-strong);
   color: var(--bb-fg-default);
 }
 
@@ -501,7 +517,7 @@ a.ctxtab:hover,
 
 .dashboard__guild:hover {
   border-color: var(--bb-border-strong);
-  background: var(--bb-bg-raised);
+  background: var(--bb-bg-glass-strong);
   color: var(--bb-fg-default);
 }
 

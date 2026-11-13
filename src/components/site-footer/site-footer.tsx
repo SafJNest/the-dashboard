@@ -6,24 +6,13 @@ import styles from './site-footer.css?inline';
 const columns = [
   {
     title: 'Product',
-    links: [
-      { href: '/commands/', label: 'Commands' },
-      { href: '/changelog/', label: 'Changelog' },
-      { href: '/status/', label: 'Status' },
-    ],
-  },
-  {
-    title: 'Community',
-    links: [
-      { href: '/leaderboard/', label: 'Leaderboards' },
-      { href: '/sounds/', label: 'Sounds' },
-    ],
+    links: [{ href: '/commands/', label: 'Commands' }],
   },
   {
     title: 'Legal',
     links: [
-      { href: '/legal/#terms', label: 'Terms' },
-      { href: '/legal/#privacy', label: 'Privacy' },
+      { href: '/terms/', label: 'Terms of service' },
+      { href: '/privacy/', label: 'Privacy policy' },
     ],
   },
 ];
@@ -57,9 +46,9 @@ export const SiteFooter = component$(() => {
             <nav key={column.title} class="site-footer__column" aria-label={column.title}>
               <span class="overline">{column.title}</span>
               {column.links.map((link) => (
-                <a key={link.href} href={link.href} class="site-footer__link">
+                <Link key={link.href} href={link.href} class="site-footer__link">
                   {link.label}
-                </a>
+                </Link>
               ))}
             </nav>
           ))}

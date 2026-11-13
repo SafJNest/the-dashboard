@@ -3,6 +3,7 @@ import { Link } from '@qwik.dev/router';
 import { settingsPath } from '../../lib/dashboard-path';
 import { useGuild } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
+import { EmptyState } from '../empty-state/empty-state';
 import { AlertSettings } from './alert-settings';
 import { SectionIntro } from './settings-form';
 
@@ -42,10 +43,11 @@ export const RewardSettings = component$<{ level?: string }>(({ level }) => {
         <header class="settings-head">
           <SectionIntro {...INTRO} />
         </header>
-        <p class="callout callout--info">
-          <Icon name="info" />
-          <span>No rewards yet. Create one in Discord with <span class="mono">/reward</span>, then edit it here.</span>
-        </p>
+        <div class="card">
+          <EmptyState icon="rewards" title="No rewards yet">
+            Create one in Discord with <span class="mono">/reward</span>, then edit it here.
+          </EmptyState>
+        </div>
       </div>
     );
   }

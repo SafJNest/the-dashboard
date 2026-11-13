@@ -1,0 +1,49 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bb-space-1);
+  height: 1.375rem;
+  padding: 0 var(--bb-space-2);
+  border: 1px solid var(--bb-border-default);
+  border-radius: var(--bb-radius-pill);
+  background: var(--bb-bg-raised);
+  color: var(--bb-fg-muted);
+  font: var(--bb-weight-medium) var(--bb-text-2xs) / 1 var(--bb-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge--accent {
+  border-color: var(--bb-accent-border);
+  background: var(--bb-accent-muted);
+  color: var(--bb-fg-accent);
+}
+
+.badge--info {
+  border-color: transparent;
+  background: var(--bb-info-muted);
+  color: var(--bb-info-fg);
+}
+
+.badge--app {
+  height: 1rem;
+  padding: 0 0.3rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: var(--bb-discord-blurple);
+  color: #fff;
+  font-size: 0.625rem;
+}
+
+.badge--warning {
+  border-color: transparent;
+  background: var(--bb-warning-muted);
+  color: var(--bb-warning-fg);
+}
+
+.badge--danger {
+  border-color: transparent;
+  background: var(--bb-danger-muted);
+  color: var(--bb-danger-fg);
+}

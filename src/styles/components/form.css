@@ -1,0 +1,212 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bb-space-2);
+  min-width: 0;
+}
+
+.fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fieldset > legend {
+  margin-bottom: var(--bb-space-2);
+  padding: 0;
+}
+
+.fieldset > .hint {
+  margin-top: var(--bb-space-2);
+}
+
+.field-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--bb-space-3);
+}
+
+.field-check {
+  display: flex;
+  align-items: center;
+  gap: var(--bb-space-3);
+  color: var(--bb-fg-default);
+  font-size: var(--bb-text-sm);
+  cursor: pointer;
+}
+
+.label {
+  color: var(--bb-fg-default);
+  font-size: var(--bb-text-sm);
+  font-weight: var(--bb-weight-medium);
+  line-height: 1.54;
+}
+
+.hint {
+  color: var(--bb-fg-subtle);
+  font-size: var(--bb-text-xs);
+  line-height: 1.33;
+}
+
+.input,
+.select,
+.textarea {
+  --field-border: var(--bb-border-default);
+
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--field-border);
+  border-radius: var(--bb-radius-sm);
+  background-color: var(--bb-bg-inset);
+  color: var(--bb-fg-default);
+  font: var(--bb-weight-regular) var(--bb-text-md) / var(--bb-leading-normal) var(--bb-font-ui);
+  transition: border-color var(--bb-duration-fast) var(--bb-ease-out);
+}
+
+.input,
+.select {
+  height: var(--bb-control-md);
+  padding: 0 var(--bb-space-3);
+}
+
+.input:hover,
+.select:hover,
+.textarea:hover {
+  --field-border: var(--bb-border-strong);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  --field-border: var(--bb-accent-border);
+}
+
+.input:user-invalid {
+  --field-border: var(--bb-danger);
+}
+
+.input.mono {
+  font-family: var(--bb-font-mono);
+}
+
+.input--sm {
+  height: var(--bb-control-sm);
+  font-size: var(--bb-text-sm);
+}
+
+.input--number {
+  max-width: 7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.input--short {
+  max-width: 10rem;
+}
+
+.select {
+  padding-right: var(--bb-space-8);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--bb-fg-subtle) 50%),
+    linear-gradient(135deg, var(--bb-fg-subtle) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.125rem) 50%,
+    calc(100% - 0.8125rem) 50%;
+  background-repeat: no-repeat;
+  background-size: 0.3125rem 0.3125rem;
+  cursor: pointer;
+  appearance: none;
+}
+
+.textarea {
+  display: block;
+  min-height: 7.5rem;
+  max-height: 17.5rem;
+  padding: var(--bb-space-3);
+  resize: vertical;
+  field-sizing: content;
+}
+
+.textarea,
+.combo__list {
+  scrollbar-color: var(--bb-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.textarea::-webkit-scrollbar,
+.combo__list::-webkit-scrollbar {
+  width: 0.625rem;
+}
+
+.textarea::-webkit-scrollbar-thumb,
+.combo__list::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: var(--bb-radius-pill);
+  background: var(--bb-border-strong) padding-box;
+}
+
+.textarea::placeholder,
+.input::placeholder {
+  color: var(--bb-fg-subtle);
+}
+
+.textarea-wrap {
+  overflow: hidden;
+  border: 1px solid var(--bb-border-default);
+  border-radius: var(--bb-radius-sm);
+  background: var(--bb-bg-inset);
+}
+
+.textarea-wrap:focus-within {
+  border-color: var(--bb-accent-border);
+}
+
+.textarea-wrap:has(.textarea:focus-visible) {
+  outline: var(--bb-focus-width) solid var(--bb-focus-ring);
+  outline-offset: var(--bb-focus-offset);
+}
+
+.textarea-wrap > .textarea {
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.textarea-wrap > .textarea:focus-visible {
+  outline: none;
+}
+
+.textarea-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bb-space-2);
+  padding: var(--bb-space-2) var(--bb-space-3);
+  border-top: 1px solid var(--bb-border-muted);
+  background: var(--bb-bg-surface);
+}
+
+.counter {
+  margin-left: auto;
+  color: var(--bb-fg-subtle);
+  font: var(--bb-text-2xs) / 1 var(--bb-font-mono);
+}
+
+.variable {
+  display: inline-flex;
+  align-items: center;
+  height: var(--bb-control-xs);
+  padding: 0 var(--bb-space-2);
+  border: 1px solid var(--bb-border-default);
+  border-radius: var(--bb-radius-xs);
+  background: var(--bb-bg-raised);
+  color: var(--bb-fg-accent);
+  font: var(--bb-weight-medium) var(--bb-text-xs) / 1 var(--bb-font-mono);
+  cursor: pointer;
+}
+
+.variable:hover {
+  border-color: var(--bb-accent-border);
+  background: var(--bb-accent-subtle);
+}

@@ -1,5 +1,5 @@
 import { component$, useStyles$ } from '@qwik.dev/core';
-import { Link } from '@qwik.dev/router';
+import { Link, useLocation } from '@qwik.dev/router';
 import { HexMark } from '../hex-mark/hex-mark';
 import styles from './site-header.css?inline';
 
@@ -7,16 +7,11 @@ interface SiteHeaderProps {
   inviteUrl: string | null;
 }
 
-const navItems = [
-  { href: '/#features', label: 'Features' },
-  { href: '/commands/', label: 'Commands' },
-  { href: '/leaderboard/', label: 'Leaderboards' },
-  { href: '/sounds/', label: 'Sounds' },
-  { href: '/status/', label: 'Status' },
-];
+const navItems = [{ href: '/commands/', label: 'Commands' }];
 
 export const SiteHeader = component$<SiteHeaderProps>(({ inviteUrl }) => {
   useStyles$(styles);
+  const location = useLocation();
 
   return (
     <header class="site-header">
@@ -24,14 +19,20 @@ export const SiteHeader = component$<SiteHeaderProps>(({ inviteUrl }) => {
         <HexMark />
         Beebot
       </Link>
-      <nav class="site-header__nav" aria-label="Main">
-        {navItems.map((item) => (
-          <a key={item.href} href={item.href} class="nav-link">
-            {item.label}
-          </a>
-        ))}
-      </nav>
-      <div class="site-header__actions">
+      <div class="site-header__end">
+        <nav class="site-header__nav" aria-label="Main">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              class="site-header__link"
+              aria-current={location.url.pathname.startsWith(item.href) ? 'page' : undefined}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <span class="site-header__separator" aria-hidden="true" />
         <a href="/dashboard/" class="button button--ghost">
           Log in
         </a>

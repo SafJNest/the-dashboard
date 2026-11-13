@@ -33,6 +33,18 @@ Le route della dashboard condividono `src/routes/dashboard/layout.tsx`. I futuri
 
 Qwik MCP usa il server di sviluppo per gli strumenti di ispezione. CodeGraph indicizza la repository in modalità strutturale, senza embeddings. Le configurazioni MCP usano percorsi assoluti: aggiornarli se la repository viene spostata. Riavviare la sessione dell'agente dopo la configurazione.
 
+## Pagine pubbliche
+
+`/`, `/commands/`, `/terms/` e `/privacy/` sono generate staticamente durante la build (`ssg.include` in `adapters/vercel-edge/vite.config.ts`). La home ha il proprio layout; le altre pagine usano `src/routes/(site)/layout.tsx`, con lo stesso header sticky e lo stesso footer. Header e footer collegano solo pagine esistenti: Changelog e il link al server di supporto verranno aggiunti quando saranno disponibili.
+
+La pagina dei comandi legge `src/data/commands.json`, una copia ripulita di `rsc/commands.json` del bot (branch `the-dashboard`): contiene solo i comandi registrati in `Bot.java`, con `text` e `slash` ricavati dai metodi `execute` effettivamente implementati e `options` dalle `OptionData` dei comandi slash. `getCommandSource()` (`src/lib/beebot/commands.server.ts`) restituisce la fonte e `buildCommandCatalog()` (`src/lib/commands.ts`) prepara la pagina: nasconde la categoria `Owner`, raggruppa i sottocomandi sotto il comando padre (che può essere anche un comando testuale, come `!list`) e affianca a un sottocomando slash il comando testuale con il nome unito (`playsound` diventa la forma prefix di `/play sound`). Gli argomenti vengono dalle opzioni slash; la stringa `arguments` resta solo per i comandi senza opzioni. Il prefisso mostrato è quello predefinito, `!`.
+
+Quando il bot esporrà i comandi tramite endpoint, cambierà solo `getCommandSource()`. Il loader della pagina viene eseguito in build per l'HTML statico, ma anche sul server Edge nelle navigazioni interne con `Link`: con un endpoint remoto, quelle navigazioni lo contatterebbero.
+
+La ricerca filtra nel browser gli elementi già presenti nell'HTML (`data-search`), senza dati serializzati; il filtro Slash/Prefix è solo CSS (`:has()` sui radio).
+
+Termini e privacy sono testo modello: i segnaposto `[...]` vanno completati e il testo verificato prima della pubblicazione.
+
 ## Login e server Discord
 
 Il login viene gestito da Beebot. Il server Qwik avvia l'autorizzazione Discord tramite Beebot, riceve il callback GET di Discord, verifica state e inoltra codice, state e callback a Beebot tramite JSON server-to-server. Beebot completa lo scambio OAuth e restituisce la sessione, conservata da Qwik in un cookie HttpOnly. Le richieste alle API Beebot partono solo dal server Qwik, con la API key e il token della sessione; le credenziali non sono disponibili al JavaScript della pagina.

@@ -4,6 +4,7 @@ import type { SettingsProblem } from '../../lib/guild';
 import { useGuild, useSaveSettings } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
 import { SaveDock } from '../dashboard/save-dock';
+import { Toast } from '../toast/toast';
 
 interface SectionIntroProps {
   group: string;
@@ -97,10 +98,7 @@ export const SettingsForm = component$<SettingsFormProps>((props) => {
       )}
       <Slot />
       {result?.ok && !dirty.value && (
-        <p class="toast settings-status" role="status">
-          <Icon name="check" />
-          <span>Changes saved</span>
-        </p>
+        <Toast class="settings-status" title="Changes saved" />
       )}
       <SaveDock dirty={dirty} action={save} onReset$={props.onReset$} />
     </Form>

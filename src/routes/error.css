@@ -1,17 +1,47 @@
 .error-page {
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
   gap: var(--bb-space-4);
   max-width: 40rem;
   min-height: 100vh;
   margin: 0 auto;
   padding: var(--bb-space-14) var(--bb-gutter);
+  text-align: center;
+}
+
+.error-page__digits {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--bb-space-2);
+  margin-bottom: var(--bb-space-4);
+  color: var(--bb-fg-default);
+  font: var(--bb-weight-semibold) clamp(7rem, 22vw, 12.5rem) / 1 var(--bb-font-display);
+  letter-spacing: -0.06em;
+}
+
+.error-page__zero {
+  display: grid;
+  place-items: center;
+  width: 10rem;
+  height: 9.375rem;
+  color: var(--bb-accent);
+}
+
+.error-page__bee {
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: var(--bb-space-2);
+  border-radius: var(--bb-radius-md);
+  background: var(--bb-danger-muted);
 }
 
 .error-page__actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: var(--bb-space-3);
   margin-top: var(--bb-space-4);
 }

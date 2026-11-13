@@ -19,6 +19,7 @@ import { readSource, type LibrarySource } from './library-source';
 import { LoadError, PanelSkeleton, Skeleton } from './library-states';
 import { DayBars, HeatGrid, ReplaySplit, SourceSplit } from './sound-charts';
 import { GreetPicker } from './greet-picker';
+import { SoundWave } from './sound-wave';
 import type { Playback, PlayHandler } from './sound-library';
 import { VoteButtons } from './vote-buttons';
 
@@ -264,6 +265,7 @@ interface SoundDetailProps {
 export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, entry, votes, playback, onPlay$ }) => {
   const { sound, guildName } = entry;
   const active = playback.id === sound.id;
+  const duration = playback.duration ?? (sound.durationMs ? sound.durationMs / 1000 : null);
   const scopeLabel = scopeLabelOf(model, guildName);
 
   return (
@@ -283,6 +285,7 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
           </button>
           <h2 id="sound-title" class="sound-head__title">{sound.name}</h2>
         </div>
+        <SoundWave key={sound.id} url={sound.url} duration={duration} playing={active} buffering={active && playback.loading} />
         <dl class="sound-facts">
           <div>
             <dt>Uploaded by</dt>

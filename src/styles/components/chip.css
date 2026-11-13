@@ -1,0 +1,54 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bb-space-2);
+  height: 1.75rem;
+  padding: 0 var(--bb-space-1) 0 0.625rem;
+  border: 1px solid var(--bb-border-default);
+  border-radius: var(--bb-radius-pill);
+  background: var(--bb-bg-raised);
+  color: var(--bb-fg-default);
+  font-size: var(--bb-text-sm);
+  white-space: nowrap;
+}
+
+.chip:not(:has(.chip__remove)) {
+  padding-right: 0.625rem;
+}
+
+.chip__remove {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--bb-fg-subtle);
+  cursor: pointer;
+}
+
+.chip__remove:hover {
+  background: var(--bb-bg-active);
+  color: var(--bb-fg-default);
+}
+
+.chip__remove svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.chip--role {
+  border-color: color-mix(in oklab, var(--role-color, var(--bb-role-default)) 34%, transparent);
+  background: color-mix(in oklab, var(--role-color, var(--bb-role-default)) 14%, var(--bb-bg-raised));
+}
+
+.role-dot {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--role-color, var(--bb-role-default));
+  box-shadow: 0 0 0 1px var(--bb-border-strong);
+}
