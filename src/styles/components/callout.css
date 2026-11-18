@@ -2,7 +2,7 @@
   display: flex;
   gap: var(--bb-space-3);
   padding: 0.875rem var(--bb-space-4);
-  border-radius: var(--bb-radius-md);
+  border-radius: var(--bb-radius-control);
   background: var(--bb-warning-muted);
   color: var(--bb-fg-default);
   font-size: var(--bb-text-sm);
@@ -42,7 +42,7 @@
   width: 2.75rem;
   height: 2.75rem;
   flex: none;
-  border-radius: var(--bb-radius-md);
+  border-radius: var(--bb-radius-control);
   background: var(--bb-danger-muted);
 }
 

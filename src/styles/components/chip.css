@@ -5,7 +5,7 @@
   height: 1.75rem;
   padding: 0 var(--bb-space-1) 0 0.625rem;
   border: 1px solid var(--bb-border-default);
-  border-radius: var(--bb-radius-pill);
+  border-radius: var(--bb-radius-part);
   background: var(--bb-bg-raised);
   color: var(--bb-fg-default);
   font-size: var(--bb-text-sm);

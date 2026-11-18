@@ -26,7 +26,7 @@ export default component$(() => {
         </span>
       )}
       <p class="eyebrow">Error {status}</p>
-      <h1 class="display display--md">{status === 404 ? 'This page flew off' : status === 403 ? 'Access denied' : 'The hive is having a moment'}</h1>
+      <h1 class="display display--md">{status === 404 ? 'This page flew off' : status === 403 ? 'Access denied' : 'Something went wrong'}</h1>
       <p class="lead">{message}</p>
       <div class="error-page__actions">
         {status >= 502 && <a href={url.href} class="button button--primary">Try again</a>}

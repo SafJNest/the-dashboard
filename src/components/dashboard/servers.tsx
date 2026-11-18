@@ -22,7 +22,6 @@ interface ServersProps {
 export const Servers = component$<ServersProps>(({ guilds }) => (
   <main class="dashboard__main">
     <div class="dashboard__intro">
-      <p class="eyebrow">Your hive</p>
       <h1 class="display display--md">Your servers</h1>
       <p class="lead">Servers you own or can manage.</p>
     </div>

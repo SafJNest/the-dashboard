@@ -58,7 +58,7 @@
   width: 100%;
   min-width: 0;
   border: 1px solid var(--field-border);
-  border-radius: var(--bb-radius-sm);
+  border-radius: var(--bb-radius-control);
   background-color: var(--bb-bg-inset);
   color: var(--bb-fg-default);
   font: var(--bb-weight-regular) var(--bb-text-md) / var(--bb-leading-normal) var(--bb-font-ui);
@@ -154,7 +154,7 @@
 .textarea-wrap {
   overflow: hidden;
   border: 1px solid var(--bb-border-default);
-  border-radius: var(--bb-radius-sm);
+  border-radius: var(--bb-radius-control);
   background: var(--bb-bg-inset);
 }
 

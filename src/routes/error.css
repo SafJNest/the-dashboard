@@ -34,7 +34,7 @@
   width: 2.75rem;
   height: 2.75rem;
   margin-bottom: var(--bb-space-2);
-  border-radius: var(--bb-radius-md);
+  border-radius: var(--bb-radius-control);
   background: var(--bb-danger-muted);
 }
 

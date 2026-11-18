@@ -21,7 +21,7 @@ export const SectionIntro = component$<SectionIntroProps>(({ group, title, descr
       <h1 class="settings-head__title">{title}</h1>
       <p class="text-muted">{description}</p>
       <p class="caption">
-        Slash command <span class="mono text-accent">{command}</span>
+        Slash command <span class="mono text-muted">{command}</span>
       </p>
     </div>
   );

@@ -29,9 +29,8 @@
   gap: var(--bb-space-4);
   padding: var(--bb-space-3) var(--bb-space-3) var(--bb-space-3) var(--bb-space-5);
   border: 1px solid var(--bb-border-strong);
-  border-radius: var(--bb-radius-md);
+  border-radius: var(--bb-radius-box);
   background: var(--bb-bg-glass-strong);
-  box-shadow: var(--bb-shadow-glass);
   backdrop-filter: var(--bb-blur-glass);
 }
 

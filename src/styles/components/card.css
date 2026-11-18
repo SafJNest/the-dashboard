@@ -2,9 +2,8 @@
   min-width: 0;
   padding: var(--bb-space-6);
   border: 1px solid var(--bb-border-glass);
-  border-radius: var(--bb-radius-lg);
+  border-radius: var(--bb-radius-box);
   background: var(--bb-bg-glass);
-  box-shadow: var(--bb-shadow-glass);
   backdrop-filter: var(--bb-blur-glass);
 }
 

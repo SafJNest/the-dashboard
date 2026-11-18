@@ -251,7 +251,6 @@ a.ctxtab:hover,
   height: 2px;
   border-radius: 2px;
   background: var(--bb-accent);
-  box-shadow: var(--bb-glow-sm);
 }
 
 :root:has(.dashboard .settings) {
@@ -284,9 +283,8 @@ a.ctxtab:hover,
   max-width: 17.5rem;
   padding: var(--bb-space-2) var(--bb-space-2) var(--bb-space-3);
   border: 1px solid var(--bb-border-glass);
-  border-radius: var(--bb-radius-lg);
+  border-radius: var(--bb-radius-box);
   background: var(--bb-bg-glass);
-  box-shadow: var(--bb-shadow-glass);
   backdrop-filter: var(--bb-blur-glass);
 }
 
@@ -440,7 +438,7 @@ a.ctxtab:hover,
   gap: var(--bb-space-3);
   padding: var(--bb-space-3) 0.875rem;
   border: 1px solid var(--bb-border-muted);
-  border-radius: var(--bb-radius-md);
+  border-radius: var(--bb-radius-control);
   color: var(--bb-fg-default);
   text-decoration: none;
 }
@@ -508,6 +506,7 @@ a.ctxtab:hover,
   align-items: center;
   gap: var(--bb-space-4);
   height: 100%;
+  padding: var(--bb-space-4);
   color: var(--bb-fg-default);
   text-decoration: none;
   transition:
@@ -534,8 +533,15 @@ a.ctxtab:hover,
 }
 
 .dashboard__manage {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: var(--bb-control-sm);
   margin-left: auto;
-  color: var(--bb-fg-accent);
+  padding: 0 var(--bb-space-3);
+  border: 1px solid var(--bb-border-strong);
+  border-radius: var(--bb-radius-control);
+  color: var(--bb-fg-default);
   font-size: var(--bb-text-sm);
   font-weight: var(--bb-weight-medium);
 }
@@ -614,7 +620,6 @@ a[q\:link][aria-busy="true"] {
   inset: 0;
   width: 40%;
   background: linear-gradient(90deg, transparent, var(--bb-accent), transparent);
-  box-shadow: var(--bb-glow-sm);
   animation: nav-progress 1.1s var(--bb-ease-out) infinite;
 }
 

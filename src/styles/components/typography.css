@@ -48,21 +48,19 @@
 }
 
 .eyebrow {
-  color: var(--bb-fg-accent);
-  font-family: var(--bb-font-mono);
-  font-size: var(--bb-text-xs);
-  letter-spacing: var(--bb-tracking-eyebrow);
+  color: var(--bb-fg-subtle);
+  font-family: var(--bb-font-ui);
+  font-size: var(--bb-text-sm);
   line-height: 1.33;
-  text-transform: uppercase;
+  font-weight: var(--bb-weight-medium);
 }
 
 .overline {
   color: var(--bb-fg-subtle);
-  font-family: var(--bb-font-mono);
-  font-size: var(--bb-text-2xs);
-  letter-spacing: var(--bb-tracking-overline);
+  font-family: var(--bb-font-ui);
+  font-size: var(--bb-text-xs);
   line-height: 1.45;
-  text-transform: uppercase;
+  font-weight: var(--bb-weight-medium);
 }
 
 .caption {
@@ -78,4 +76,21 @@
 
 .text-subtle {
   color: var(--bb-fg-subtle);
+}
+
+.eyebrow--mono {
+  color: var(--bb-fg-accent);
+  font-family: var(--bb-font-mono);
+  font-size: var(--bb-text-xs);
+  font-weight: var(--bb-weight-regular);
+  letter-spacing: var(--bb-tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.overline--mono {
+  font-family: var(--bb-font-mono);
+  font-size: var(--bb-text-2xs);
+  font-weight: var(--bb-weight-regular);
+  letter-spacing: var(--bb-tracking-overline);
+  text-transform: uppercase;
 }

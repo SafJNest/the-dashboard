@@ -131,7 +131,7 @@ export const Hero = component$<HeroProps>(({ inviteUrl }) => (
     </div>
 
     <div class="container hero__content">
-      <p class="eyebrow">500 worker nodes · one hive</p>
+      <p class="eyebrow eyebrow--mono">500 worker nodes · one hive</p>
       <h1 class="display display--xl hero__title">
         One <span class="text-accent">hive.</span> Every server.
       </h1>

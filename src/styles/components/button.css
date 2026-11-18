@@ -14,7 +14,7 @@
   height: var(--button-height);
   padding: 0 var(--button-padding);
   border: 1px solid var(--button-border);
-  border-radius: var(--bb-radius-pill);
+  border-radius: var(--bb-radius-control);
   background: var(--button-bg);
   color: var(--button-fg);
   font: var(--bb-weight-medium) var(--bb-text-md) / 1 var(--bb-font-ui);
@@ -42,9 +42,9 @@
   --button-bg-hover: var(--bb-accent-hover);
   --button-fg: var(--bb-fg-on-accent);
   --button-border: transparent;
-  --button-glow: var(--bb-glow-md);
+  --button-glow: none;
 
-  font-weight: var(--bb-weight-semibold);
+  font-weight: var(--bb-weight-medium);
 }
 
 .button--secondary {

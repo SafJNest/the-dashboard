@@ -15,7 +15,7 @@
   gap: var(--bb-space-3);
   padding: var(--bb-space-4) var(--bb-space-5);
   border: 1px solid var(--bb-border-muted);
-  border-radius: var(--bb-radius-md);
+  border-radius: var(--bb-radius-control);
   background: color-mix(in oklab, var(--bb-bg-surface) 80%, transparent);
 }
 
@@ -61,7 +61,7 @@
 
 .command-search__input {
   padding-left: 2.375rem;
-  border-radius: var(--bb-radius-pill);
+  border-radius: var(--bb-radius-control);
 }
 
 .command-kind {
@@ -128,7 +128,7 @@
   gap: var(--bb-space-4) var(--bb-space-10);
   padding: var(--bb-space-6);
   border: 1px solid var(--bb-border-muted);
-  border-radius: var(--bb-radius-lg);
+  border-radius: var(--bb-radius-box);
   background: var(--bb-bg-surface);
 }
 
@@ -204,7 +204,7 @@
   max-width: 100%;
   padding: 0.375rem 0.625rem;
   border: 1px solid var(--bb-border-default);
-  border-radius: var(--bb-radius-sm);
+  border-radius: var(--bb-radius-control);
   background: var(--bb-bg-raised);
   color: var(--bb-fg-default);
   font: var(--bb-weight-medium) var(--bb-text-md) / var(--bb-leading-snug) var(--bb-font-mono);
@@ -237,7 +237,7 @@
   align-items: center;
   height: 1.375rem;
   padding: 0 0.4375rem;
-  border-radius: var(--bb-radius-xs);
+  border-radius: var(--bb-radius-part);
   font: var(--bb-weight-medium) var(--bb-text-xs) / 1 var(--bb-font-mono);
   white-space: nowrap;
 }
@@ -259,7 +259,7 @@
   gap: var(--bb-space-1);
   height: 1.375rem;
   padding: 0 0.4375rem;
-  border-radius: var(--bb-radius-xs);
+  border-radius: var(--bb-radius-part);
   background: var(--bb-warning-muted);
   color: var(--bb-warning-fg);
   font: var(--bb-weight-medium) var(--bb-text-2xs) / 1 var(--bb-font-mono);
@@ -282,8 +282,6 @@
 .command-aliases__label {
   font-family: var(--bb-font-ui);
   font-size: var(--bb-text-2xs);
-  letter-spacing: var(--bb-tracking-overline);
-  text-transform: uppercase;
 }
 
 .command-details summary {

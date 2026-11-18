@@ -36,7 +36,7 @@ const FeatureNumber = ({ value }: { value: string }) => (
 export const Features = component$(() => (
   <section id="features" class="container features">
     <div class="features__intro">
-      <p class="eyebrow">The colony</p>
+      <p class="eyebrow eyebrow--mono">The colony</p>
       <h2 class="display display--md">Four castes. One hive.</h2>
       <p class="lead">
         Every module is a caste with one job. Switch them on from the dashboard — setup is free, and anything
@@ -49,7 +49,7 @@ export const Features = component$(() => (
         <header class="feature__header">
           <div class="feature__kicker">
             <FeatureNumber value="01" />
-            <span class="overline">Guards · Welcome &amp; leave</span>
+            <span class="overline overline--mono">Guards · Welcome &amp; leave</span>
           </div>
           <h3 class="heading">Greet every bee that lands.</h3>
           <p class="text-muted">
@@ -79,7 +79,7 @@ export const Features = component$(() => (
         <header class="feature__header">
           <div class="feature__kicker">
             <FeatureNumber value="02" />
-            <span class="overline">Workers · Experience</span>
+            <span class="overline overline--mono">Workers · Experience</span>
           </div>
           <h3 class="heading">From larva to queen.</h3>
           <p class="text-muted">
@@ -108,7 +108,7 @@ export const Features = component$(() => (
         <header class="feature__header">
           <div class="feature__kicker">
             <FeatureNumber value="03" />
-            <span class="overline">Drones · Soundboards</span>
+            <span class="overline overline--mono">Drones · Soundboards</span>
           </div>
           <h3 class="heading">25 cells, one comb.</h3>
           <p class="text-muted">
@@ -132,7 +132,7 @@ export const Features = component$(() => (
         <header class="feature__header">
           <div class="feature__kicker">
             <FeatureNumber value="04" />
-            <span class="overline">Foragers · Sound library</span>
+            <span class="overline overline--mono">Foragers · Sound library</span>
           </div>
           <h3 class="heading">Nectar from every server.</h3>
           <p class="text-muted">

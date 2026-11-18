@@ -66,7 +66,7 @@ export const RewardSettings = component$<{ level?: string }>(({ level }) => {
               return (
                 <li key={item}>
                   <Link href={settingsPath(guild.value.id, 'rewards', item)} scroll={false} class="item-picker__link" aria-current={item === selected ? 'page' : undefined}>
-                    <span class="badge badge--accent">LVL {item}</span>
+                    <span class="badge badge--accent">Level {item}</span>
                     <span class="item-picker__label">{role ? role.name : 'No roles'}</span>
                     {!entry.valid && <span class="badge badge--warning">Fix</span>}
                   </Link>

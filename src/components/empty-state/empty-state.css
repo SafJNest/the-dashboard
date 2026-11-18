@@ -36,9 +36,8 @@
   width: 3.5rem;
   height: 3.5rem;
   border: 1px solid var(--bb-border-strong);
-  border-radius: var(--bb-radius-lg);
+  border-radius: var(--bb-radius-box);
   background: var(--bb-bg-glass-strong);
-  box-shadow: var(--bb-shadow-glass);
   color: var(--bb-fg-muted);
 }
 

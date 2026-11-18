@@ -11,10 +11,8 @@
   padding: var(--bb-space-3) var(--bb-space-4);
   border-bottom: 1px solid var(--bb-border-default);
   color: var(--bb-fg-subtle);
-  font: var(--bb-weight-medium) var(--bb-text-2xs) / 1 var(--bb-font-mono);
-  letter-spacing: 0.1em;
+  font: var(--bb-weight-medium) var(--bb-text-xs) / 1 var(--bb-font-ui);
   text-align: left;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
