@@ -4,6 +4,7 @@ import { settingsPath } from '../../lib/dashboard-path';
 import { useGuild } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
 import { EmptyState } from '../empty-state/empty-state';
+import { KeyedAlertCreate } from './keyed-alert-create';
 import { AlertSettings } from './alert-settings';
 import { SectionIntro } from './settings-form';
 
@@ -45,33 +46,37 @@ export const RewardSettings = component$<{ level?: string }>(({ level }) => {
         </header>
         <div class="card">
           <EmptyState icon="rewards" title="No rewards yet">
-            Create one in Discord with <span class="mono">/reward</span>, then edit it here.
+            Create a reward for a level between 1 and 100.
           </EmptyState>
         </div>
+        <KeyedAlertCreate kind="reward" />
       </div>
     );
   }
 
   return (
-    <AlertSettings kind="reward" itemKey={selected} key={selected}>
-      <section q:slot="lead" class="card settings-card" aria-labelledby="reward-tiers">
-        <h2 id="reward-tiers" class="heading heading--sm">Tiers</h2>
-        <ul class="item-picker">
-          {levels.map((item) => {
-            const entry = reward[item];
-            const role = guild.value.roles.find((candidate) => candidate.id === entry.roleIds[0]);
-            return (
-              <li key={item}>
-                <Link href={settingsPath(guild.value.id, 'rewards', item)} scroll={false} class="item-picker__link" aria-current={item === selected ? 'page' : undefined}>
-                  <span class="badge badge--accent">LVL {item}</span>
-                  <span class="item-picker__label">{role ? role.name : 'No roles'}</span>
-                  {!entry.valid && <span class="badge badge--warning">Fix</span>}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-    </AlertSettings>
+    <>
+      <AlertSettings kind="reward" itemKey={selected} key={selected}>
+        <section q:slot="lead" class="card settings-card" aria-labelledby="reward-tiers">
+          <h2 id="reward-tiers" class="heading heading--sm">Tiers</h2>
+          <ul class="item-picker">
+            {levels.map((item) => {
+              const entry = reward[item];
+              const role = guild.value.roles.find((candidate) => candidate.id === entry.roleIds[0]);
+              return (
+                <li key={item}>
+                  <Link href={settingsPath(guild.value.id, 'rewards', item)} scroll={false} class="item-picker__link" aria-current={item === selected ? 'page' : undefined}>
+                    <span class="badge badge--accent">LVL {item}</span>
+                    <span class="item-picker__label">{role ? role.name : 'No roles'}</span>
+                    {!entry.valid && <span class="badge badge--warning">Fix</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      </AlertSettings>
+      <KeyedAlertCreate kind="reward" />
+    </>
   );
 });

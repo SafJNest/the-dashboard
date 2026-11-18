@@ -78,6 +78,17 @@ export class BeebotClient {
     return this.send('POST', ENDPOINTS.guildSettings(guildId), body, (data) => data);
   }
 
+  twitchStreamer(guildId: string, login: string): Promise<ClientResult<string>> {
+    return this.read(withQuery(ENDPOINTS.twitchLookup(guildId), { login }), (data) => {
+      const id = (data as { id?: unknown } | null)?.id;
+      return typeof id === 'string' && /^[1-9][0-9]{0,31}$/.test(id) ? id : null;
+    });
+  }
+
+  uploadSound(guildId: string, body: FormData): Promise<ClientResult<Sound>> {
+    return this.send('POST', ENDPOINTS.guildSounds(guildId), body, parseSound);
+  }
+
   guildSounds(guildId: string, period: Period): Promise<ClientResult<GuildSoundLibrary>> {
     return this.read(withQuery(ENDPOINTS.guildSounds(guildId), { period }), (data) => parseGuildSoundLibrary(data, guildId));
   }
@@ -101,7 +112,7 @@ export class BeebotClient {
     }, SOUND_NOT_FOUND);
   }
 
-  soundAnalytics(soundId: string, options: { period: Period; guildId?: string }): Promise<ClientResult<SoundAnalytics>> {
+  soundAnalytics(soundId: string, options: { period: Period; guildId?: string; timezone?: string; cursor?: string }): Promise<ClientResult<SoundAnalytics>> {
     return this.send('GET', withQuery(ENDPOINTS.soundAnalytics(soundId), options), undefined, (data) => {
       const analytics = parseSoundAnalytics(data);
       return analytics?.soundId === soundId ? analytics : null;

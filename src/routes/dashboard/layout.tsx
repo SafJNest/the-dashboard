@@ -9,7 +9,7 @@ import { apiError, loginRedirect, SESSION_COOKIE } from '../../lib/beebot.server
 import { BeebotClient } from '../../lib/beebot/client.server';
 import { pageKey } from '../../lib/dashboard-path';
 import { useGuildSoundLibrary, useMySounds } from '../../lib/sound-loaders';
-import { GLOBAL_GREET, GUILD_ID, SOUND_ID, type FieldError, type Greets, type VoteState } from '../../lib/sounds';
+import { GLOBAL_GREET, GUILD_ID, PERIODS, SOUND_ID, type FieldError, type Greets, type Period, type MyPlays, type VoteState } from '../../lib/sounds';
 import styles from './dashboard.css?inline';
 
 export const onRequest: RequestHandler = (event) => {
@@ -29,6 +29,21 @@ export const useAccount = routeLoader$(async (event) => {
   };
   return account;
 }, { search: [], serializationStrategy: 'always', cacheControl: { private: true, maxAge: 300 } });
+
+export const useLoadSoundHistory = routeAction$(async (form, event): Promise<{ page: MyPlays | null; message: string | null }> => {
+  const soundId = typeof form.soundId === 'string' ? form.soundId : '';
+  const guildId = typeof form.guildId === 'string' && form.guildId ? form.guildId : undefined;
+  const timezone = typeof form.timezone === 'string' ? form.timezone : '';
+  const period = form.period as Period;
+  const cursor = typeof form.cursor === 'string' ? form.cursor : '';
+
+  if (!SOUND_ID.test(soundId) || (guildId && !GUILD_ID.test(guildId)) || !PERIODS.includes(period) || !timezone || !cursor) {
+    return { page: null, message: 'This history page is unavailable.' };
+  }
+
+  const result = await new BeebotClient(event).soundAnalytics(soundId, { guildId, period, timezone, cursor });
+  return result.ok ? { page: result.data.my, message: null } : { page: null, message: result.message };
+}, { invalidate: [] });
 
 export interface VoteResult {
   soundId: string;

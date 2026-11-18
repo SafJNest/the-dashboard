@@ -5,6 +5,7 @@ export const ENDPOINTS = {
   meSettings: '/me/settings',
   guild: (guildId: string) => `/guilds/${segment(guildId)}`,
   guildSettings: (guildId: string) => `/guilds/${segment(guildId)}/settings`,
+  twitchLookup: (guildId: string) => `/guilds/${segment(guildId)}/alerts/twitch/lookup`,
   guildSounds: (guildId: string) => `/guilds/${segment(guildId)}/sounds`,
   guildSoundAnalytics: (guildId: string) => `/guilds/${segment(guildId)}/sounds/analytics`,
   mySounds: '/sounds/me',

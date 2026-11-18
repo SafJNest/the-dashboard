@@ -111,10 +111,11 @@ export async function beebotFetch(event: ServerEvent, path: string, options: { m
   const { base, apiKey } = configuration(event);
   const headers = new Headers({ 'X-API-Key': apiKey, Accept: 'application/json' });
   if (options.token) headers.set('Authorization', `Bearer ${options.token}`);
-  if (options.body !== undefined) headers.set('Content-Type', 'application/json');
+  const multipart = options.body instanceof FormData;
+  if (options.body !== undefined && !multipart) headers.set('Content-Type', 'application/json');
   return fetch(`${base}${path}`, {
     method: options.method || 'GET', headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: multipart ? (options.body as FormData) : options.body === undefined ? undefined : JSON.stringify(options.body),
     signal: AbortSignal.timeout(15000),
     redirect: 'manual',
   });

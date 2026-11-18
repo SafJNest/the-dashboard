@@ -11,6 +11,7 @@ export interface SoundView {
   replay: ReplayBucket[];
   myPlays: number;
   history: PlayEvent[];
+  nextCursor: string | null;
   where: { guildId: string | null; plays: number }[];
 }
 
@@ -33,6 +34,7 @@ const EMPTY_VIEW: SoundView = {
   replay: [],
   myPlays: 0,
   history: [],
+  nextCursor: null,
   where: [],
 };
 
@@ -53,6 +55,7 @@ export function viewFromGuildStats(stats: GuildSoundStats | undefined): SoundVie
     replay: stats.replayDistribution,
     myPlays: stats.my.plays,
     history: stats.my.history,
+    nextCursor: stats.my.nextCursor,
     where: [],
   };
 }
@@ -85,7 +88,7 @@ export function viewFromSoundAnalytics(analytics: SoundAnalytics | undefined, gu
   if (guildId) {
     const group = analytics.guilds[guildId];
     const history = analytics.my.history.filter((event) => event.guildId === guildId);
-    if (!group) return { ...EMPTY_VIEW, myPlays: history.length, history };
+    if (!group) return { ...EMPTY_VIEW, myPlays: history.length, history, nextCursor: analytics.my.nextCursor };
     return {
       plays: group.plays,
       listeners: group.listeners,
@@ -97,6 +100,7 @@ export function viewFromSoundAnalytics(analytics: SoundAnalytics | undefined, gu
       replay: group.replayDistribution,
       myPlays: history.length,
       history,
+      nextCursor: analytics.my.nextCursor,
       where: [],
     };
   }
@@ -113,6 +117,7 @@ export function viewFromSoundAnalytics(analytics: SoundAnalytics | undefined, gu
     replay: totals.replayDistribution,
     myPlays: analytics.my.plays,
     history: analytics.my.history,
+    nextCursor: analytics.my.nextCursor,
     where,
   };
 }

@@ -13,7 +13,7 @@ const ALERTS: Record<string, AlertSpec> = {
   welcome: { channel: true, roles: 'multi' },
   leave: { channel: true },
   boost: { channel: true, roles: 'multi' },
-  levelUp: {},
+  levelUp: { roles: 'multi' },
   reward: { roles: 'multi', temporary: true, keyed: true },
   twitch: { channel: true, roles: 'single', keyed: true },
 };
@@ -111,7 +111,7 @@ export function buildSettingsBody(form: FormValues) {
     return {
       section,
       key,
-      body: { general: { prefix, language: text(form, 'language').trim(), voice: text(form, 'voice').trim(), leagueShard } },
+      body: { general: { prefix, voice: text(form, 'voice').trim(), ...(leagueShard ? { leagueShard } : {}) } },
     };
   }
   if (section === 'blacklist') {

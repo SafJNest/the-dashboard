@@ -5,6 +5,7 @@ import { alertBadge } from '../../lib/guild';
 import { useGuild } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
 import { EmptyState } from '../empty-state/empty-state';
+import { KeyedAlertCreate } from './keyed-alert-create';
 import { AlertSettings } from './alert-settings';
 import { SectionIntro } from './settings-form';
 
@@ -46,33 +47,37 @@ export const TwitchSettings = component$<{ streamerId?: string }>(({ streamerId 
         </header>
         <div class="card">
           <EmptyState icon="twitch" title="No streamers linked yet">
-            Link one in Discord with <span class="mono">/twitch link</span>, then edit the alert here.
+            Link a streamer using their Twitch username.
           </EmptyState>
         </div>
+        <KeyedAlertCreate kind="twitch" />
       </div>
     );
   }
 
   return (
-    <AlertSettings kind="twitch" itemKey={selected} key={selected}>
-      <section q:slot="lead" class="card settings-card" aria-labelledby="twitch-streamers">
-        <h2 id="twitch-streamers" class="heading heading--sm">Streamers</h2>
-        <ul class="item-picker">
-          {streamers.map((streamer) => {
-            const badge = alertBadge(twitch[streamer]);
-            return (
-              <li key={streamer}>
-                <Link href={settingsPath(guild.value.id, 'twitch', streamer)} scroll={false} class="item-picker__link" aria-current={streamer === selected ? 'page' : undefined}>
-                  <Icon name="twitch" />
-                  <span class="item-picker__label mono">{streamer}</span>
-                  <span class={['badge', badge.tone && `badge--${badge.tone}`]}>{badge.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-        <p class="hint">Streamers are listed by Twitch ID.</p>
-      </section>
-    </AlertSettings>
+    <>
+      <AlertSettings kind="twitch" itemKey={selected} key={selected}>
+        <section q:slot="lead" class="card settings-card" aria-labelledby="twitch-streamers">
+          <h2 id="twitch-streamers" class="heading heading--sm">Streamers</h2>
+          <ul class="item-picker">
+            {streamers.map((streamer) => {
+              const badge = alertBadge(twitch[streamer]);
+              return (
+                <li key={streamer}>
+                  <Link href={settingsPath(guild.value.id, 'twitch', streamer)} scroll={false} class="item-picker__link" aria-current={streamer === selected ? 'page' : undefined}>
+                    <Icon name="twitch" />
+                    <span class="item-picker__label mono">{streamer}</span>
+                    <span class={['badge', badge.tone && `badge--${badge.tone}`]}>{badge.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          <p class="hint">Streamers are listed by Twitch ID.</p>
+        </section>
+      </AlertSettings>
+      <KeyedAlertCreate kind="twitch" />
+    </>
   );
 });

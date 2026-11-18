@@ -7,7 +7,7 @@ import { PageSkeleton } from '../../../components/dashboard/page-skeleton';
 import { findSection } from '../../../components/guild/sections';
 import { apiError, GUILD_NOT_AVAILABLE } from '../../../lib/beebot.server';
 import { BeebotClient } from '../../../lib/beebot/client.server';
-import { settingsSection } from '../../../lib/dashboard-path';
+import { settingsPath, settingsSection } from '../../../lib/dashboard-path';
 import { peekValue } from '../../../lib/loader-value';
 import type { SettingsResult } from '../../../lib/guild';
 import { buildSettingsBody, readSettingsResult } from '../../../lib/settings';
@@ -46,6 +46,33 @@ export const useSaveSettings = routeAction$(async (form, event): Promise<Setting
     errors: result.errors,
     message: ok || result.errors.length ? null : 'Your changes were not saved. Please try again.',
   };
+}, { invalidate: [useGuild] });
+
+export const useCreateKeyedAlert = routeAction$(async (form, event): Promise<{ message: string }> => {
+  const { guildId } = event.params;
+  const kind = form.kind;
+  const identifier = typeof form.identifier === 'string' ? form.identifier.trim() : '';
+  if (!GUILD_ID.test(guildId) || (kind !== 'reward' && kind !== 'twitch')) {
+    return { message: 'This alert could not be created.' };
+  }
+
+  const client = new BeebotClient(event);
+  let key = identifier;
+  if (kind === 'twitch') {
+    if (!/^[a-zA-Z0-9_]{1,25}$/.test(identifier)) return { message: 'Enter a Twitch username.' };
+    const streamer = await client.twitchStreamer(guildId, identifier);
+    if (!streamer.ok) return { message: streamer.message };
+    key = streamer.data;
+  } else if (!/^(?:[1-9][0-9]?|100)$/.test(identifier)) {
+    return { message: 'Enter a level between 1 and 100.' };
+  }
+
+  const saved = await client.saveGuildSettings(guildId, { [kind]: { [key]: {} } });
+  if (!saved.ok) return { message: saved.message };
+  const result = readSettingsResult(saved.data);
+  if (result.failed) return { message: result.errors[0]?.message ?? 'This alert could not be created.' };
+
+  throw event.redirect(303, settingsPath(guildId, kind === 'reward' ? 'rewards' : 'twitch', key));
 }, { invalidate: [useGuild] });
 
 export default component$(() => {

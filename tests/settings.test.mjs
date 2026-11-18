@@ -43,6 +43,11 @@ test('keyed alerts are nested under their streamer or level', () => {
   assert.deepEqual(reward.body, { reward: { 10: { enabled: false, message: 'GG', privateMessage: '', sendType: 'PRIVATE', roleIds: [], temporary: true } } });
 });
 
+test('general settings omit derived language and a missing shard', () => {
+  const request = buildSettingsBody({ section: 'general', prefix: '!', language: 'en-us', voice: 'John' });
+  assert.deepEqual(request.body, { general: { prefix: '!', voice: 'John' } });
+});
+
 test('experience sends only the channels that changed', () => {
   const original = JSON.stringify({ experienceEnabled: true, experienceModifier: 1, statisticsEnabled: false, leagueShard: 'EUW1' });
   const request = buildSettingsBody({

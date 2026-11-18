@@ -58,6 +58,7 @@ const ALERTS: Record<AlertKind, AlertMeta> = {
     toggle: 'Enable level-up message',
     variables: ['#user', '#level'],
     channel: false,
+    roles: { mode: 'multi', label: 'Roles on level-up', hint: 'Choose roles for this alert.' },
   },
   reward: {
     group: 'Leveling',

@@ -34,7 +34,7 @@ export const GeneralSettings = component$(() => {
           <div class="settings-pair">
             <div class="field">
               <label class="label" for="general-language">Language</label>
-              <input id="general-language" class="input mono" name="language" value={general.language} />
+              <input id="general-language" class="input mono" value={general.language} readOnly />
             </div>
             <div class="field">
               <label class="label" for="general-voice-input">Voice</label>

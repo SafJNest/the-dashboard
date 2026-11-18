@@ -1,4 +1,4 @@
-import { $, component$, Pending } from '@qwik.dev/core';
+import { $, component$, Pending, useSignal } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
 import { OTHER_GUILDS, readStats, UNKNOWN_GUILD, type DetailTab, type LibraryEntry, type LibraryModel, type LibraryView } from '../../lib/sound-library';
 import {
@@ -13,7 +13,8 @@ import {
   topShare,
   WEEKDAYS,
 } from '../../lib/sound-stats';
-import { PERIOD_LABELS, type Sound, type VoteState } from '../../lib/sounds';
+import { PERIOD_LABELS, type Period, type PlayEvent, type Sound, type VoteState } from '../../lib/sounds';
+import { useLoadSoundHistory } from '../../routes/dashboard/layout';
 import { Icon } from '../dashboard/icons';
 import { readSource, type LibrarySource } from './library-source';
 import { LoadError, PanelSkeleton, Skeleton } from './library-states';
@@ -157,7 +158,7 @@ const SoundPanel = component$<PanelProps>(({ model, source, view: options, sound
           </div>
         ) : (
           <div class="sound-panel__body">
-            {view.myPlays > 0 || history.length > 0 ? (
+            {view.myPlays > 0 || history.length > 0 || view.nextCursor ? (
               <>
                 <div class="stat-tiles">
                   <div class="stat-tile">
@@ -198,40 +199,11 @@ const SoundPanel = component$<PanelProps>(({ model, source, view: options, sound
                     </ul>
                   </div>
                 </div>
-                <div class="chart-block">
-                  <div class="chart-block__head">
-                    <h3 class="chart-block__title">Your recent plays</h3>
-                    <span class="caption">Showing {Math.min(HISTORY_ROWS, history.length)} of {history.length} recent plays</span>
-                  </div>
-                  <div class="table-wrap">
-                    <table class="table">
-                      <thead>
-                        <tr>
-                          <th scope="col">When</th>
-                          <th scope="col">Server</th>
-                          <th scope="col">How</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {history.slice(0, HISTORY_ROWS).map((event) => {
-                          const when = formatPlayedAt(event.playedAt, timezone);
-                          return (
-                            <tr key={event.id}>
-                              <td>
-                                <span class="history__when">
-                                  <span>{when.date}</span>
-                                  <span class="caption mono">{when.time}</span>
-                                </span>
-                              </td>
-                              <td>{guildLabel(event.guildId)}</td>
-                              <td>{sourceLabel(event.source)}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <SoundHistoryTable
+                  key={`${sound.id}:${model.scope}:${model.guildId ?? ''}:${options.period}:${timezone}:${view.nextCursor ?? ''}`}
+                  soundId={sound.id} guildId={model.guildId} scope={model.scope} period={stats.period}
+                  timezone={timezone} seed={history} nextCursor={view.nextCursor} guildNames={model.guildNames}
+                />
               </>
             ) : (
               <div class="sound-panel__empty">
@@ -249,6 +221,89 @@ const SoundPanel = component$<PanelProps>(({ model, source, view: options, sound
           </div>
         )}
     </>
+  );
+});
+
+interface HistoryProps {
+  soundId: string;
+  guildId: string | null;
+  scope: LibraryModel['scope'];
+  period: Period;
+  timezone: string;
+  seed: PlayEvent[];
+  nextCursor: string | null;
+  guildNames: LibraryModel['guildNames'];
+}
+
+const SoundHistoryTable = component$<HistoryProps>(({ soundId, guildId, scope, period, timezone, seed, nextCursor, guildNames }) => {
+  const load = useLoadSoundHistory();
+  const extra = useSignal<PlayEvent[]>([]);
+  const cursor = useSignal(nextCursor);
+  const shown = useSignal(HISTORY_ROWS);
+  const error = useSignal<string | null>(null);
+  const history = [...seed, ...extra.value];
+
+  return (
+    <div class="chart-block">
+      <div class="chart-block__head">
+        <h3 class="chart-block__title">Your recent plays</h3>
+        <span class="caption">Showing {Math.min(shown.value, history.length)} of {history.length} loaded plays</span>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Server</th>
+              <th scope="col">How</th>
+            </tr>
+          </thead>
+          <tbody>
+            {history.slice(0, shown.value).map((event) => {
+              const when = formatPlayedAt(event.playedAt, timezone);
+              return (
+                <tr key={event.id}>
+                  <td>
+                    <span class="history__when">
+                      <span>{when.date}</span>
+                      <span class="caption mono">{when.time}</span>
+                    </span>
+                  </td>
+                  <td>{event.guildId === null ? OTHER_GUILDS : guildNames[event.guildId] ?? UNKNOWN_GUILD}</td>
+                  <td>{sourceLabel(event.source)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {(shown.value < history.length || cursor.value) && (
+        <button type="button" class="button button--secondary button--sm" disabled={load.isRunning}
+          onClick$={async () => {
+            if (load.isRunning) return;
+            if (shown.value < history.length) {
+              shown.value += HISTORY_ROWS;
+              return;
+            }
+            if (!cursor.value) return;
+
+            error.value = null;
+            const { value } = await load.submit({ soundId, period, timezone, cursor: cursor.value, guildId: scope === 'guild' ? guildId ?? '' : '' });
+            if (!value?.page) {
+              error.value = value?.message ?? 'This history page is unavailable.';
+              return;
+            }
+
+            const loadedIds = new Set(history.map((item) => item.id));
+            const items = value.page.history.filter((item) => !loadedIds.has(item.id) && (scope === 'guild' || !guildId || item.guildId === guildId));
+            extra.value = [...extra.value, ...items];
+            cursor.value = value.page.nextCursor;
+            shown.value += HISTORY_ROWS;
+          }}
+        >{load.isRunning ? 'Loading…' : 'Load more'}</button>
+      )}
+      {error.value && <p role="alert">{error.value}</p>}
+    </div>
   );
 });
 
@@ -335,8 +390,8 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
                 <span>Download</span>
               </a>
             )}
-            {sound.canEdit && (
-              <Link href={`/dashboard/me/sounds/${sound.id}/edit/`} class="button button--secondary button--icon" aria-label={`Edit ${sound.name}`} title="Edit">
+            {(sound.canEdit || sound.canDelete) && (
+              <Link href={`/dashboard/me/sounds/${sound.id}/edit/`} class="button button--secondary button--icon" aria-label={`Manage ${sound.name}`} title="Manage">
                 <Icon name="edit" />
               </Link>
             )}
