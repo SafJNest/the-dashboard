@@ -124,6 +124,7 @@ export const SoundPanel = component$<SoundPanelProps>(({ sound, live, loginHref,
             </span>
           </div>
         </div>
+        {sound.description && <p class="sound-card__description">{sound.description}</p>}
 
         <div class="sound-card__player">
           <button type="button" class="play play--lg" aria-label={`${playing ? 'Pause' : 'Play'} ${sound.name}`} aria-busy={current && player.state.loading} disabled={!sound.audioUrl} onClick$={() => player.toggle$(sound.id, sound.audioUrl)}>

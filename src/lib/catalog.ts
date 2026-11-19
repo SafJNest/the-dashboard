@@ -36,6 +36,7 @@ export interface Viewer {
 export interface SoundCard {
   id: string;
   name: string;
+  description: string | null;
   public: boolean;
   createdAt: string | null;
   durationMs: number | null;
@@ -188,6 +189,7 @@ export function parseSoundCard(value: unknown): SoundCard | null {
   return {
     id,
     name,
+    description: text(card.description) || null,
     public: card.public !== false,
     createdAt: text(card.createdAt),
     durationMs: number(card.durationMs),

@@ -97,7 +97,7 @@ Le richieste partono solo dal server Qwik tramite la classe `BeebotClient` (`src
 
 - `/dashboard/{guildId}/sounds/` e `/dashboard/{guildId}/sounds/{soundId}/`: suoni caricati nel server, tuoi e degli altri.
 - `/dashboard/me/sounds/` e `/dashboard/me/sounds/{soundId}/`: i tuoi suoni di tutti i server. Filtro per server nel path: `/dashboard/me/sounds/guild/{guildId}/` e `/dashboard/me/sounds/guild/{guildId}/{soundId}/`, con gli stessi dati della libreria personale e senza chiamare `/guilds/{id}`. `/dashboard/me/` reindirizza qui.
-- `/dashboard/me/sounds/{soundId}/edit/`: modifica (nome, visibilità, tag) e cancellazione, solo se il suono ha `canEdit` o `canDelete`. Sta fuori dal gruppo `(library)`, quindi non carica la libreria.
+- `/dashboard/me/sounds/{soundId}/edit/`: modifica (nome, descrizione, visibilità, tag) e cancellazione, solo se il suono ha `canEdit` o `canDelete`. Sta fuori dal gruppo `(library)`, quindi non carica la libreria.
 - Nell'URL delle librerie ci sono solo identificativi (server, suono, filtro server personale): nessun parametro di query. I vecchi link con `?period=`, `?tab=`, `?owner=`, `?sort=` o `?guild=` vengono reindirizzati (301) al solo path; `?guild=` diventa il segmento `guild/{guildId}/`.
 - Filtro All/Mine/Others, ordinamento Name/Plays e pannello Everyone/Your plays sono stato locale della vista: restano mentre ci si muove nella stessa libreria e tornano ai valori predefiniti (All, Name, Everyone) a una nuova apertura.
 - Il periodo (`7d|30d|90d|all`, predefinito `30d`) è un dato richiesto ai loader, quindi viaggia nel cookie di sessione `beebot_period` (path `/dashboard/`, senza scadenza): resta per la sessione del browser, anche dopo un refresh. Scegliere un periodo aggiorna il cookie e invalida solo i loader della library e delle analytics. Le risposte dei loader hanno `Vary: Cookie` e la cache HTTP del browser conserva una sola variante per URL: tornare a un periodo già visto rifà la richiesta. L'ordine per nome e poi per ID è uguale su server e client. Il contatore delle righe e l'ordinamento "Plays" usano il totale di riproduzioni del suono (`plays` della risposta della library), quindi sono disponibili insieme all'elenco, non cambiano con il periodo e non aspettano le analytics.
@@ -130,6 +130,7 @@ Limiti e scelte sul contratto:
 - Con "All servers" i grafici giornalieri, la heatmap e le modalità sommano i gruppi per server quando `totals` non li contiene; la distribuzione delle ripetizioni non è sommabile e compare solo se presente in `totals` o nel singolo server.
 - La cronologia personale mostra gli eventi ricevuti (massimo 100 per suono); la paginazione con `nextCursor` non è ancora usata. Con un server selezionato i propri play sono contati sugli eventi ricevuti.
 - La classifica `users` delle analytics non viene mostrata.
+- Descrizione: facoltativa, fino a 500 caratteri anche su più righe, nel form di upload (parte `metadata`) e nell'editor (`PATCH /sounds/{id}`: vuota invia `null` e la cancella). Si legge sotto il titolo nel dettaglio della dashboard e nel pannello pubblico.
 - Upload e soundboard non sono implementati. Il limite di 5 tag segue il comando `/sound upload`.
 - Gli errori 400 di modifica mostrano il messaggio generico di `sessionFetch`, non il `message` del backend.
 

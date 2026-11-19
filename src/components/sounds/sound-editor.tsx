@@ -4,7 +4,7 @@ import { useAccount } from '../../routes/dashboard/layout';
 import { useDeleteSound, useSearchTags, useUpdateSound } from '../../routes/dashboard/me/sounds/[soundId]/edit/index';
 import { SoundImage } from './sound-image';
 import { formatAdded, formatCount, formatLength } from '../../lib/sound-stats';
-import { MAX_TAGS, type Sound } from '../../lib/sounds';
+import { DESCRIPTION_MAX, MAX_TAGS, type Sound } from '../../lib/sounds';
 import { Icon } from '../dashboard/icons';
 import { SaveDock } from '../dashboard/save-dock';
 import { GreetPicker } from './greet-picker';
@@ -23,6 +23,7 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
   const playing = useSignal(false);
   const dirty = useSignal(false);
   const name = useSignal(sound.name);
+  const description = useSignal(sound.description ?? '');
   const isPublic = useSignal(sound.public);
   const tags = useSignal(sound.tags.map((tag) => tag.name));
   const query = useSignal('');
@@ -56,6 +57,7 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
 
   const reset = $(() => {
     name.value = sound.name;
+    description.value = sound.description ?? '';
     isPublic.value = sound.public;
     tags.value = sound.tags.map((tag) => tag.name);
     query.value = '';
@@ -138,6 +140,14 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
                 <label class="label" for="sound-name">Name</label>
                 <input id="sound-name" class="input" name="name" bind:value={name} required autocomplete="off" />
                 <p class="hint">How members find it with /play sound and search.</p>
+              </div>
+              <div class="field">
+                <div class="field-row">
+                  <label class="label" for="sound-description">Description</label>
+                  <span class="caption">{[...description.value].length} / {DESCRIPTION_MAX}</span>
+                </div>
+                <textarea id="sound-description" class="textarea" name="description" rows={3} maxLength={DESCRIPTION_MAX} bind:value={description} />
+                <p class="hint">Shown on the sound page. Leave it empty to remove it.</p>
               </div>
               <div class="field">
                 <span class="label" id="sound-visibility">Visibility</span>

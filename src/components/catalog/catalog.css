@@ -550,6 +550,15 @@
   gap: var(--bb-space-4);
 }
 
+.sound-card__description {
+  margin: 0;
+  color: var(--bb-fg-muted);
+  font-weight: var(--bb-weight-regular);
+  line-height: var(--bb-leading-normal);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
 .sound-card__title {
   font-size: 1.625rem;
   line-height: 1.15;

@@ -225,12 +225,13 @@ test('the client sends edits and votes and validates the response', async (t) =>
     if (url.endsWith('/like')) return Response.json({ soundId: '42', likes: 215, dislikes: 13, likedByMe: true, dislikedByMe: false });
     if (options.method === 'DELETE') return new Response(null, { status: 204 });
     if (url.endsWith('/sounds/7')) return Response.json({ code: 'not_found', message: 'x' }, { status: 404 });
-    return Response.json({ ...rawSound, name: 'airhorn nuovo' });
+    return Response.json({ ...rawSound, name: 'airhorn nuovo', description: 'A short blast.\nLoud.' });
   });
   const client = new BeebotClient(sessionEvent());
-  const updated = await client.updateSound('42', { name: 'airhorn nuovo', public: true, tags: ['meme'] });
+  const updated = await client.updateSound('42', { name: 'airhorn nuovo', description: null, public: true, tags: ['meme'] });
   assert.equal(updated.data.name, 'airhorn nuovo');
-  assert.deepEqual(calls[0], { url: 'https://api.safjnest.com/beebot/sounds/42', method: 'PATCH', body: { name: 'airhorn nuovo', public: true, tags: ['meme'] } });
+  assert.equal(updated.data.description, 'A short blast.\nLoud.');
+  assert.deepEqual(calls[0], { url: 'https://api.safjnest.com/beebot/sounds/42', method: 'PATCH', body: { name: 'airhorn nuovo', description: null, public: true, tags: ['meme'] } });
   assert.deepEqual((await client.setVote('42', 'like', true)).data.likes, 215);
   assert.deepEqual(calls[1].body, { enabled: true });
   assert.deepEqual(await client.deleteSound('42'), { ok: true, data: null });

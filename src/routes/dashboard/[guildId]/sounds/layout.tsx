@@ -4,7 +4,7 @@ import { SoundLibrary } from '../../../../components/sounds/sound-library';
 import { apiError, awaitLoader, isDocumentRequest, loaderResolver } from '../../../../lib/beebot.server';
 import { BeebotClient, SOUND_NOT_FOUND } from '../../../../lib/beebot/client.server';
 import { useGuildSoundAnalytics, useGuildSoundLibrary } from '../../../../lib/sound-loaders';
-import { GUILD_ID } from '../../../../lib/sounds';
+import { DESCRIPTION_MAX, GUILD_ID } from '../../../../lib/sounds';
 import { useAccount } from '../../layout';
 import { useGuild } from '../layout';
 
@@ -29,15 +29,17 @@ export const useUploadSound = routeAction$(async (form, event): Promise<{ messag
   const { guildId } = event.params;
   const file = form.file;
   const name = typeof form.name === 'string' ? form.name.trim() : '';
+  const description = typeof form.description === 'string' ? form.description.trim() : '';
   const tags = typeof form.tags === 'string' ? form.tags.split(',').map((tag) => tag.trim()).filter(Boolean) : [];
 
   if (!GUILD_ID.test(guildId) || !(file instanceof File) || file.size === 0 || file.size > MAX_UPLOAD_BYTES || !name) {
     return { message: 'Enter a name and choose an MP3 or Opus file up to 3.9 MB.' };
   }
+  if ( [...description].length > DESCRIPTION_MAX ) { return { message: `The description can be up to ${DESCRIPTION_MAX} characters.` }; }
 
   const body = new FormData();
   body.append('file', file);
-  body.append('metadata', new Blob([JSON.stringify({ name, public: form.visibility === 'public', tags })],
+  body.append('metadata', new Blob([JSON.stringify({ name, description: description || undefined, public: form.visibility === 'public', tags })],
     { type: 'application/json' }), 'metadata.json');
 
   const uploaded = await new BeebotClient(event).uploadSound(guildId, body);
@@ -61,6 +63,11 @@ export default component$(() => {
           <div class="field">
             <label class="label" for="sound-upload-name">Name</label>
             <input id="sound-upload-name" class="input" name="name" maxLength={255} required />
+          </div>
+          <div class="field">
+            <label class="label" for="sound-upload-description">Description (optional)</label>
+            <textarea id="sound-upload-description" class="textarea" name="description" rows={3} maxLength={DESCRIPTION_MAX} />
+            <p class="hint">Shown on the sound page. Up to {DESCRIPTION_MAX} characters.</p>
           </div>
           <div class="field">
             <label class="label" for="sound-upload-file">MP3 or Opus</label>

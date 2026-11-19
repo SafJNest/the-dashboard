@@ -23,6 +23,9 @@ test('sound card parses guest and viewer forms', () => {
   assert.deepEqual(catalog.parseSoundCard({ ...card, viewer: { ownedByMe: false, vote: 'LIKE' } }).viewer, { ownedByMe: false, vote: 'LIKE' });
   assert.equal(catalog.parseSoundCard({ ...card, viewer: { ownedByMe: false, vote: 'MEH' } }), null);
   assert.equal(catalog.parseSoundCard({ ...card, uploader: null }), null);
+  assert.equal(catalog.parseSoundCard(card).description, null);
+  assert.equal(catalog.parseSoundCard({ ...card, description: '' }).description, null);
+  assert.equal(catalog.parseSoundCard({ ...card, description: 'Loud.' }).description, 'Loud.');
 });
 
 test('catalog query drops defaults and maps length presets', () => {

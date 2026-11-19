@@ -6,6 +6,7 @@ export const PERIOD_LABELS: Record<Period, string> = { '7d': '7d', '30d': '30d',
 
 export const GLOBAL_GREET = '0';
 export const MAX_TAGS = 5;
+export const DESCRIPTION_MAX = 500;
 export const SOUND_ID = /^\d{1,20}$/;
 export const GUILD_ID = /^\d{17,20}$/;
 
@@ -30,6 +31,7 @@ export interface TagCount extends SoundTag {
 export interface Sound {
   id: string;
   name: string;
+  description: string | null;
   guildId: string | null;
   userId: string;
   uploader: SoundUser;
@@ -199,6 +201,7 @@ export interface VoteState {
 
 export interface SoundPatch {
   name?: string;
+  description?: string | null;
   public?: boolean;
   tags?: string[];
 }
@@ -269,6 +272,7 @@ export function parseSound(value: unknown): Sound | null {
   return {
     id,
     name,
+    description: text(sound.description) || null,
     guildId: text(sound.guildId),
     userId: text(sound.userId) ?? uploader.id,
     uploader,

@@ -7,7 +7,7 @@ import { apiError } from '../../../../../../lib/beebot.server';
 import { BeebotClient } from '../../../../../../lib/beebot/client.server';
 import { CatalogClient } from '../../../../../../lib/beebot/catalog.server';
 import { IMAGE_MAX_BYTES, IMAGE_TYPES } from '../../../../../../lib/catalog';
-import { MAX_TAGS, SOUND_ID, type Sound, type SoundPatch, type SoundTag } from '../../../../../../lib/sounds';
+import { DESCRIPTION_MAX, MAX_TAGS, SOUND_ID, type Sound, type SoundPatch, type SoundTag } from '../../../../../../lib/sounds';
 
 const NOT_EDITABLE = 'You can only edit your own sounds.';
 
@@ -34,11 +34,13 @@ function tagList(value: unknown) {
 export const useUpdateSound = routeAction$(async (form, event): Promise<UpdateResult> => {
   const { soundId } = event.params;
   const name = typeof form.name === 'string' ? form.name.trim() : '';
+  const description = typeof form.description === 'string' ? form.description.trim() : '';
   const tags = tagList(form.tags);
   if (!SOUND_ID.test(soundId)) return { ok: false, sound: null, message: "This sound doesn't exist, or you can't see it." };
   if (!name) return { ok: false, sound: null, message: 'The name cannot be empty.' };
   if (tags.length > MAX_TAGS) return { ok: false, sound: null, message: `A sound can have up to ${MAX_TAGS} tags.` };
-  const patch: SoundPatch = { name, public: form.public === 'true', tags };
+  if ( [...description].length > DESCRIPTION_MAX ) { return { ok: false, sound: null, message: `The description can be up to ${DESCRIPTION_MAX} characters.` }; }
+  const patch: SoundPatch = { name, description: description || null, public: form.public === 'true', tags };
   const result = await new BeebotClient(event).updateSound(soundId, patch);
   return result.ok ? { ok: true, sound: result.data, message: null } : { ok: false, sound: null, message: `${result.message} Your changes were not saved.` };
 }, { invalidate: [] });

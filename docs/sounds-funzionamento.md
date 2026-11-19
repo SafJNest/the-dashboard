@@ -15,7 +15,7 @@ Fonte visiva: canvas "Beebot Dashboard", sezioni **Audio — sounds, search & cr
 
 ### Il suono
 
-Un suono ha: id, nome (max 32), immagine opzionale (nuova, come la thumbnail delle soundboard), fino a 5 tag, visibilità pubblico/privato, guild in cui è stato caricato, uploader, durata, data di caricamento, file audio.
+Un suono ha: id, nome (max 32), descrizione opzionale (max 500 caratteri, anche su più righe), immagine opzionale (nuova, come la thumbnail delle soundboard), fino a 5 tag, visibilità pubblico/privato, guild in cui è stato caricato, uploader, durata, data di caricamento, file audio.
 
 Numeri del suono: play, ascoltatori unici, like, dislike, commenti, visualizzazioni (nuove, vedi §4).
 
@@ -189,7 +189,7 @@ Percorso: nome dell'uploader ovunque (dashboard, pannello, commenti). Accesso: c
 Esiste già; si aggiunge l'**immagine**.
 
 - Immagine: carica, sostituisci, rimuovi. PNG, JPG o GIF, ritaglio quadrato. Senza immagine si mostra il riquadro neutro con waveform.
-- Il resto invariato: nome, visibilità, tag (max 5 con suggerimenti), greet, scarica, elimina.
+- Il resto invariato: nome, descrizione (max 500), visibilità, tag (max 5 con suggerimenti), greet, scarica, elimina.
 - Passare un suono da pubblico a privato lo toglie subito da Explore, profilo creatore e suggerimenti.
 
 ## 11. Cosa esiste già

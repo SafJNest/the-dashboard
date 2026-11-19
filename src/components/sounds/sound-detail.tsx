@@ -340,6 +340,7 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
           </button>
           <h2 id="sound-title" class="sound-head__title">{sound.name}</h2>
         </div>
+        {sound.description && <p class="sound-head__description">{sound.description}</p>}
         <SoundWave key={sound.id} soundId={sound.id} url={sound.url} />
         <dl class="sound-facts">
           <div>
