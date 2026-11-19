@@ -1,0 +1,37 @@
+@layer components {
+  .sound-wave {
+    --wave-base: var(--bb-fg-subtle);
+    --wave-progress: var(--bb-accent);
+    position: relative;
+    block-size: var(--bb-space-14);
+
+    &.sound-wave--ready .sound-wave__surface {
+      opacity: 1;
+      cursor: pointer;
+    }
+
+    &.sound-wave--failed::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      inset-block-start: 50%;
+      border-block-start: 1px solid var(--bb-border-default);
+    }
+  }
+
+  .sound-wave__loader {
+    position: absolute;
+    inset: 0;
+  }
+
+  .sound-wave__surface {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity var(--bb-duration-base) var(--bb-ease-out);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}

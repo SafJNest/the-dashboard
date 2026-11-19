@@ -1,4 +1,5 @@
 import type { RequestEvent, RequestEventLoader } from '@qwik.dev/router';
+import { siteOrigin } from './sounds-site';
 
 type ServerEvent = Pick<RequestEvent, 'env' | 'url'>;
 type SessionEvent = ServerEvent & Pick<RequestEvent, 'cookie' | 'headers' | 'redirect'>;
@@ -39,7 +40,7 @@ export interface Me {
   servers: Server[];
 }
 
-type FailureStatus = 400 | 403 | 404 | 500 | 502 | 503;
+type FailureStatus = 400 | 401 | 403 | 404 | 500 | 502 | 503;
 
 export interface ApiFailure {
   ok: false;
@@ -89,7 +90,8 @@ export function configuration(event: ServerEvent) {
   if (apiUrl.protocol !== 'https:' && !(apiUrl.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(apiUrl.hostname))) {
     throw new Error('Invalid Beebot API URL');
   }
-  if (callbackUrl.origin !== event.url.origin || callbackUrl.pathname !== '/auth/callback/' || callbackUrl.search || callbackUrl.hash) {
+  const siteUrl = siteOrigin(event.url) || event.url.origin;
+  if (callbackUrl.origin !== siteUrl || callbackUrl.pathname !== '/auth/callback/' || callbackUrl.search || callbackUrl.hash) {
     throw new Error('Invalid Beebot callback URL');
   }
   if (callbackUrl.protocol !== 'https:' && !(callbackUrl.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(callbackUrl.hostname))) {
@@ -105,6 +107,10 @@ export function cookieOptions(event: ServerEvent, maxAge: number) {
 export function randomState(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
+export function apiUrl(event: ServerEvent, path: string) {
+  return `${configuration(event).base}${path}`;
 }
 
 export async function beebotFetch(event: ServerEvent, path: string, options: { method?: string; token?: string; body?: unknown } = {}) {
@@ -138,17 +144,20 @@ function failureMessage(status: number, code: string, retryAfter: number | null)
   return FAILURE_MESSAGES[code] ?? (status === 404 ? GUILD_NOT_AVAILABLE : status === 400 ? REJECTED : UNAVAILABLE);
 }
 
-export async function sessionFetch(event: SessionEvent, path: string, options: { method?: string; body?: unknown } = {}): Promise<ApiResult> {
-  const token = event.cookie.get(SESSION_COOKIE)?.value;
-  if (!token) throw loginRedirect(event);
+const UNAUTHORIZED = 'unauthorized';
+export const LOGIN_REQUIRED: ApiFailure = { ok: false, status: 401, code: 'login_required', message: 'Log in with Discord to continue.', retryAfter: null };
+
+async function requestBeebot(event: ServerEvent, path: string, options: { method?: string; body?: unknown }, token?: string): Promise<ApiResult | typeof UNAUTHORIZED> {
   const method = options.method || 'GET';
   const startedAt = Date.now();
+  let url = path;
   let response: Response;
   try {
+    url = apiUrl(event, path);
     response = await beebotFetch(event, path, { ...options, token });
   } catch (error) {
     const failure = error as Error & { cause?: { code?: string } };
-    console.error(`[Beebot] ${method} ${path} failed after ${Date.now() - startedAt}ms: ${failure.name} ${failure.cause?.code ?? failure.message}`);
+    console.error(`[Beebot] ${method} ${url} failed after ${Date.now() - startedAt}ms: ${failure.name} ${failure.cause?.code ?? failure.message}`);
     return { ok: false, status: 503, code: 'network_error', message: UNAVAILABLE, retryAfter: null };
   }
   if (response.ok) {
@@ -156,21 +165,38 @@ export async function sessionFetch(event: SessionEvent, path: string, options: {
     try {
       return { ok: true, data: await response.json() };
     } catch {
-      console.error(`[Beebot] ${method} ${path}: invalid JSON after ${Date.now() - startedAt}ms`);
+      console.error(`[Beebot] ${method} ${url}: invalid JSON after ${Date.now() - startedAt}ms`);
       return { ok: false, status: 502, code: 'invalid_response', message: INVALID_RESPONSE, retryAfter: null };
     }
   }
   const payload = await response.json().catch(() => null) as { code?: unknown; retryAfter?: unknown } | null;
   const code = typeof payload?.code === 'string' && /^[a-z_]{1,64}$/.test(payload.code) ? payload.code : 'unknown';
-  console.error(`[Beebot] ${method} ${path}: HTTP ${response.status} code=${code} after ${Date.now() - startedAt}ms`);
+  console.error(`[Beebot] ${method} ${url}: HTTP ${response.status} code=${code} after ${Date.now() - startedAt}ms`);
   if (response.status === 401 && code === 'invalid_api_key') return { ok: false, status: 500, code, message: MISCONFIGURED, retryAfter: null };
-  if (response.status === 401) {
-    event.cookie.delete(SESSION_COOKIE, { path: '/' });
-    throw loginRedirect(event);
-  }
+  if (response.status === 401) return UNAUTHORIZED;
   const retryAfter = code === 'discord_rate_limited' ? retryAfterSeconds(payload, response.headers.get('Retry-After')) : null;
   const status = ([400, 403, 404, 503] as const).find((value) => value === response.status) ?? 502;
   return { ok: false, status, code, message: failureMessage(response.status, code, retryAfter), retryAfter };
+}
+
+export async function sessionFetch(event: SessionEvent, path: string, options: { method?: string; body?: unknown } = {}): Promise<ApiResult> {
+  const token = event.cookie.get(SESSION_COOKIE)?.value;
+  if (!token) throw loginRedirect(event);
+  const result = await requestBeebot(event, path, options, token);
+  if (result !== UNAUTHORIZED) return result;
+  event.cookie.delete(SESSION_COOKIE, { path: '/' });
+  throw loginRedirect(event);
+}
+
+export async function publicFetch(event: ServerEvent & Pick<RequestEvent, 'cookie'>, path: string, options: { method?: string; body?: unknown; session?: boolean } = {}): Promise<ApiResult> {
+  const token = event.cookie.get(SESSION_COOKIE)?.value;
+  if ( options.session && !token ) { return LOGIN_REQUIRED; }
+  const result = await requestBeebot(event, path, options, token);
+  if ( result !== UNAUTHORIZED ) { return result; }
+  event.cookie.delete(SESSION_COOKIE, { path: '/' });
+  if ( options.session || !token ) { return LOGIN_REQUIRED; }
+  const guest = await requestBeebot(event, path, options);
+  return guest === UNAUTHORIZED ? LOGIN_REQUIRED : guest;
 }
 
 export type LoadFailure = Pick<ApiFailure, 'status' | 'message' | 'retryAfter'> & { failed: true };

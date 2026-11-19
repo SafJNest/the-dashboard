@@ -93,6 +93,18 @@ const ICONS = {
     </>
   ),
   sort: <path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4" />,
+  copy: (
+    <>
+      <rect x="8" y="8" width="12" height="12" rx="2" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </>
+  ),
+  link: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />,
+  thumbUp: <path d="M7 10v11M7 10l4-7a2.5 2.5 0 0 1 2.5 3l-.7 3h5.6a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 17 21H7M3 10h4v11H3z" />,
+  thumbDown: <path d="M17 14V3M17 14l-4 7a2.5 2.5 0 0 1-2.5-3l.7-3H5.6a2 2 0 0 1-2-2.4l1.4-7A2 2 0 0 1 7 3h10M21 14h-4V3h4z" />,
+  pin: <path d="M12 17v5M9 3h6l-1 6 4 4H6l4-4z" />,
+  login: <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />,
+  thread: <path d="M5 5v8a3 3 0 0 0 3 3h11M15 12l4 4-4 4" />,
 };
 
 export type IconName = keyof typeof ICONS;

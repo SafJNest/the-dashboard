@@ -1,7 +1,8 @@
-import { $, component$, sync$, useSignal, useStyles$, useTask$ } from '@qwik.dev/core';
+import { $, component$, sync$, useSignal, useStyles$, useTask$, Pending } from '@qwik.dev/core';
 import { Form, Link } from '@qwik.dev/router';
 import { useAccount } from '../../routes/dashboard/layout';
 import { useDeleteSound, useSearchTags, useUpdateSound } from '../../routes/dashboard/me/sounds/[soundId]/edit/index';
+import { SoundImage } from './sound-image';
 import { formatAdded, formatCount, formatLength } from '../../lib/sound-stats';
 import { MAX_TAGS, type Sound } from '../../lib/sounds';
 import { Icon } from '../dashboard/icons';
@@ -235,6 +236,11 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
         </div>
 
         <div class="sound-editor__stack">
+          {sound.canEdit && (
+            <Pending fallback$={() => null}>
+              <SoundImage name={sound.name} />
+            </Pending>
+          )}
           <section class="card settings-card" aria-labelledby="sound-stats">
             <div class="chart-block__head">
               <h2 id="sound-stats" class="chart-block__title">Stats</h2>

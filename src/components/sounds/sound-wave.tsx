@@ -1,88 +1,85 @@
-import { component$, useSignal, useVisibleTask$ } from '@qwik.dev/core';
+import { component$, noSerialize, useContext, useSignal, useStyles$, useTask$, useVisibleTask$, type NoSerialize } from '@qwik.dev/core';
+import type WaveSurfer from 'wavesurfer.js';
+import { Skeleton } from '../skeleton/skeleton';
+import { SoundPlayerContext } from './sound-player';
+import styles from './sound-wave.css?inline';
 
-const BARS = 180;
-const FLOOR = 0.06;
-const SAMPLES_PER_BAR = 2048;
+const BAR_WIDTH = 2;
+const BAR_GAP = 1;
+const BAR_RADIUS = 2;
+const CURSOR_WIDTH = 2;
 
-const SYNTH = Array.from({ length: BARS }, (_, index) => {
-  const position = index / BARS;
-  return FLOOR + Math.abs(Math.sin(position * Math.PI * 7) * Math.sin(position * Math.PI * 1.6 + 0.5)) * (1 - FLOOR);
-});
+type WaveState = 'loading' | 'ready' | 'failed';
 
-async function readPeaks(url: string, signal: AbortSignal) {
-  const response = await fetch(url, { signal });
-  if (!response.ok) throw new Error(`Audio request failed (${response.status})`);
-  const audio = await new OfflineAudioContext(1, 1, 44100).decodeAudioData(await response.arrayBuffer());
-  const channels = Array.from({ length: audio.numberOfChannels }, (_, index) => audio.getChannelData(index));
-  const size = Math.max(1, Math.floor(audio.length / BARS));
-  const step = Math.max(1, Math.floor(size / SAMPLES_PER_BAR));
-  const levels = Array.from({ length: BARS }, (_, bar) => {
-    const end = Math.min(audio.length, (bar + 1) * size);
-    let sum = 0;
-    let count = 0;
-    for (const data of channels) {
-      for (let sample = bar * size; sample < end; sample += step) {
-        sum += data[sample] * data[sample];
-        count++;
-      }
-    }
-    return count ? Math.sqrt(sum / count) : 0;
+interface Waveform {
+  wave: WaveSurfer;
+  ownMedia: HTMLAudioElement;
+}
+
+export const SoundWave = component$<{ soundId: string; url: string | null }>(({ soundId, url }) => {
+  useStyles$(styles);
+  const player = useContext(SoundPlayerContext);
+  const surface = useSignal<HTMLDivElement>();
+  const state = useSignal<WaveState>(url ? 'loading' : 'failed');
+  const waveform = useSignal<NoSerialize<Waveform>>();
+
+  useVisibleTask$(async ({ cleanup }) => {
+    const container = surface.value;
+    if ( !url || !container ) { return; }
+    let disposed = false;
+    cleanup(() => {
+      disposed = true;
+      const instance = waveform.value;
+      instance?.wave.setMediaElement(instance.ownMedia);
+      instance?.wave.destroy();
+    });
+    const fail = (error: unknown) => {
+      if ( disposed ) { return; }
+      console.error('[SoundWave] Waveform unavailable.', error);
+      state.value = 'failed';
+    };
+    const [blob, module] = await Promise.all([player.download$(url), import('wavesurfer.js').catch(fail)]);
+    if ( disposed || !module ) { return; }
+    if ( !blob ) { fail(new Error(`Could not download ${url}`)); return; }
+    const tokens = getComputedStyle(container);
+    const progress = tokens.getPropertyValue('--wave-progress').trim();
+    const ownMedia = document.createElement('audio');
+    const wave = module.default.create({
+      container,
+      media: ownMedia,
+      height: 'auto',
+      waveColor: tokens.getPropertyValue('--wave-base').trim(),
+      progressColor: progress,
+      cursorColor: progress,
+      cursorWidth: CURSOR_WIDTH,
+      barWidth: BAR_WIDTH,
+      barGap: BAR_GAP,
+      barRadius: BAR_RADIUS,
+      normalize: true,
+      dragToSeek: true,
+    });
+    waveform.value = noSerialize({ wave, ownMedia });
+    wave.on('interaction', (time) => player.seek$(soundId, url, time));
+    wave.on('ready', () => (state.value = 'ready'));
+    await wave.loadBlob(blob).catch(fail);
+  }, { strategy: 'document-ready' });
+
+  useTask$(({ track }) => {
+    const instance = track(() => waveform.value);
+    const ready = track(() => state.value === 'ready');
+    const current = track(() => player.state.soundId === soundId);
+    const audio = player.audio.value;
+    if ( !instance || !ready || !audio ) { return; }
+    const media = current ? audio : instance.ownMedia;
+    if ( instance.wave.getMediaElement() === media ) { return; }
+    instance.wave.setMediaElement(media);
+    !current && media.dispatchEvent(new Event('pause'));
   });
-  const max = Math.max(...levels);
-  return levels.map((level) => FLOOR + (max ? level / max : 0) * (1 - FLOOR));
-}
-
-function Bars({ heights, played }: { heights: number[]; played?: boolean }) {
-  return (
-    <div class={['sound-wave__bars', played && 'sound-wave__bars--played']}>
-      {heights.map((height, index) => (
-        <span key={index} style={{ '--i': String(index), '--h': height.toFixed(3) }} />
-      ))}
-    </div>
-  );
-}
-
-interface SoundWaveProps {
-  url: string | null;
-  duration: number | null;
-  playing: boolean;
-  buffering: boolean;
-}
-
-export const SoundWave = component$<SoundWaveProps>(({ url, duration, playing, buffering }) => {
-  const peaks = useSignal<number[] | null>(null);
-  const failed = useSignal(!url);
-
-  useVisibleTask$(({ cleanup }) => {
-    if (!url) return;
-    const controller = new AbortController();
-    cleanup(() => controller.abort());
-    readPeaks(url, controller.signal).then(
-      (values) => {
-        peaks.value = values;
-      },
-      () => {
-        if (!controller.signal.aborted) failed.value = true;
-      },
-    );
-  });
-
-  const heights = peaks.value ?? SYNTH;
 
   return (
-    <div
-      class={[
-        'sound-wave',
-        !peaks.value && !failed.value && 'sound-wave--loading',
-        failed.value && 'sound-wave--idle',
-        playing && !!duration && 'sound-wave--playing',
-        buffering && 'sound-wave--buffering',
-      ]}
-      style={{ '--duration': `${duration ?? 0}s` }}
-      aria-hidden="true"
-    >
-      <Bars heights={heights} />
-      <Bars heights={heights} played />
+    <div class={['sound-wave', `sound-wave--${state.value}`]} aria-hidden="true">
+      {state.value === 'loading' && <span class="sound-wave__loader"><Skeleton width="100%" height="100%" /></span>}
+      <div ref={surface} class="sound-wave__surface" />
     </div>
   );
 });

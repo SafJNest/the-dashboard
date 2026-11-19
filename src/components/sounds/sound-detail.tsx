@@ -1,4 +1,4 @@
-import { $, component$, Pending, useSignal } from '@qwik.dev/core';
+import { $, component$, Pending, useContext, useSignal } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
 import { OTHER_GUILDS, readStats, UNKNOWN_GUILD, type DetailTab, type LibraryEntry, type LibraryModel, type LibraryView } from '../../lib/sound-library';
 import {
@@ -21,7 +21,8 @@ import { LoadError, PanelSkeleton, Skeleton } from './library-states';
 import { DayBars, HeatGrid, ReplaySplit, SourceSplit } from './sound-charts';
 import { GreetPicker } from './greet-picker';
 import { SoundWave } from './sound-wave';
-import type { Playback, PlayHandler } from './sound-library';
+import { publicSoundsUrl } from '../../lib/sounds-site';
+import { SoundPlayerContext } from './sound-player';
 import { VoteButtons } from './vote-buttons';
 
 const HISTORY_ROWS = 20;
@@ -313,14 +314,13 @@ interface SoundDetailProps {
   view: LibraryView;
   entry: LibraryEntry;
   votes: Record<string, VoteState>;
-  playback: Playback;
-  onPlay$: PlayHandler;
 }
 
-export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, entry, votes, playback, onPlay$ }) => {
+export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, entry, votes }) => {
   const { sound, guildName } = entry;
-  const active = playback.id === sound.id;
-  const duration = playback.duration ?? (sound.durationMs ? sound.durationMs / 1000 : null);
+  const player = useContext(SoundPlayerContext);
+  const current = player.state.soundId === sound.id;
+  const playing = current && player.state.playing;
   const scopeLabel = scopeLabelOf(model, guildName);
 
   return (
@@ -331,16 +331,16 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
           <button
             type="button"
             class="play sound-head__play"
-            aria-label={`${active ? 'Pause' : 'Play'} ${sound.name}`}
-            aria-busy={active && playback.loading}
+            aria-label={`${playing ? 'Pause' : 'Play'} ${sound.name}`}
+            aria-busy={current && player.state.loading}
             disabled={!sound.url}
-            onClick$={() => onPlay$(sound.id, sound.url)}
+            onClick$={() => player.toggle$(sound.id, sound.url)}
           >
-            <Icon name={active ? 'pause' : 'play'} />
+            <Icon name={playing ? 'pause' : 'play'} />
           </button>
           <h2 id="sound-title" class="sound-head__title">{sound.name}</h2>
         </div>
-        <SoundWave key={sound.id} url={sound.url} duration={duration} playing={active} buffering={active && playback.loading} />
+        <SoundWave key={sound.id} soundId={sound.id} url={sound.url} />
         <dl class="sound-facts">
           <div>
             <dt>Uploaded by</dt>
@@ -350,7 +350,7 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
               ) : (
                 <span class="avatar avatar--sm" aria-hidden="true">{sound.uploader.name.slice(0, 1).toUpperCase()}</span>
               )}
-              {sound.ownedByMe ? 'You' : sound.uploader.name}
+              <a href={publicSoundsUrl(`/u/${sound.uploader.id}/`)}>{sound.ownedByMe ? 'You' : sound.uploader.name}</a>
             </dd>
           </div>
           <div>
@@ -384,6 +384,12 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
           <VoteButtons key={sound.id} sound={sound} votes={votes} />
           <GreetPicker key={sound.id} soundId={sound.id} soundName={sound.name} variant="button" />
           <div class="sound-actions__end">
+            {sound.public && (
+              <a href={publicSoundsUrl(`/${sound.id}/`)} class="button button--ghost">
+                <Icon name="link" />
+                <span>Public page</span>
+              </a>
+            )}
             {sound.url && (
               <a href={sound.url} class="button button--secondary" download>
                 <Icon name="download" />

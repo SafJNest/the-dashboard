@@ -15,6 +15,18 @@ export const ENDPOINTS = {
   soundAnalytics: (soundId: string) => `/sounds/${segment(soundId)}/analytics`,
   soundVote: (soundId: string, vote: 'like' | 'dislike') => `/sounds/${segment(soundId)}/${vote}`,
   tags: '/tags',
+  soundVoteValue: (soundId: string) => `/sounds/${segment(soundId)}/vote`,
+  soundImage: (soundId: string) => `/sounds/${segment(soundId)}/image`,
+  soundComments: (soundId: string) => `/sounds/${segment(soundId)}/comments`,
+  soundComment: (soundId: string, commentId: string) => `/sounds/${segment(soundId)}/comments/${segment(commentId)}`,
+  soundCommentVote: (soundId: string, commentId: string) => `/sounds/${segment(soundId)}/comments/${segment(commentId)}/vote`,
+  publicExplore: '/public/sounds/explore',
+  publicSounds: '/public/sounds',
+  publicSuggestions: '/public/sounds/suggestions',
+  publicSound: (soundId: string) => `/public/sounds/${segment(soundId)}`,
+  publicComments: (soundId: string) => `/public/sounds/${segment(soundId)}/comments`,
+  publicPlays: (soundId: string) => `/public/sounds/${segment(soundId)}/plays`,
+  publicUser: (userId: string) => `/public/users/${segment(userId)}`,
 } as const;
 
 export type QueryValue = string | number | null | undefined;

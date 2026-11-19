@@ -215,12 +215,12 @@ export type GreetResults = Record<string, { ok: boolean; errors: FieldError[] }>
 
 type Json = Record<string, unknown>;
 
-const object = (value: unknown): Json | null => (value && typeof value === 'object' && !Array.isArray(value) ? (value as Json) : null);
-const text = (value: unknown) => (typeof value === 'string' ? value : null);
-const number = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : null);
-const count = (value: unknown) => number(value) ?? 0;
+export const object = (value: unknown): Json | null => (value && typeof value === 'object' && !Array.isArray(value) ? (value as Json) : null);
+export const text = (value: unknown) => (typeof value === 'string' ? value : null);
+export const number = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : null);
+export const count = (value: unknown) => number(value) ?? 0;
 
-function list<T>(value: unknown, parse: (item: unknown) => T | null): T[] | null {
+export function list<T>(value: unknown, parse: (item: unknown) => T | null): T[] | null {
   if (value === undefined || value === null) return [];
   if (!Array.isArray(value)) return null;
   const items: T[] = [];
@@ -240,21 +240,21 @@ function parsePeriod(value: unknown): Period {
   return readPeriod(text(value));
 }
 
-function parseUser(value: unknown): SoundUser | null {
+export function parseUser(value: unknown): SoundUser | null {
   const user = object(value);
   const id = text(user?.id);
   if (!user || !id) return null;
   return { id, name: text(user.name) ?? 'Unknown user', avatarUrl: text(user.avatarUrl) };
 }
 
-function parseTag(value: unknown): SoundTag | null {
+export function parseTag(value: unknown): SoundTag | null {
   const tag = object(value);
   const id = text(tag?.id);
   const name = text(tag?.name);
   return id && name ? { id, name } : null;
 }
 
-function parseTagCount(value: unknown): TagCount | null {
+export function parseTagCount(value: unknown): TagCount | null {
   const tag = parseTag(value);
   return tag ? { ...tag, soundCount: count(object(value)?.soundCount) } : null;
 }

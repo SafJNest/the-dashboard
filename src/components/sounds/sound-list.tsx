@@ -1,11 +1,11 @@
-import { $, component$, useOnDocument, useSignal, type QRL } from '@qwik.dev/core';
+import { $, component$, useContext, useOnDocument, useSignal } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
 import { useAccount } from '../../routes/dashboard/layout';
 import { mySoundsPath, soundHref, type LibraryEntry, type LibraryModel, type LibraryView, type Owner, type SortOrder } from '../../lib/sound-library';
 import { formatCompact, formatLength } from '../../lib/sound-stats';
 import { GuildAvatar } from '../dashboard/guild-avatar';
 import { Icon } from '../dashboard/icons';
-import type { Playback, PlayHandler } from './sound-library';
+import { SoundPlayerContext, type SoundPlayerApi } from './sound-player';
 
 const PAGE = 40;
 const OWNERS: { value: Owner; label: string }[] = [
@@ -70,34 +70,34 @@ interface SoundRowsProps {
   model: LibraryModel;
   entries: LibraryEntry[];
   limit: number;
-  playback: Playback;
-  onPlay$: PlayHandler;
+  player: SoundPlayerApi;
 }
 
-function SoundRows({ model, entries, limit, playback, onPlay$ }: SoundRowsProps) {
+function SoundRows({ model, entries, limit, player }: SoundRowsProps) {
   const selectedId = model.selected?.sound.id;
   return (
     <>
       {entries.slice(0, limit).map(({ sound, guildName }) => {
-        const active = playback.id === sound.id;
+        const current = player.state.soundId === sound.id;
+        const playing = current && player.state.playing;
         return (
           <div key={sound.id} class={['sound-row', sound.id === selectedId && 'sound-row--selected']}>
             <button
               type="button"
               class="play sound-row__play"
-              aria-label={`${active ? 'Pause' : 'Play'} ${sound.name}`}
-              aria-busy={active && playback.loading}
+              aria-label={`${playing ? 'Pause' : 'Play'} ${sound.name}`}
+              aria-busy={current && player.state.loading}
               disabled={!sound.url}
-              onClick$={() => onPlay$(sound.id, sound.url)}
+              onClick$={() => player.toggle$(sound.id, sound.url)}
             >
-              <Icon name={active ? 'pause' : 'play'} />
+              <Icon name={playing ? 'pause' : 'play'} />
             </button>
             <Link href={soundHref(model, sound.id)} scroll={false} class="sound-row__main" aria-current={sound.id === selectedId ? 'true' : undefined}>
               <span class="sound-row__name">{sound.name}</span>
               <span class="sound-row__meta">
                 {model.scope === 'guild' && sound.ownedByMe && <span class="sound-row__mine">Yours</span>}
                 <span>
-                  {playback.failed === sound.id ? "Couldn't play" : `${model.scope === 'guild' ? (sound.ownedByMe ? 'You' : sound.uploader.name) : guildName} · ${formatLength(sound.durationMs)}`}
+                  {player.state.failed === sound.id ? "Couldn't play" : `${model.scope === 'guild' ? (sound.ownedByMe ? 'You' : sound.uploader.name) : guildName} · ${formatLength(sound.durationMs)}`}
                 </span>
               </span>
             </Link>
@@ -115,11 +115,10 @@ function SoundRows({ model, entries, limit, playback, onPlay$ }: SoundRowsProps)
 interface SoundListProps {
   model: LibraryModel;
   view: LibraryView;
-  playback: Playback;
-  onPlay$: QRL<(soundId: string, url: string | null) => void>;
 }
 
-export const SoundList = component$<SoundListProps>(({ model, view, playback, onPlay$ }) => {
+export const SoundList = component$<SoundListProps>(({ model, view }) => {
+  const player = useContext(SoundPlayerContext);
   const query = useSignal('');
   const limit = useSignal(PAGE);
   const search = query.value.trim().toLowerCase();
@@ -186,7 +185,7 @@ export const SoundList = component$<SoundListProps>(({ model, view, playback, on
         </div>
       </div>
       <div class="sound-list__body">
-        <SoundRows model={model} entries={entries} limit={limit.value} playback={playback} onPlay$={onPlay$} />
+        <SoundRows model={model} entries={entries} limit={limit.value} player={player} />
         {entries.length > shown && (
           <div class="sound-list__more">
             <button

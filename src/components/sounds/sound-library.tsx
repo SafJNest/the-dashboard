@@ -1,5 +1,4 @@
-import { $, component$, Pending, useComputed$, useSignal, useStore, useStyles$, useTask$, type QRL } from '@qwik.dev/core';
-import { isBrowser } from '@qwik.dev/core/build';
+import { $, component$, Pending, useStore, useStyles$ } from '@qwik.dev/core';
 import { Link, useLocation } from '@qwik.dev/router';
 import { DEFAULT_VIEW, readLibrary, readStats, type LibraryView } from '../../lib/sound-library';
 import { peekValue } from '../../lib/loader-value';
@@ -11,16 +10,8 @@ import { ChartsSkeleton, LoadError, Skeleton, SummarySkeleton, WorkSkeleton } fr
 import { LineChart, RankList } from './sound-charts';
 import { SoundDetail } from './sound-detail';
 import { SoundList } from './sound-list';
+import { SoundPlayer } from './sound-player';
 import styles from './sounds.css?inline';
-
-export interface Playback {
-  id: string | null;
-  loading: boolean;
-  failed: string | null;
-  duration: number | null;
-}
-
-export type PlayHandler = QRL<(soundId: string, url: string | null) => void>;
 
 const SummaryStrip = component$<{ source: LibrarySource; view: LibraryView }>(({ source, view }) => {
   const location = useLocation();
@@ -61,12 +52,10 @@ const SummaryStrip = component$<{ source: LibrarySource; view: LibraryView }>(({
 interface LibraryWorkProps {
   source: LibrarySource;
   view: LibraryView;
-  playback: Playback;
   votes: Record<string, VoteState>;
-  onPlay$: PlayHandler;
 }
 
-const LibraryWork = component$<LibraryWorkProps>(({ source, view, playback, votes, onPlay$ }) => {
+const LibraryWork = component$<LibraryWorkProps>(({ source, view, votes }) => {
   const location = useLocation();
   const state = readLibrary(readSource(source, view.period, false), location.params, view);
   if (state.status === 'stale') return <WorkSkeleton />;
@@ -86,7 +75,7 @@ const LibraryWork = component$<LibraryWorkProps>(({ source, view, playback, vote
   }
   return (
     <div class="sounds__work">
-      <SoundList model={model} view={view} playback={playback} onPlay$={onPlay$} />
+      <SoundList model={model} view={view} />
       {model.missing ? (
         <div class="card sounds__empty">
           <EmptyState icon="sounds" title="Sound not found" role="alert">
@@ -95,7 +84,7 @@ const LibraryWork = component$<LibraryWorkProps>(({ source, view, playback, vote
           </EmptyState>
         </div>
       ) : model.selected ? (
-        <SoundDetail model={model} source={source} view={view} entry={model.selected} votes={votes} playback={playback} onPlay$={onPlay$} />
+        <SoundDetail model={model} source={source} view={view} entry={model.selected} votes={votes} />
       ) : (
         <div class="card sounds__empty">
           <EmptyState icon="sounds" title="No sounds yet" flight="patrol">
@@ -173,32 +162,8 @@ export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) =
   useStyles$(styles);
   const votes = useStore<Record<string, VoteState>>({});
   const view = useStore<LibraryView>({ ...DEFAULT_VIEW });
-  const audio = useSignal<HTMLAudioElement>();
-  const playback = useStore<Playback>({ id: null, loading: false, failed: null, duration: null });
-  const attempt = useSignal(0);
   const period = view.period ?? peekValue<{ period: Period }>(source.library)?.period ?? null;
-
-  const stop = $(() => {
-    const element = audio.value;
-    attempt.value++;
-    if (element) {
-      element.pause();
-      element.removeAttribute('src');
-      element.load();
-    }
-    playback.id = null;
-    playback.loading = false;
-    playback.duration = null;
-  });
-
-  const scope = useComputed$(() => (source.scope === 'guild' ? source.guildId : 'me'));
-
-  useTask$(({ track, cleanup }) => {
-    track(scope);
-    if (!isBrowser) return;
-    stop();
-    cleanup(() => stop());
-  });
+  const scope = source.scope === 'guild' ? source.guildId : 'me';
 
   const choosePeriod = $((next: Period) => {
     if (next === period) return;
@@ -206,32 +171,6 @@ export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) =
     document.cookie = `${PERIOD_COOKIE}=${next}; Path=/dashboard/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
     source.library.invalidate();
     source.analytics.invalidate();
-  });
-
-  const togglePlay = $(async (soundId: string, url: string | null) => {
-    const element = audio.value;
-    if (!element || !url) return;
-    if (playback.id === soundId) {
-      attempt.value++;
-      element.pause();
-      playback.id = null;
-      playback.loading = false;
-      return;
-    }
-    const current = ++attempt.value;
-    element.src = url;
-    playback.id = soundId;
-    playback.loading = true;
-    playback.failed = null;
-    playback.duration = null;
-    try {
-      await element.play();
-    } catch {
-      if (attempt.value !== current) return;
-      playback.id = null;
-      playback.loading = false;
-      playback.failed = soundId;
-    }
   });
 
   return (
@@ -250,35 +189,15 @@ export const SoundLibrary = component$<{ source: LibrarySource }>(({ source }) =
         </div>
       </div>
 
-      <Pending fallback$={() => <WorkSkeleton />}>
-        <LibraryWork source={source} view={view} playback={playback} votes={votes} onPlay$={togglePlay} />
-      </Pending>
+      <SoundPlayer key={scope}>
+        <Pending fallback$={() => <WorkSkeleton />}>
+          <LibraryWork source={source} view={view} votes={votes} />
+        </Pending>
 
-      <Pending fallback$={() => <ChartsSkeleton />}>
-        <LibraryOverview source={source} view={view} />
-      </Pending>
-
-      <audio
-        ref={audio}
-        preload="none"
-        onPlaying$={(_, element) => {
-          playback.loading = false;
-          if (Number.isFinite(element.duration)) playback.duration = element.duration;
-        }}
-        onWaiting$={() => {
-          if (playback.id) playback.loading = true;
-        }}
-        onEnded$={() => {
-          playback.id = null;
-          playback.loading = false;
-        }}
-        onError$={() => {
-          if (!playback.id) return;
-          playback.failed = playback.id;
-          playback.id = null;
-          playback.loading = false;
-        }}
-      />
+        <Pending fallback$={() => <ChartsSkeleton />}>
+          <LibraryOverview source={source} view={view} />
+        </Pending>
+      </SoundPlayer>
     </div>
   );
 });

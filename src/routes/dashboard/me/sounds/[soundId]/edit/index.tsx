@@ -5,6 +5,8 @@ import { PageSkeleton } from '../../../../../../components/dashboard/page-skelet
 import { SoundEditor } from '../../../../../../components/sounds/sound-editor';
 import { apiError } from '../../../../../../lib/beebot.server';
 import { BeebotClient } from '../../../../../../lib/beebot/client.server';
+import { CatalogClient } from '../../../../../../lib/beebot/catalog.server';
+import { IMAGE_MAX_BYTES, IMAGE_TYPES } from '../../../../../../lib/catalog';
 import { MAX_TAGS, SOUND_ID, type Sound, type SoundPatch, type SoundTag } from '../../../../../../lib/sounds';
 
 const NOT_EDITABLE = 'You can only edit your own sounds.';
@@ -39,6 +41,27 @@ export const useUpdateSound = routeAction$(async (form, event): Promise<UpdateRe
   const patch: SoundPatch = { name, public: form.public === 'true', tags };
   const result = await new BeebotClient(event).updateSound(soundId, patch);
   return result.ok ? { ok: true, sound: result.data, message: null } : { ok: false, sound: null, message: `${result.message} Your changes were not saved.` };
+}, { invalidate: [] });
+
+export const useSoundImage = routeLoader$(async (event) => {
+  const result = await new CatalogClient(event).sound(event.params.soundId);
+  return result.ok ? { imageUrl: result.data.imageUrl, message: null } : { imageUrl: null, message: result.message };
+}, { search: [], blockSSR: false });
+
+export const useSetSoundImage = routeAction$(async (form, event): Promise<{ ok: boolean; imageUrl: string | null; message: string | null }> => {
+  const file = form.file;
+  const isImage = file instanceof Blob && IMAGE_TYPES.includes(file.type);
+  if ( !isImage ) { return { ok: false, imageUrl: null, message: 'Choose a PNG, JPEG or GIF image.' }; }
+  if ( file.size > IMAGE_MAX_BYTES ) { return { ok: false, imageUrl: null, message: 'The image must be 1 MB or smaller.' }; }
+  const body = new FormData();
+  body.append('file', file, file instanceof File ? file.name : 'image');
+  const result = await new CatalogClient(event).setImage(event.params.soundId, body);
+  return result.ok ? { ok: true, imageUrl: result.data, message: null } : { ok: false, imageUrl: null, message: result.message };
+}, { invalidate: [] });
+
+export const useRemoveSoundImage = routeAction$(async (_, event): Promise<{ ok: boolean; message: string | null }> => {
+  const result = await new CatalogClient(event).removeImage(event.params.soundId);
+  return result.ok ? { ok: true, message: null } : { ok: false, message: result.message };
 }, { invalidate: [] });
 
 export const useDeleteSound = routeAction$(async (_, event): Promise<{ ok: boolean; message: string | null }> => {

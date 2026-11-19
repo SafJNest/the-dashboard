@@ -9,7 +9,7 @@ Data: 12 novembre 2026. Progetto: Beebot Dashboard, Qwik 2 / Qwik Router 2, attu
 - Questo documento descrive il comportamento da ottenere, non funzionalità già implementate o prestazioni misurate. I nomi dei nuovi blocchi sotto sono responsabilità suggerite, non l'obbligo di creare un file per ogni nome.
 - Leggere prima `AGENTS.md` e lo stato Git. Preservare le modifiche preesistenti in `alert-settings.tsx`, `settings-form.tsx` e `dashboard.css`, e ricontrollare lo stato prima degli interventi.
 - Usare CodeGraph sincronizzato per struttura e dipendenze. Rileggere i file segnalati come modificati dopo l'indicizzazione.
-- Non migrare a Svelte o Next. Non aggiungere dipendenze, nuovi servizi, nuove API backend, upload, waveform o funzioni future.
+- Non migrare a Svelte o Next. Non aggiungere dipendenze, nuovi servizi, nuove API backend, upload o funzioni future. Eccezione decisa dall'utente il 19/11/2026: onda con `wavesurfer.js` e player unico (vedi `docs/sounds-navigation-loading.md`, "Player e onda").
 - Mandato: implementare tutti i comportamenti di questa specifica nella dashboard, senza fermarsi a piano o preparazione di agenti. Le verifiche sotto sono a supporto delle modifiche, non autorizzano a costruire un nuovo finto backend completo, infrastrutture di test o benchmark. Usare strumenti esistenti e simulazioni temporanee minime quando servono; segnalare i limiti di verifica senza ampliare l'incarico.
 - Non eseguire test, benchmark o richieste sul sito privato, né chiamare Beebot o Discord reali. Le eventuali verifiche runtime sono locali, con dati fittizi e senza caricare credenziali reali; devono restare proporzionate alle modifiche richieste.
 - Seguire le decisioni confermate sotto. Per un nuovo dubbio di prodotto che cambia il comportamento, chiedere all'utente e proseguire sulle parti indipendenti; non inventare la risposta.
@@ -244,7 +244,7 @@ Data: 12 novembre 2026. Progetto: Beebot Dashboard, Qwik 2 / Qwik Router 2, attu
 - I riepiloghi già inclusi nella risposta library possono apparire con essa. Dati disponibili soltanto nell'analytics hanno un loro stato pending. Non trattare tutti i numeri come se provenissero dallo stesso endpoint.
 - Se la risposta library è essa stessa lenta perché il backend vi calcola summary, separare i loader non può anticipare i suoi suoni: documentare il limite, non inventare una nuova API o promettere il contrario.
 - Analytics fallite: elenco, metadati, player e azioni restano utilizzabili; errore/retry solo nell'area analytics. Library fallita: errore della libreria e nessun falso elenco vuoto.
-- Entrare nella libreria non deve scaricare gli audio. Conservare `preload="none"`.
+- Aggiornato il 19/11/2026: l'audio del suono aperto (anche quello selezionato di default) si scarica all'apertura per disegnare l'onda, una sola volta, e la riproduzione usa lo stesso file (`docs/sounds-navigation-loading.md`, "Player e onda"). Gli altri suoni della lista non si scaricano.
 
 ## Libreria Sounds della guild
 
