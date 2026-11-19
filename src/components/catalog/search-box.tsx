@@ -1,6 +1,6 @@
 import { $, component$, noSerialize, useContext, useSignal, useTask$, type NoSerialize, type QRL } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
-import { QUERY_MAX, type SoundCard, type Suggestions } from '../../lib/catalog';
+import { QUERY_MAX, SOUNDS_PATH, type SoundCard, type Suggestions } from '../../lib/catalog';
 import { formatCompact, formatLength } from '../../lib/sound-stats';
 import { Icon } from '../dashboard/icons';
 import { SearchContext } from './catalog-context';
@@ -11,14 +11,13 @@ const SUGGEST_DELAY_MS = 180;
 const SUGGEST_MIN_LENGTH = 2;
 
 interface SearchBoxProps {
-  base: string;
   compact: boolean;
   onSearch$: QRL<(query: string) => void>;
   onTag$: QRL<(tag: string) => void>;
   onPlay$: QRL<(sound: SoundCard) => void>;
 }
 
-export const SearchBox = component$<SearchBoxProps>(({ base, compact, onSearch$, onTag$, onPlay$ }) => {
+export const SearchBox = component$<SearchBoxProps>(({ compact, onSearch$, onTag$, onPlay$ }) => {
   const search = useContext(SearchContext);
   const suggestions = useSignal<Suggestions | null>(null);
   const open = useSignal(false);
@@ -118,7 +117,7 @@ export const SearchBox = component$<SearchBoxProps>(({ base, compact, onSearch$,
                   <Icon name="play" />
                 </button>
                 <SoundThumb sound={sound} size="sm" />
-                <Link href={`${base}/${sound.id}/`} class="catalog-row__link" aria-label={`Open ${sound.name}`} prefetchData="off" scroll={false} onClick$={async () => {
+                <Link href={`${SOUNDS_PATH}/${sound.id}/`} class="catalog-row__link" aria-label={`Open ${sound.name}`} prefetchData="off" scroll={false} onClick$={async () => {
                   search.preview = sound;
                   await close();
                 }} />

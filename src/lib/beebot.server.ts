@@ -1,5 +1,4 @@
 import type { RequestEvent, RequestEventLoader } from '@qwik.dev/router';
-import { siteOrigin } from './sounds-site';
 
 type ServerEvent = Pick<RequestEvent, 'env' | 'url'>;
 type SessionEvent = ServerEvent & Pick<RequestEvent, 'cookie' | 'headers' | 'redirect'>;
@@ -90,8 +89,7 @@ export function configuration(event: ServerEvent) {
   if (apiUrl.protocol !== 'https:' && !(apiUrl.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(apiUrl.hostname))) {
     throw new Error('Invalid Beebot API URL');
   }
-  const siteUrl = siteOrigin(event.url) || event.url.origin;
-  if (callbackUrl.origin !== siteUrl || callbackUrl.pathname !== '/auth/callback/' || callbackUrl.search || callbackUrl.hash) {
+  if (callbackUrl.origin !== event.url.origin || callbackUrl.pathname !== '/auth/callback/' || callbackUrl.search || callbackUrl.hash) {
     throw new Error('Invalid Beebot callback URL');
   }
   if (callbackUrl.protocol !== 'https:' && !(callbackUrl.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(callbackUrl.hostname))) {

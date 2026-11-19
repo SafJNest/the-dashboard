@@ -22,6 +22,7 @@ export const CATALOG_PAGE = 20;
 export const IMAGE_MAX_BYTES = 1024 * 1024;
 export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif'];
 export const COMMAND_PREFIX = '/play ';
+export const SOUNDS_PATH = '/sounds';
 export const NOT_FOUND_STATUS = 404;
 export const USER_ID = /^\d{1,20}$/;
 

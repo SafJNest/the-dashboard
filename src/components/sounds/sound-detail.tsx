@@ -21,7 +21,7 @@ import { LoadError, PanelSkeleton, Skeleton } from './library-states';
 import { DayBars, HeatGrid, ReplaySplit, SourceSplit } from './sound-charts';
 import { GreetPicker } from './greet-picker';
 import { SoundWave } from './sound-wave';
-import { publicSoundsUrl } from '../../lib/sounds-site';
+import { SOUNDS_PATH } from '../../lib/catalog';
 import { SoundPlayerContext } from './sound-player';
 import { VoteButtons } from './vote-buttons';
 
@@ -350,7 +350,7 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
               ) : (
                 <span class="avatar avatar--sm" aria-hidden="true">{sound.uploader.name.slice(0, 1).toUpperCase()}</span>
               )}
-              <a href={publicSoundsUrl(`/u/${sound.uploader.id}/`)}>{sound.ownedByMe ? 'You' : sound.uploader.name}</a>
+              <a href={`${SOUNDS_PATH}/u/${sound.uploader.id}/`}>{sound.ownedByMe ? 'You' : sound.uploader.name}</a>
             </dd>
           </div>
           <div>
@@ -385,7 +385,7 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
           <GreetPicker key={sound.id} soundId={sound.id} soundName={sound.name} variant="button" />
           <div class="sound-actions__end">
             {sound.public && (
-              <a href={publicSoundsUrl(`/${sound.id}/`)} class="button button--ghost">
+              <a href={`${SOUNDS_PATH}/${sound.id}/`} class="button button--ghost">
                 <Icon name="link" />
                 <span>Public page</span>
               </a>

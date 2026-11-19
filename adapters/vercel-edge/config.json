@@ -2,9 +2,10 @@
   "version": 3,
   "routes": [
     {
-      "src": "^/$",
+      "src": "^/(.*)$",
       "has": [{ "type": "host", "value": "sounds.safjnest.com" }],
-      "dest": "/_qwik-router"
+      "status": 308,
+      "headers": { "Location": "https://safjnest.com/sounds/$1" }
     },
     {
       "handle": "filesystem"

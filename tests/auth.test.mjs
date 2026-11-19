@@ -3,16 +3,14 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 
-async function load(path, helper, site) {
+async function load(path, helper) {
   let source = await readFile(new URL(path, import.meta.url), 'utf8');
   if (helper) source = source.replace("'../../../lib/beebot.server'", JSON.stringify(helper));
-  if (site) source = source.replace("'./sounds-site'", JSON.stringify(site));
   const { outputText } = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } });
   const url = `data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`;
   return { url, module: await import(url) };
 }
-const site = await load('../src/lib/sounds-site.ts');
-const helper = await load('../src/lib/beebot.server.ts', null, site.url);
+const helper = await load('../src/lib/beebot.server.ts');
 const callback = (await load('../src/routes/auth/callback/index.ts', helper.url)).module;
 const login = (await load('../src/routes/auth/login/index.ts', helper.url)).module;
 const logout = (await load('../src/routes/auth/logout/index.ts', helper.url)).module;

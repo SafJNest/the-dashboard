@@ -1,6 +1,6 @@
 import { $, component$, useSignal, useStore, type QRL, type Signal } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
-import { COMMENT_MAX, COMMENT_SORT_LABELS, COMMENT_SORTS, type CatalogVote, type CommentPage, type CommentSort, type SoundComment } from '../../lib/catalog';
+import { COMMENT_MAX, COMMENT_SORT_LABELS, COMMENT_SORTS, SOUNDS_PATH, type CatalogVote, type CommentPage, type CommentSort, type SoundComment } from '../../lib/catalog';
 import { formatCount } from '../../lib/sound-stats';
 import { Icon } from '../dashboard/icons';
 import { createComment, deleteComment, loadComments, updateComment, voteComment } from './catalog-server';
@@ -21,7 +21,6 @@ function timeAgo(iso: string) {
 
 interface ThreadContext {
   soundId: string;
-  base: string;
   signedIn: boolean;
   soundOwned: boolean;
   loginHref: string;
@@ -113,7 +112,7 @@ const CommentItem = component$<CommentItemProps>(({ comment, depth, thread }) =>
       <div class="comment__body">
         {comment.pinned && <span class="comment__pin"><Icon name="pin" />Pinned by the uploader</span>}
         <div class="comment__top">
-          {comment.author ? <Link href={`${thread.base}/u/${comment.author.id}/`} class="comment__author" prefetchData="off">{comment.author.name}</Link> : <span class="text-subtle">Deleted</span>}
+          {comment.author ? <Link href={`${SOUNDS_PATH}/u/${comment.author.id}/`} class="comment__author" prefetchData="off">{comment.author.name}</Link> : <span class="text-subtle">Deleted</span>}
           {comment.uploader && <span class="badge badge--accent">Uploader</span>}
           {authored && <span class="badge">You</span>}
           <span class="caption">{timeAgo(comment.createdAt)}{comment.editedAt ? ' · edited' : ''}</span>
@@ -193,7 +192,6 @@ const CommentItem = component$<CommentItemProps>(({ comment, depth, thread }) =>
 
 interface CommentsProps {
   soundId: string;
-  base: string;
   commentCount: number;
   seed: CommentPage;
   signedIn: boolean;
@@ -201,7 +199,7 @@ interface CommentsProps {
   loginHref: string;
 }
 
-export const Comments = component$<CommentsProps>(({ soundId, base, commentCount, seed, signedIn, soundOwned, loginHref }) => {
+export const Comments = component$<CommentsProps>(({ soundId, commentCount, seed, signedIn, soundOwned, loginHref }) => {
   const list = useStore({ items: seed.items, cursor: seed.nextCursor, sort: 'top' as CommentSort, loading: false, error: null as string | null });
   const total = useSignal(commentCount);
   const draft = useSignal('');
@@ -236,7 +234,7 @@ export const Comments = component$<CommentsProps>(({ soundId, base, commentCount
     }
   });
 
-  const thread: ThreadContext = { soundId, base, signedIn, soundOwned, loginHref, sort: list.sort, total, onPinned$ };
+  const thread: ThreadContext = { soundId, signedIn, soundOwned, loginHref, sort: list.sort, total, onPinned$ };
 
   return (
     <section class="comments" aria-labelledby="comments-title">

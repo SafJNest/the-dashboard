@@ -26,7 +26,7 @@ export const SoundRoute = component$(() => {
   const live = current?.sound ?? null;
   const sound = live ?? (search.preview?.id === soundId ? search.preview : null);
   if ( !sound ) { return <PanelSkeleton />; }
-  return <SoundPanel key={soundId} sound={sound} live={live} base={site.value.base} loginHref={site.value.loginHref} signedIn={viewer?.signedIn ?? true} greetId={viewer?.profile?.globalGreetId ?? null} />;
+  return <SoundPanel key={soundId} sound={sound} live={live} loginHref={site.value.loginHref} signedIn={viewer?.signedIn ?? true} greetId={viewer?.profile?.globalGreetId ?? null} />;
 });
 
 export const soundHead: DocumentHead = ({ resolveValue }) => {

@@ -94,7 +94,7 @@ Verificare se `GET /sounds/{id}` contiene `imageUrl`. Se sì: parser `Sound` e r
 ### F8 — Verifica e documentazione
 
 1. `npx tsc --noEmit`, `node --test tests/*.test.mjs`, `npm run build`.
-2. Conteggio chiamate dopo le modifiche con la stessa fixture; SSR senza JS; ritardi ed errori per regione; `sounds.localhost`.
+2. Conteggio chiamate dopo le modifiche con la stessa fixture; SSR senza JS; ritardi ed errori per regione.
 3. README: sezione sul sito pubblico Sounds (loader, cache, prefetch, limiti).
 
 ## Agenti
@@ -106,4 +106,4 @@ Gli agenti `nav-*` sono condivisi tra dashboard e Sounds: il prompt indica la co
 - API sperimentali di rc.5 (`Pending`, `blockSSR`, `peekValue`): se non si comportano come documentato, usare `DocumentRecovery` e documentare il limite.
 - L'SSR di rc.5 attende tutti i loader: l'accesso diretto non accelera.
 - `sound-wave.tsx` e la route dell'editor sono toccati anche da `docs/fix-plan`: modifiche mirate.
-- Il cookie di sessione senza `Domain` non arriva su `sounds.<dominio>`: fuori perimetro, segnalato.
+- Sito separato su `sounds.safjnest.com` abbandonato (19/11/2026): il sottodominio fa un redirect 308 a `safjnest.com/sounds/…` (README).

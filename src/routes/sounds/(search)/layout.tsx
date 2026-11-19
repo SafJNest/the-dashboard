@@ -11,11 +11,11 @@ import { LoadError } from '../../../components/sounds/library-states';
 import { SoundPlayerContext } from '../../../components/sounds/sound-player';
 import { isDocumentRequest, loadFailure, loaderResolver } from '../../../lib/beebot.server';
 import { CatalogClient } from '../../../lib/beebot/catalog.server';
-import { CATALOG_SORT_LABELS, CATALOG_SORTS, LENGTHS, type CatalogSort, type LengthFilter, type SoundCard } from '../../../lib/catalog';
+import { CATALOG_SORT_LABELS, CATALOG_SORTS, LENGTHS, SOUNDS_PATH, type CatalogSort, type LengthFilter, type SoundCard } from '../../../lib/catalog';
 import { CACHED_LOADER } from '../../../lib/catalog-loaders';
 import { requireSound } from '../../../lib/catalog-guard.server';
 import { peekValue } from '../../../lib/loader-value';
-import { useSoundsSite, useViewer } from '../layout';
+import { useViewer } from '../layout';
 
 const SEARCH_FAILED = 'Search is unavailable right now. Please try again.';
 const FILTER_TAGS = 8;
@@ -50,7 +50,7 @@ const PopularTags = component$<{ limit?: number; active: string | null; onPick$:
   );
 });
 
-const ExploreSections = component$<{ base: string; selected: string | null; onPlay$: QRL<(sound: SoundCard) => void> }>(({ base, selected, onPlay$ }) => {
+const ExploreSections = component$<{ selected: string | null; onPlay$: QRL<(sound: SoundCard) => void> }>(({ selected, onPlay$ }) => {
   const loader = useExplore();
   const value = peekValue(loader);
   if ( value?.failed ) { return <LoadError message={value.message} retrying={loader.pending} onRetry$={$(() => loader.invalidate())} />; }
@@ -62,7 +62,7 @@ const ExploreSections = component$<{ base: string; selected: string | null; onPl
         <div class="catalog-section__head"><h2 id="catalog-trending" class="heading">Trending this week</h2></div>
         {data ? (
           <div class="catalog-grid">
-            {data.trending.map((sound) => <SoundTile key={sound.id} sound={sound} href={`${base}/${sound.id}/`} />)}
+            {data.trending.map((sound) => <SoundTile key={sound.id} sound={sound} href={`${SOUNDS_PATH}/${sound.id}/`} />)}
           </div>
         ) : (
           <TilesSkeleton />
@@ -71,7 +71,7 @@ const ExploreSections = component$<{ base: string; selected: string | null; onPl
       <section class="catalog-section" aria-labelledby="catalog-latest">
         <div class="catalog-section__head"><h2 id="catalog-latest" class="heading">Just added</h2><span class="caption">Newest public sounds</span></div>
         <div class="card catalog-list catalog-list--grid" aria-busy={!data}>
-          {data ? data.latest.map((sound) => <SoundRow key={sound.id} sound={sound} href={`${base}/${sound.id}/`} current={selected === sound.id} onPlay$={onPlay$} />) : <RowsSkeleton label="Loading new sounds" />}
+          {data ? data.latest.map((sound) => <SoundRow key={sound.id} sound={sound} href={`${SOUNDS_PATH}/${sound.id}/`} current={selected === sound.id} onPlay$={onPlay$} />) : <RowsSkeleton label="Loading new sounds" />}
         </div>
       </section>
     </div>
@@ -79,14 +79,12 @@ const ExploreSections = component$<{ base: string; selected: string | null; onPl
 });
 
 export default component$(() => {
-  const site = useSoundsSite();
   const search = useContext(SearchContext);
   const player = useContext(SoundPlayerContext);
   const location = useLocation();
   const navigate = useNavigate();
   const results = useStore({ items: [] as SoundCard[], mine: [] as SoundCard[], cursor: null as string | null, loading: false, more: false, error: null as string | null, ticket: 0 });
   const request = useSignal<NoSerialize<AbortController>>();
-  const base = site.value.base;
   const selected = location.params.soundId ?? null;
   const searching = search.submitted !== null || search.tag !== null;
   const typed = search.submitted ?? '';
@@ -123,7 +121,7 @@ export default component$(() => {
 
   const play = $(async (sound: SoundCard) => {
     search.preview = sound;
-    await Promise.all([player.toggle$(sound.id, sound.audioUrl), navigate(`${base}/${sound.id}/`, { scroll: false })]);
+    await Promise.all([player.toggle$(sound.id, sound.audioUrl), navigate(`${SOUNDS_PATH}/${sound.id}/`, { scroll: false })]);
   });
 
   const showResults = $((query: string) => {
@@ -147,7 +145,7 @@ export default component$(() => {
     <aside class="card card--raised catalog-panel" aria-label="Sound details">
       <div class="catalog-panel__bar">
         <span class="overline">Now viewing</span>
-        <Link href={`${base}/`} class="button button--ghost button--sm" aria-label="Close" scroll={false}><Icon name="close" /></Link>
+        <Link href={`${SOUNDS_PATH}/`} class="button button--ghost button--sm" aria-label="Close" scroll={false}><Icon name="close" /></Link>
       </div>
       <Slot />
     </aside>
@@ -157,7 +155,7 @@ export default component$(() => {
     <div class="catalog">
       {searching ? (
         <div class="catalog-bar">
-          <SearchBox base={base} compact onSearch$={showResults} onTag$={pickTag} onPlay$={play} />
+          <SearchBox compact onSearch$={showResults} onTag$={pickTag} onPlay$={play} />
           <div class="catalog-filters">
             <PopularTags limit={FILTER_TAGS} active={search.tag} onPick$={$((tag: string) => (search.tag = search.tag === tag ? null : tag))} />
             <div class="segmented" role="group" aria-label="Length">
@@ -182,7 +180,7 @@ export default component$(() => {
           <p class="eyebrow">Beebot sounds</p>
           <h1 class="display catalog-hero__title">Find the sound <em>for the moment.</em></h1>
           <p class="lead">Search public sounds from every server by name or tag. Listen freely; log in to like, comment and use them as your greet.</p>
-          <SearchBox base={base} compact={false} onSearch$={showResults} onTag$={pickTag} onPlay$={play} />
+          <SearchBox compact={false} onSearch$={showResults} onTag$={pickTag} onPlay$={play} />
           <PopularTags active={null} onPick$={pickTag} />
         </div>
       )}
@@ -197,11 +195,11 @@ export default component$(() => {
                 {results.mine.length > 0 && (
                   <>
                     <h2 class="overline">Your sounds</h2>
-                    {results.mine.map((sound) => <SoundRow key={`mine-${sound.id}`} sound={sound} href={`${base}/${sound.id}/`} query={typed} current={selected === sound.id} onPlay$={play} />)}
+                    {results.mine.map((sound) => <SoundRow key={`mine-${sound.id}`} sound={sound} href={`${SOUNDS_PATH}/${sound.id}/`} query={typed} current={selected === sound.id} onPlay$={play} />)}
                     <h2 class="overline">Everyone</h2>
                   </>
                 )}
-                {results.items.map((sound) => <SoundRow key={sound.id} sound={sound} href={`${base}/${sound.id}/`} query={typed} current={selected === sound.id} onPlay$={play} />)}
+                {results.items.map((sound) => <SoundRow key={sound.id} sound={sound} href={`${SOUNDS_PATH}/${sound.id}/`} query={typed} current={selected === sound.id} onPlay$={play} />)}
               </>
             )}
             {results.error && <LoadError message={results.error} retrying={results.loading} onRetry$={$(() => run(results.more ? results.cursor : null))} />}
@@ -222,7 +220,7 @@ export default component$(() => {
         </div>
       ) : (
         <div class="catalog-results">
-          <ExploreSections base={base} selected={selected} onPlay$={play} />
+          <ExploreSections selected={selected} onPlay$={play} />
           {panel}
         </div>
       )}

@@ -15,8 +15,7 @@ const sounds = await load('../src/lib/sounds.ts');
 const stats = await load('../src/lib/sound-stats.ts');
 const library = (await load('../src/lib/sound-library.ts', { "'./sound-stats'": JSON.stringify(stats.url), "'./sounds'": JSON.stringify(sounds.url) })).module;
 const endpoints = await load('../src/lib/beebot/endpoints.ts');
-const site = await load('../src/lib/sounds-site.ts');
-const helper = await load('../src/lib/beebot.server.ts', { "'./sounds-site'": JSON.stringify(site.url) });
+const helper = await load('../src/lib/beebot.server.ts');
 const guild = await load('../src/lib/guild.ts');
 const { BeebotClient } = (await load('../src/lib/beebot/client.server.ts', {
   "'../beebot.server'": JSON.stringify(helper.url),

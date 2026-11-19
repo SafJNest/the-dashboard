@@ -9,12 +9,12 @@ import { LoadError } from '../../../../components/sounds/library-states';
 import { SoundPlayerContext } from '../../../../components/sounds/sound-player';
 import { apiError, isDocumentRequest, loadFailure, loaderResolver } from '../../../../lib/beebot.server';
 import { CatalogClient } from '../../../../lib/beebot/catalog.server';
-import { CATALOG_SORT_LABELS, likeShare, NOT_FOUND_STATUS, USER_ID, type CatalogSort, type SoundCard } from '../../../../lib/catalog';
+import { CATALOG_SORT_LABELS, likeShare, NOT_FOUND_STATUS, SOUNDS_PATH, USER_ID, type CatalogSort, type SoundCard } from '../../../../lib/catalog';
 import { CACHED_LOADER } from '../../../../lib/catalog-loaders';
 import { requireSound } from '../../../../lib/catalog-guard.server';
 import { peekValue } from '../../../../lib/loader-value';
 import { formatCompact, formatCount } from '../../../../lib/sound-stats';
-import { useSoundsSite, useViewer } from '../../layout';
+import { useViewer } from '../../layout';
 
 const CREATOR_SORTS: CatalogSort[] = ['popular', 'mostLiked', 'newest'];
 const LIST_FAILED = 'These sounds are unavailable right now. Please try again.';
@@ -148,16 +148,14 @@ const CreatorSounds = component$<CreatorSoundsProps>(({ userId, name, home, sele
 });
 
 export default component$(() => {
-  const site = useSoundsSite();
   const viewer = peekValue(useViewer());
   const loader = useCreator();
   const search = useContext(SearchContext);
   const player = useContext(SoundPlayerContext);
   const location = useLocation();
   const navigate = useNavigate();
-  const base = site.value.base;
   const userId = location.params.userId;
-  const home = `${base}/u/${userId}`;
+  const home = `${SOUNDS_PATH}/u/${userId}`;
   const selected = location.params.soundId ?? null;
   const value = peekValue(loader);
   const current = value?.userId === userId ? value : undefined;
@@ -173,7 +171,7 @@ export default component$(() => {
   return (
     <div class="catalog">
       <section class="creator-hero">
-        <nav aria-label="Breadcrumb"><Link href={`${base}/`} class="button button--ghost button--sm"><Icon name="back" /><span>Explore</span></Link></nav>
+        <nav aria-label="Breadcrumb"><Link href={`${SOUNDS_PATH}/`} class="button button--ghost button--sm"><Icon name="back" /><span>Explore</span></Link></nav>
         {current?.failed ? (
           <LoadError message={current.message} retrying={loader.pending} onRetry$={current.status === NOT_FOUND_STATUS ? undefined : $(() => loader.invalidate())} />
         ) : creator ? (
@@ -187,7 +185,7 @@ export default component$(() => {
                   <p class="text-muted">Uploading since {new Date(creator.uploadingSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
                 )}
               </div>
-              {self && <a href={`${site.value.origin}/dashboard/me/sounds/`} class="button button--primary">Manage in dashboard</a>}
+              {self && <a href="/dashboard/me/sounds/" class="button button--primary">Manage in dashboard</a>}
             </div>
             <div class="creator-stats">
               <div><span class="overline">Public sounds</span><strong>{formatCount(creator.soundCount)}</strong></div>

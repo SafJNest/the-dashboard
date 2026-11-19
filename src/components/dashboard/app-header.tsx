@@ -1,6 +1,6 @@
 import { $, component$, useOnWindow, useSignal } from '@qwik.dev/core';
 import { Link, useLocation } from '@qwik.dev/router';
-import { publicSoundsUrl } from '../../lib/sounds-site';
+import { SOUNDS_PATH } from '../../lib/catalog';
 import { HexMark } from '../hex-mark/hex-mark';
 import { Icon } from './icons';
 import type { DashboardUser } from './servers';
@@ -41,7 +41,7 @@ export const AppHeader = component$<AppHeaderProps>(({ user, navigating }) => {
           </span>
         </nav>
         <span class="appbar__spacer" />
-        <a href={publicSoundsUrl('/')} class="appbar__link">
+        <a href={`${SOUNDS_PATH}/`} class="appbar__link">
           <Icon name="search" />
           <span>Explore sounds</span>
         </a>

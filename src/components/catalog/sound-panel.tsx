@@ -1,6 +1,6 @@
 import { $, component$, useContext, useSignal, useTask$, useVisibleTask$ } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
-import { likeShare, playCommand, type CatalogVote, type SoundCard, type SoundVoteResult } from '../../lib/catalog';
+import { likeShare, playCommand, SOUNDS_PATH, type CatalogVote, type SoundCard, type SoundVoteResult } from '../../lib/catalog';
 import { useSoundComments } from '../../lib/catalog-loaders';
 import { peekValue } from '../../lib/loader-value';
 import { formatCount, formatLength } from '../../lib/sound-stats';
@@ -22,7 +22,6 @@ type Gate = 'react' | 'greet' | null;
 interface SoundPanelProps {
   sound: SoundCard;
   live: SoundCard | null;
-  base: string;
   loginHref: string;
   signedIn: boolean;
   greetId: string | null;
@@ -36,16 +35,16 @@ const GATES = {
   greet: { title: 'Log in to set a greet', text: 'Beebot plays your greet when you join a voice channel.' },
 };
 
-const CommentsBlock = component$<{ live: SoundCard | null; soundId: string; base: string; loginHref: string; signedIn: boolean }>(({ live, soundId, base, loginHref, signedIn }) => {
+const CommentsBlock = component$<{ live: SoundCard | null; soundId: string; loginHref: string; signedIn: boolean }>(({ live, soundId, loginHref, signedIn }) => {
   const loader = useSoundComments();
   const value = peekValue(loader);
   const current = value?.soundId === soundId ? value : undefined;
   if ( current?.failed ) { return <LoadError message={current.message} retrying={loader.pending} onRetry$={$(() => loader.invalidate())} />; }
   if ( !current?.page || !live ) { return <CommentsSkeleton />; }
-  return <Comments key={soundId} soundId={soundId} base={base} commentCount={live.commentCount} seed={current.page} signedIn={signedIn} soundOwned={live.viewer?.ownedByMe === true} loginHref={loginHref} />;
+  return <Comments key={soundId} soundId={soundId} commentCount={live.commentCount} seed={current.page} signedIn={signedIn} soundOwned={live.viewer?.ownedByMe === true} loginHref={loginHref} />;
 });
 
-export const SoundPanel = component$<SoundPanelProps>(({ sound, live, base, loginHref, signedIn, greetId }) => {
+export const SoundPanel = component$<SoundPanelProps>(({ sound, live, loginHref, signedIn, greetId }) => {
   const search = useContext(SearchContext);
   const greetAction = useGlobalGreet();
   const player = useContext(SoundPlayerContext);
@@ -115,7 +114,7 @@ export const SoundPanel = component$<SoundPanelProps>(({ sound, live, base, logi
           <SoundThumb sound={sound} size="lg" />
           <div class="sound-card__meta">
             <h2 class="display sound-card__title">{sound.name}</h2>
-            <Link href={`${base}/u/${sound.uploader.id}/`} class="sound-card__by">
+            <Link href={`${SOUNDS_PATH}/u/${sound.uploader.id}/`} class="sound-card__by">
               <PersonAvatar user={sound.uploader} size={24} />
               {sound.uploader.name}
             </Link>
@@ -192,7 +191,7 @@ export const SoundPanel = component$<SoundPanelProps>(({ sound, live, base, logi
         {sound.tags.length > 0 && (
           <div class="catalog-filters__tags" aria-label="Tags">
             {sound.tags.map((tag) => (
-              <Link key={tag.id} href={`${base}/`} class="catalog-chip" prefetchData="off" onClick$={() => {
+              <Link key={tag.id} href={`${SOUNDS_PATH}/`} class="catalog-chip" prefetchData="off" onClick$={() => {
                 search.tag = tag.name;
                 search.submitted = '';
                 search.query = '';
@@ -202,7 +201,7 @@ export const SoundPanel = component$<SoundPanelProps>(({ sound, live, base, logi
         )}
       </div>
 
-      <CommentsBlock live={live} soundId={sound.id} base={base} loginHref={loginHref} signedIn={signedIn} />
+      <CommentsBlock live={live} soundId={sound.id} loginHref={loginHref} signedIn={signedIn} />
     </article>
   );
 });

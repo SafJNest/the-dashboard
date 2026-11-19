@@ -2,7 +2,7 @@
 
 Data: 19 novembre 2026. Progetto: Beebot Dashboard, Qwik 2 / Qwik Router 2 `2.0.0-rc.5`.
 
-Applica al sito pubblico Sounds (`/sounds/**` e `sounds.<dominio>` tramite `src/routes/plugin@sounds.ts`) la stessa logica di `docs/claude-navigation-loading.md`, già realizzata nella dashboard. Il comportamento di prodotto delle pagine è in `docs/sounds-funzionamento.md`; le regole generali in `AGENTS.md`. Questo documento descrive il comportamento da ottenere, non funzionalità già presenti o prestazioni misurate.
+Applica al sito pubblico Sounds (`/sounds/**`; `sounds.safjnest.com` fa solo un redirect 308 lì) la stessa logica di `docs/claude-navigation-loading.md`, già realizzata nella dashboard. Il comportamento di prodotto delle pagine è in `docs/sounds-funzionamento.md`; le regole generali in `AGENTS.md`. Questo documento descrive il comportamento da ottenere, non funzionalità già presenti o prestazioni misurate.
 
 ## Obiettivo e modalità di lavoro
 
@@ -48,7 +48,6 @@ Applica al sito pubblico Sounds (`/sounds/**` e `sounds.<dominio>` tramite `src/
 | `/sounds/u/{userId}/` | Header, hero e statistiche del creatore, lista | — |
 | `/sounds/u/{userId}/{soundId}/` | Profilo + pannello del suono | Commenti |
 
-Su `sounds.<dominio>` le stesse URL senza `/sounds`, riscritte da `plugin@sounds.ts`.
 
 ## Viewer e header
 
@@ -138,6 +137,5 @@ Su `sounds.<dominio>` le stesse URL senza `/sounds`, riscritte da `plugin@sounds
 - HTML SSR senza JavaScript con il contenuto principale e senza segreti.
 - Ritardi distinti e invertiti tra viewer, Explore, creatore, suono e commenti: nessuna attesa artificiale; errori confinati alla propria regione.
 - Hover sulle liste senza richieste di dati; apertura del pannello con un solo download audio, nessun altro al Play.
-- Host `sounds.localhost`: rewrite e navigazione interna funzionanti.
 - `npx tsc --noEmit`, `node --test tests/*.test.mjs`, `npm run build`.
 - README aggiornato solo per ciò che è cambiato e verificato; limiti residui dichiarati.

@@ -11,7 +11,6 @@ import { CACHED_LOADER } from '../../lib/catalog-loaders';
 import { discordInviteUrl } from '../../lib/invite';
 import { peekValue } from '../../lib/loader-value';
 import { SOUND_ID } from '../../lib/sounds';
-import { siteOrigin, soundsBase } from '../../lib/sounds-site';
 import catalogStyles from '../../components/catalog/catalog.css?inline';
 import siteStyles from '../(site)/site.css?inline';
 
@@ -24,11 +23,8 @@ export interface GreetResult {
 }
 
 export const useSoundsSite = routeLoader$((event) => {
-  const origin = siteOrigin(event.url);
   return {
-    base: soundsBase(event.url),
-    origin,
-    loginHref: `${origin}/auth/login/`,
+    loginHref: '/auth/login/',
     inviteUrl: discordInviteUrl(event.env.get('DISCORD_CLIENT_ID')),
   };
 }, { serializationStrategy: 'always', cacheControl: 'immutable' });
@@ -66,7 +62,7 @@ export default component$(() => {
     <div class="site">
       <BeeDefs />
       <div class="site__top">
-        <SiteHeader inviteUrl={site.value.inviteUrl} origin={site.value.origin} soundsHref={`${site.value.base}/`} account={viewer?.profile ?? null} signedIn={viewer?.signedIn ?? true} />
+        <SiteHeader inviteUrl={site.value.inviteUrl} account={viewer?.profile ?? null} signedIn={viewer?.signedIn ?? true} />
       </div>
       <main class="catalog-page">
         <SoundPlayer>

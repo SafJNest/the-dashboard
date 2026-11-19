@@ -14,7 +14,6 @@ async function load(path, replacements = {}) {
 const sounds = await load('../src/lib/sounds.ts');
 const endpoints = await load('../src/lib/beebot/endpoints.ts');
 const catalog = (await load('../src/lib/catalog.ts', { "'./sounds'": JSON.stringify(sounds.url), "'./beebot/endpoints'": JSON.stringify(endpoints.url) })).module;
-const site = (await load('../src/lib/sounds-site.ts')).module;
 const { withQuery, ENDPOINTS } = endpoints.module;
 
 const card = { id: '42', name: 'Airhorn', public: true, createdAt: '2026-11-01T10:00:00Z', durationMs: 2088, audioUrl: 'https://cdn.example.com/sounds/42/42.mp3', imageUrl: null, uploader: { id: '456', name: 'Luna', avatarUrl: null }, tags: [{ id: '1', name: 'meme' }], plays: 18, listeners: 7, likes: 4, dislikes: 1, commentCount: 2 };
@@ -38,11 +37,4 @@ test('comments keep deleted placeholders and votes', () => {
   assert.equal(page.items[0].deleted, true);
   assert.equal(page.items[0].author, null);
   assert.deepEqual(catalog.parseSoundVoteResult({ soundId: '42', commentId: null, likes: 5, dislikes: 1, vote: null }), { likes: 5, dislikes: 1, vote: null });
-});
-
-test('sounds host maps to the root path', () => {
-  assert.equal(site.soundsBase(new URL('https://sounds.example.com/42/')), '');
-  assert.equal(site.soundsBase(new URL('http://localhost:5173/sounds/42/')), '/sounds');
-  assert.equal(site.siteOrigin(new URL('https://sounds.example.com/42/')), 'https://example.com');
-  assert.equal(site.siteOrigin(new URL('https://example.com/')), '');
 });

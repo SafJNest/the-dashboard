@@ -34,8 +34,7 @@ Il prompt indica l'ambito: dashboard (`docs/claude-navigation-loading.md`, `docs
 6. Scenari specifici del sito Sounds:
    - chiamate per: accesso diretto a `/sounds/`, `/sounds/{id}/`, profilo; clic su un suono da Explore, risultati e profilo; chiusura del pannello; ritorno a Explore; hover sulle righe; digitazione nella ricerca; Load more;
    - ospite (nessun cookie) e utente con cookie fittizio, compreso `/me` che fallisce;
-   - nessun download audio all'apertura del pannello, uno solo dopo Play;
-   - host `sounds.localhost` (rewrite e navigazione interna);
+   - un solo download audio per suono aperto (onda e riproduzione dallo stesso file), nessuno in più al Play; audio che continua cambiando suono o chiudendo il pannello;
    - suono o creatore inesistente: 404 documento ed errore locale in navigazione.
 
 ## Rapporto
