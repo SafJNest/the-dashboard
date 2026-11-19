@@ -11,6 +11,6 @@ export default extendConfig(baseConfig, () => {
       },
       outDir: ".vercel/output/functions/_qwik-router.func",
     },
-    plugins: [vercelEdgeAdapter({ ssg: { include: ["/", "/commands/", "/terms/", "/privacy/"] } })],
+    plugins: [vercelEdgeAdapter({ outputConfig: false, ssg: { include: ["/", "/commands/", "/terms/", "/privacy/"] } })],
   };
 });

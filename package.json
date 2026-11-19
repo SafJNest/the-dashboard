@@ -10,7 +10,7 @@
     "build": "qwik build",
     "build.client": "vite build",
     "build.preview": "vite build --ssr src/entry.preview.tsx",
-    "build.server": "qwik check-client src dist && vite build -c adapters/vercel-edge/vite.config.ts",
+    "build.server": "qwik check-client src dist && vite build -c adapters/vercel-edge/vite.config.ts && cp adapters/vercel-edge/config.json .vercel/output/config.json",
     "deploy": "vercel deploy",
     "dev": "vite --mode ssr",
     "qwik": "qwik"

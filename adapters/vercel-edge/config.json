@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "routes": [
+    {
+      "src": "^/$",
+      "has": [{ "type": "host", "value": "sounds.safjnest.com" }],
+      "dest": "/_qwik-router"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
+      "dest": "/_qwik-router"
+    }
+  ]
+}
