@@ -1,6 +1,7 @@
 import { component$, useStyles$ } from '@qwik.dev/core';
 import { useHttpStatus, useLocation, type DocumentHead } from '@qwik.dev/router';
 import { Bee } from '../components/bee/bee';
+import { NOINDEX } from '../lib/seo';
 import styles from './error.css?inline';
 
 export default component$(() => {
@@ -38,4 +39,5 @@ export default component$(() => {
 
 export const head: DocumentHead = {
   title: 'Error · Beebot',
+  meta: [NOINDEX],
 };

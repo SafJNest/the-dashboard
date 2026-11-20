@@ -37,7 +37,7 @@ Ogni punto è stato verificato leggendo il codice il 2026-11-15, senza eseguirlo
 **Meccanismo**
 - `useMySounds` e `useGuildSoundLibrary` (`src/lib/sound-loaders.ts:11,24`) hanno `cacheControl: { private: true, maxAge: 300 }`.
 - Il JSON del loader ha un solo URL per ogni libreria.
-- `useUpdateSound` e `useDeleteSound` (`src/routes/dashboard/me/sounds/[soundId]/edit/index.tsx:42,49`) non invalidano niente. Non potrebbero comunque: l'edit è fuori da `(library)`, e in rc.5 si invalidano solo i loader montati.
+- `useUpdateSound` e `useDeleteSound` (`src/lib/sound-editor.ts:34,69`) non invalidano niente. Non potrebbero comunque: l'edit è fuori da `(library)`, e in rc.5 si invalidano solo i loader montati.
 - Indietro/Avanti, il link "Sounds" dell'header e il prefetch mostrano quindi fino a 5 minuti di dati vecchi.
 
 **Fix (scelto dall'utente)**

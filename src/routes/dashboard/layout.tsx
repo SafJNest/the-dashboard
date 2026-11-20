@@ -1,6 +1,6 @@
 import { $, component$, Slot, useOnDocument, useOnWindow, useSignal, useStyles$, useTask$ } from '@qwik.dev/core';
 import { isBrowser } from '@qwik.dev/core/build';
-import { routeAction$, routeLoader$, useLocation, type RequestHandler } from '@qwik.dev/router';
+import { routeAction$, routeLoader$, useLocation, type DocumentHead, type RequestHandler } from '@qwik.dev/router';
 import { AppHeader } from '../../components/dashboard/app-header';
 import { DocumentRecovery } from '../../components/dashboard/document-recovery';
 import { NAVIGATION_CANCELLED } from '../../components/dashboard/unsaved-guard';
@@ -8,6 +8,7 @@ import type { DashboardGuild, DashboardUser } from '../../components/dashboard/s
 import { apiError, loginRedirect, SESSION_COOKIE } from '../../lib/beebot.server';
 import { BeebotClient } from '../../lib/beebot/client.server';
 import { pageKey } from '../../lib/dashboard-path';
+import { NOINDEX } from '../../lib/seo';
 import { useGuildSoundLibrary, useMySounds } from '../../lib/sound-loaders';
 import { GLOBAL_GREET, GUILD_ID, PERIODS, SOUND_ID, type FieldError, type Greets, type Period, type MyPlays, type VoteState } from '../../lib/sounds';
 import styles from './dashboard.css?inline';
@@ -17,6 +18,8 @@ export const onRequest: RequestHandler = (event) => {
   if (event.internalRequest === 'loader') event.headers.set('Vary', 'Cookie');
   else event.headers.set('Cache-Control', 'private, no-store');
 };
+
+export const head: DocumentHead = { meta: [NOINDEX] };
 
 export const useAccount = routeLoader$(async (event) => {
   const result = await new BeebotClient(event).account();

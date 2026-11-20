@@ -13,6 +13,7 @@ import { CATALOG_SORT_LABELS, likeShare, NOT_FOUND_STATUS, SOUNDS_PATH, USER_ID,
 import { CACHED_LOADER } from '../../../../lib/catalog-loaders';
 import { requireSound } from '../../../../lib/catalog-guard.server';
 import { peekValue } from '../../../../lib/loader-value';
+import { pageHead } from '../../../../lib/seo';
 import { formatCompact, formatCount } from '../../../../lib/sound-stats';
 import { useViewer } from '../../layout';
 
@@ -206,7 +207,14 @@ export default component$(() => {
   );
 });
 
-export const head: DocumentHead = ({ resolveValue }) => {
+export const head: DocumentHead = ({ resolveValue, params, url }) => {
+  if ( params.soundId ) { return {}; }
   const creator = resolveValue(useCreator).creator;
-  return { title: creator ? `${creator.user.name} · Beebot sounds` : 'Beebot sounds' };
+  if ( !creator ) { return { title: 'Beebot sounds' }; }
+  return pageHead(url, {
+    title: `${creator.user.name} · Beebot sounds`,
+    description: `${formatCount(creator.soundCount)} public ${creator.soundCount === 1 ? 'sound' : 'sounds'} by ${creator.user.name} on Beebot.`,
+    path: `${SOUNDS_PATH}/u/${creator.user.id}/`,
+    image: creator.user.avatarUrl,
+  });
 };

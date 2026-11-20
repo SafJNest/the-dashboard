@@ -1,6 +1,18 @@
 import { $, component$, Pending, useContext, useSignal } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
-import { OTHER_GUILDS, readStats, UNKNOWN_GUILD, type DetailTab, type LibraryEntry, type LibraryModel, type LibraryView } from '../../lib/sound-library';
+import {
+  editSoundPath,
+  mySoundsPath,
+  OTHER_GUILDS,
+  readStats,
+  soundDetailPath,
+  soundHref,
+  UNKNOWN_GUILD,
+  type DetailTab,
+  type LibraryEntry,
+  type LibraryModel,
+  type LibraryView,
+} from '../../lib/sound-library';
 import {
   formatAdded,
   formatAverage,
@@ -14,7 +26,7 @@ import {
   WEEKDAYS,
 } from '../../lib/sound-stats';
 import { PERIOD_LABELS, type Period, type PlayEvent, type Sound, type VoteState } from '../../lib/sounds';
-import { useLoadSoundHistory } from '../../routes/dashboard/layout';
+import { useAccount, useLoadSoundHistory } from '../../routes/dashboard/layout';
 import { Icon } from '../dashboard/icons';
 import { readSource, type LibrarySource } from './library-source';
 import { LoadError, PanelSkeleton, Skeleton } from './library-states';
@@ -318,10 +330,18 @@ interface SoundDetailProps {
 
 export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, entry, votes }) => {
   const { sound, guildName } = entry;
+  const account = useAccount();
   const player = useContext(SoundPlayerContext);
   const current = player.state.soundId === sound.id;
   const playing = current && player.state.playing;
   const scopeLabel = scopeLabelOf(model, guildName);
+  const inMyLibrary = model.scope === 'me';
+  const pagePath = sound.public || sound.ownedByMe ? `${SOUNDS_PATH}/${sound.id}/` : null;
+  const managedGuild = inMyLibrary ? account.value.guilds.find((guild) => guild.id === sound.guildId) : undefined;
+  const myLibraryHref = !inMyLibrary && sound.ownedByMe && model.guildId ? soundHref({ basePath: mySoundsPath(model.guildId) }, sound.id) : null;
+  const editable = sound.canEdit || sound.canDelete;
+  const editHref = editSoundPath(sound.id, inMyLibrary ? null : model.guildId);
+  const hasLinks = !!pagePath || !!managedGuild || !!myLibraryHref || editable;
 
   return (
     <section id="sound-detail" class="sound-detail" aria-labelledby="sound-title">
@@ -356,7 +376,7 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
           </div>
           <div>
             <dt>Server</dt>
-            <dd>{guildName}</dd>
+            <dd>{inMyLibrary && sound.guildId ? <Link href={mySoundsPath(sound.guildId)} scroll={false}>{guildName}</Link> : guildName}</dd>
           </div>
           <div>
             <dt>Length</dt>
@@ -381,28 +401,35 @@ export const SoundDetail = component$<SoundDetailProps>(({ model, source, view, 
             </div>
           )}
         </dl>
+        {hasLinks && (
+          <nav class="sound-links" aria-label={`Pages of ${sound.name}`}>
+            {pagePath && (
+              <a href={pagePath} class="button button--secondary button--sm">
+                <Icon name="link" />
+                <span>{sound.public ? 'Public page' : 'Private page'}</span>
+              </a>
+            )}
+            {managedGuild && <Link href={soundDetailPath(sound.id, managedGuild.id)} class="button button--secondary button--sm">Open in {managedGuild.name}</Link>}
+            {myLibraryHref && <Link href={myLibraryHref} class="button button--secondary button--sm">Open in My sounds</Link>}
+            {editable && (
+              <Link href={editHref} class="button button--secondary button--sm">
+                <Icon name="edit" />
+                <span>{sound.canEdit ? 'Edit' : 'Manage'}</span>
+              </Link>
+            )}
+          </nav>
+        )}
         <div class="sound-actions">
           <VoteButtons key={sound.id} sound={sound} votes={votes} />
           <GreetPicker key={sound.id} soundId={sound.id} soundName={sound.name} variant="button" />
-          <div class="sound-actions__end">
-            {sound.public && (
-              <a href={`${SOUNDS_PATH}/${sound.id}/`} class="button button--ghost">
-                <Icon name="link" />
-                <span>Public page</span>
-              </a>
-            )}
-            {sound.url && (
+          {sound.url && (
+            <div class="sound-actions__end">
               <a href={sound.url} class="button button--secondary" download>
                 <Icon name="download" />
                 <span>Download</span>
               </a>
-            )}
-            {(sound.canEdit || sound.canDelete) && (
-              <Link href={`/dashboard/me/sounds/${sound.id}/edit/`} class="button button--secondary button--icon" aria-label={`Manage ${sound.name}`} title="Manage">
-                <Icon name="edit" />
-              </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

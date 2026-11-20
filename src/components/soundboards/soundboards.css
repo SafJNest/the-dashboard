@@ -238,6 +238,13 @@
     white-space: nowrap;
   }
 
+  a.board-slot__name {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline }
+  }
+
   .board-slot__meta {
     display: none;
 
@@ -344,7 +351,18 @@
     &:hover { background: var(--bb-bg-hover) }
   }
 
-  label.board-library__row { cursor: pointer }
+  label.board-library__row {
+    flex: 1;
+    min-inline-size: 0;
+    cursor: pointer;
+  }
+
+  .board-library__pick {
+    display: flex;
+    align-items: center;
+    gap: var(--bb-space-2);
+    padding-inline-start: var(--bb-space-2);
+  }
 
   label.board-library__row:has(:disabled) {
     color: var(--bb-fg-disabled);

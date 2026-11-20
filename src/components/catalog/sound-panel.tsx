@@ -3,6 +3,7 @@ import { Link } from '@qwik.dev/router';
 import { likeShare, playCommand, SOUNDS_PATH, type CatalogVote, type SoundCard, type SoundVoteResult } from '../../lib/catalog';
 import { useSoundComments } from '../../lib/catalog-loaders';
 import { peekValue } from '../../lib/loader-value';
+import { editSoundPath, soundDetailPath } from '../../lib/sound-library';
 import { formatCount, formatLength } from '../../lib/sound-stats';
 import { useGlobalGreet } from '../../routes/sounds/layout';
 import { Icon } from '../dashboard/icons';
@@ -106,6 +107,7 @@ export const SoundPanel = component$<SoundPanelProps>(({ sound, live, loginHref,
   });
 
   const share = votes ? likeShare(votes.likes, votes.dislikes) : null;
+  const owned = live?.viewer?.ownedByMe === true;
 
   return (
     <article ref={panel} class="catalog-panel__body" aria-label={sound.name}>
@@ -119,11 +121,21 @@ export const SoundPanel = component$<SoundPanelProps>(({ sound, live, loginHref,
               {sound.uploader.name}
             </Link>
             <span class="catalog-who">
-              {!sound.public && <span class="badge">Private</span>}
+              {!owned && !sound.public && <span class="badge">Private</span>}
               {sound.createdAt && <span>Uploaded {new Date(sound.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
             </span>
           </div>
         </div>
+        {owned && (
+          <div class="catalog-owner">
+            <span class="badge badge--accent">Your sound</span>
+            {!sound.public && <span class="badge">Private</span>}
+            <span class="catalog-owner__links">
+              <a href={soundDetailPath(sound.id, null)} class="button button--secondary button--sm">Statistics</a>
+              <a href={editSoundPath(sound.id, null)} class="button button--secondary button--sm"><Icon name="edit" />Edit</a>
+            </span>
+          </div>
+        )}
         {sound.description && <p class="sound-card__description">{sound.description}</p>}
 
         <div class="sound-card__player">
@@ -155,7 +167,7 @@ export const SoundPanel = component$<SoundPanelProps>(({ sound, live, loginHref,
             <span class="catalog-command__icon"><Icon name={copied.value ? 'check' : 'copy'} /></span>
           </button>
           <button type="button" class="button button--secondary" aria-label="Copy link" title={shared.value ? 'Link copied' : 'Copy link'} onClick$={async () => {
-            await navigator.clipboard.writeText(window.location.href);
+            await navigator.clipboard.writeText(new URL(`${SOUNDS_PATH}/${sound.id}/`, window.location.origin).href);
             shared.value = true;
           }}>
             <Icon name={shared.value ? 'check' : 'link'} />

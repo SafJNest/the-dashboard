@@ -6,6 +6,7 @@ import { formatLength } from '../../lib/sound-stats';
 import { Soundboards } from '../../lib/soundboards';
 import { Icon } from '../dashboard/icons';
 import { LoadError, RowsSkeleton, Skeleton } from '../sounds/library-states';
+import { SoundPlayerContext } from '../sounds/sound-player';
 import { SoundboardDraftContext } from './draft';
 
 const PAGE = 40;
@@ -26,6 +27,7 @@ export const BoardLibrary = component$<BoardLibraryProps>((props) => {
   const location = useLocation();
   const library = useGuildSoundLibrary();
   const draft = useContext(SoundboardDraftContext);
+  const player = useContext(SoundPlayerContext);
   const query = useSignal('');
   const limit = useSignal(PAGE);
   const data = library.error ? null : library.value;
@@ -66,9 +68,24 @@ export const BoardLibrary = component$<BoardLibraryProps>((props) => {
         {shown.map((sound) => {
           const isChosen = chosen.has(sound.id);
           const detail = `${sound.ownedByMe ? 'You' : sound.uploader.name} · ${formatLength(sound.durationMs)}`;
+          const isCurrent = player.state.soundId === sound.id;
+          const isPlaying = isCurrent && player.state.playing;
+          const play = (
+            <button
+              type="button"
+              class="play sound-row__play"
+              aria-label={`${isPlaying ? 'Pause' : 'Play'} ${sound.name}`}
+              aria-busy={isCurrent && player.state.loading}
+              disabled={!sound.url}
+              onClick$={() => player.toggle$(sound.id, sound.url)}
+            >
+              <Icon name={isPlaying ? 'pause' : 'play'} />
+            </button>
+          );
           if (props.mode === 'select') {
             return (
-              <li key={sound.id}>
+              <li key={sound.id} class="board-library__pick">
+                {play}
                 <label class="board-library__row">
                   <input type="checkbox" class="board-library__check" checked={isChosen} disabled={!isChosen && isFull} onChange$={() => toggle(sound.id)} />
                   <span class="board-library__main">
@@ -81,6 +98,7 @@ export const BoardLibrary = component$<BoardLibraryProps>((props) => {
           }
           return (
             <li key={sound.id} class="board-library__row">
+              {play}
               <span class="board-library__main">
                 <span class="board-library__name">{sound.name}</span>
                 <span class="caption">{detail}</span>

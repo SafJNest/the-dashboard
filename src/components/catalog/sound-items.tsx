@@ -1,6 +1,6 @@
 import { component$, useContext, type QRL } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
-import type { SoundCard } from '../../lib/catalog';
+import { SOUNDS_PATH, type SoundCard } from '../../lib/catalog';
 import { formatCompact, formatLength } from '../../lib/sound-stats';
 import type { SoundUser } from '../../lib/sounds';
 import { Icon } from '../dashboard/icons';
@@ -57,7 +57,7 @@ export const SoundRow = component$<SoundRowProps>(({ sound, href, query = '', cu
         <Highlight text={sound.name} query={query} />
         <span class="catalog-who">
           {showUploader && <PersonAvatar user={sound.uploader} size={16} />}
-          {showUploader && <span class="catalog-who__name">{sound.uploader.name}</span>}
+          {showUploader && <Link href={`${SOUNDS_PATH}/u/${sound.uploader.id}/`} class="catalog-who__name catalog-who__link" prefetchData="off">{sound.uploader.name}</Link>}
           {sound.tags.length > 0 && <span class="catalog-row__tags">{sound.tags.slice(0, 2).map((tag) => `#${tag.name}`).join(' ')}</span>}
         </span>
       </span>

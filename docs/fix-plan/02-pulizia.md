@@ -11,7 +11,7 @@ Nessun cambio di architettura: costanti, duplicati, codice morto, nomi, CSS e to
   - durata della sessione `8 * 60 * 60` (`src/routes/auth/callback/index.ts:24`);
   - limiti `512` (`:11`) e `1024` (`:22`).
 - Libreria suoni:
-  - tag `slice(0, 32)` (`src/routes/dashboard/me/sounds/[soundId]/edit/index.tsx:52`);
+  - tag `slice(0, 32)` (fatto: `TAG_QUERY_MAX` in `src/lib/sound-editor.ts`);
   - `slice(0, 5)` (`src/lib/sound-library.ts:119`).
 - Statistiche (`src/lib/sound-stats.ts`):
   - `92`/`7` (`:143-151`) e `24` (`:127`);
@@ -36,7 +36,7 @@ Nessun cambio di architettura: costanti, duplicati, codice morto, nomi, CSS e to
 
 **Log e segreti**
 - Il login nasconde `BEEBOT_API_KEY` nei log, `sessionFetch` (`beebot.server.ts:150`) no. Il rischio è basso, perché registra solo nome, codice o messaggio dell'errore, ma la regola va resa uguale nei due punti.
-- Gli `.catch(() => undefined)` del pre-avvio dei loader (`[guildId]/sounds/layout.tsx:16-18`, `me/sounds/(library)/layout.tsx:25-26`) sono intenzionali: gli errori ricompaiono nei loader (`README.md:110`). Vanno lasciati. Per la regola sui commenti non si aggiunge una nota nel codice: il motivo resta solo nel README.
+- Gli `.catch(() => undefined)` del pre-avvio dei loader (`[guildId]/sounds/(library)/layout.tsx:16-18`, `me/sounds/(library)/layout.tsx:25-26`) sono intenzionali: gli errori ricompaiono nei loader (`README.md:110`). Vanno lasciati. Per la regola sui commenti non si aggiunge una nota nel codice: il motivo resta solo nel README.
 
 **Codice morto** (verificare i consumer prima di eliminare)
 - Da eliminare: `searchSounds` e `SoundSearch` (`client.server.ts:43-49, 111-113`), `parseSoundSearch` (`sounds.ts:495`), `Account` (`client.server.ts:39`).

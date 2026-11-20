@@ -1,6 +1,6 @@
 import { component$ } from '@qwik.dev/core';
 import type { DocumentHead } from '@qwik.dev/router';
-import { useGuild } from '../layout';
+import { useGuild } from '../../layout';
 
 export default component$(() => null);
 

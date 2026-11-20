@@ -1,7 +1,11 @@
 import { $, component$, sync$, useSignal, useStyles$, useTask$, Pending } from '@qwik.dev/core';
-import { Form, Link } from '@qwik.dev/router';
+import { Form, Link, useLocation } from '@qwik.dev/router';
 import { useAccount } from '../../routes/dashboard/layout';
-import { useDeleteSound, useSearchTags, useUpdateSound } from '../../routes/dashboard/me/sounds/[soundId]/edit/index';
+import { SOUNDS_PATH } from '../../lib/catalog';
+import { useDeleteSound, useSearchTags, useSound, useUpdateSound } from '../../lib/sound-editor';
+import { guildSoundsPath, MY_SOUNDS_PATH, soundDetailPath } from '../../lib/sound-library';
+import { DocumentRecovery } from '../dashboard/document-recovery';
+import { PageSkeleton } from '../dashboard/page-skeleton';
 import { SoundImage } from './sound-image';
 import { formatAdded, formatCount, formatLength } from '../../lib/sound-stats';
 import { DESCRIPTION_MAX, MAX_TAGS, type Sound } from '../../lib/sounds';
@@ -11,7 +15,12 @@ import { GreetPicker } from './greet-picker';
 import { Toast } from '../toast/toast';
 import styles from './sounds.css?inline';
 
-export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => {
+interface SoundEditorProps {
+  sound: Sound;
+  guildId: string | null;
+}
+
+export const SoundEditor = component$<SoundEditorProps>(({ sound: initial, guildId }) => {
   useStyles$(styles);
   const account = useAccount();
   const update = useUpdateSound();
@@ -33,7 +42,10 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
   const listOpen = typed.length > 0 && suggestions.length > 0 && tags.value.length < MAX_TAGS;
   const result = update.value;
   const saved = result?.ok === true;
-  const detailHref = `/dashboard/me/sounds/${sound.id}/`;
+  const detailHref = soundDetailPath(sound.id, guildId);
+  const listHref = guildId ? guildSoundsPath(guildId) : MY_SOUNDS_PATH;
+  const treeLabel = guildId ? `${guildName} › Sounds` : 'My sounds';
+  const hasPage = sound.public || sound.ownedByMe;
 
   useTask$(({ track, cleanup }) => {
     const value = track(() => query.value.trim());
@@ -86,12 +98,12 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
         {saved ? (
           <a href={detailHref} class="crumb">
             <Icon name="back" />
-            <span>My sounds</span>
+            <span>{treeLabel}</span>
           </a>
         ) : (
           <Link href={detailHref} class="crumb">
             <Icon name="back" />
-            <span>My sounds</span>
+            <span>{treeLabel}</span>
           </Link>
         )}
         <span class="crumb-sep" aria-hidden="true">/</span>
@@ -293,6 +305,11 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
               <p class="hint">Plays when you join a voice channel. A server greet wins over the global one.</p>
             </div>
             <div class="sound-editor__buttons">
+              {hasPage && (
+                <a href={`${SOUNDS_PATH}/${sound.id}/`} class="button button--secondary button--sm">
+                  {sound.public ? 'Public page' : 'Private page'}
+                </a>
+              )}
               {sound.url && (
                 <a href={sound.url} class="button button--secondary button--sm" download>
                   <Icon name="download" />
@@ -317,12 +334,12 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
             action={remove}
             class="confirm__body"
             onSubmitCompleted$={(event) => {
-              if (event.detail.value?.ok) window.location.assign('/dashboard/me/sounds/');
+              if (event.detail.value?.ok) window.location.assign(listHref);
             }}
           >
             <h2 id="delete-title" class="chart-block__title">Delete “{sound.name}”?</h2>
             <p class="text-muted">It will stop working everywhere, including greets. This can't be undone.</p>
-            {remove.value?.ok && <p class="caption" role="status">Sound deleted. Opening your library…</p>}
+            {remove.value?.ok && <p class="caption" role="status">Sound deleted. Opening the sound list…</p>}
             {remove.value?.message && (
               <p class="callout callout--danger" role="alert">
                 {remove.value.message}
@@ -353,3 +370,17 @@ export const SoundEditor = component$<{ sound: Sound }>(({ sound: initial }) => 
     </div>
   );
 });
+
+const EditorContent = component$<{ guildId: string | null }>(({ guildId }) => {
+  const sound = useSound();
+  const location = useLocation();
+  if ( sound.error ) { return <DocumentRecovery />; }
+  if ( sound.value.id !== location.params.soundId ) { return <PageSkeleton />; }
+  return <SoundEditor key={sound.value.id} sound={sound.value} guildId={guildId} />;
+});
+
+export const SoundEditorPage = component$<{ guildId: string | null }>(({ guildId }) => (
+  <Pending fallback$={() => <PageSkeleton />}>
+    <EditorContent guildId={guildId} />
+  </Pending>
+));

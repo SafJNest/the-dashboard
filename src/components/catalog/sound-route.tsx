@@ -1,8 +1,9 @@
 import { $, component$, useContext } from '@qwik.dev/core';
 import { useLocation, type DocumentHead } from '@qwik.dev/router';
-import { NOT_FOUND_STATUS } from '../../lib/catalog';
+import { NOT_FOUND_STATUS, SOUNDS_PATH } from '../../lib/catalog';
 import { useSoundCard } from '../../lib/catalog-loaders';
 import { peekValue } from '../../lib/loader-value';
+import { pageHead } from '../../lib/seo';
 import { useSoundsSite, useViewer } from '../../routes/sounds/layout';
 import { LoadError } from '../sounds/library-states';
 import { SearchContext } from './catalog-context';
@@ -29,8 +30,14 @@ export const SoundRoute = component$(() => {
   return <SoundPanel key={soundId} sound={sound} live={live} loginHref={site.value.loginHref} signedIn={viewer?.signedIn ?? true} greetId={viewer?.profile?.globalGreetId ?? null} />;
 });
 
-export const soundHead: DocumentHead = ({ resolveValue }) => {
+export const soundHead: DocumentHead = ({ resolveValue, url }) => {
   const sound = resolveValue(useSoundCard).sound;
   if ( !sound ) { return { title: 'Beebot sounds' }; }
-  return { title: `${sound.name} · Beebot sounds`, meta: [{ name: 'description', content: `Listen to ${sound.name} by ${sound.uploader.name} on Beebot.` }] };
+  return pageHead(url, {
+    title: `${sound.name} · Beebot sounds`,
+    description: `Listen to ${sound.name} by ${sound.uploader.name} on Beebot.`,
+    path: `${SOUNDS_PATH}/${sound.id}/`,
+    image: sound.imageUrl,
+    indexed: sound.public,
+  });
 };

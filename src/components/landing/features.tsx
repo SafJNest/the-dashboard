@@ -1,4 +1,6 @@
 import { component$ } from '@qwik.dev/core';
+import { Link } from '@qwik.dev/router';
+import { SOUNDS_PATH } from '../../lib/catalog';
 
 const soundboardTiles = [
   { name: 'airhorn', on: true }, { name: 'bruh', on: true }, { name: 'wow', on: true },
@@ -138,6 +140,7 @@ export const Features = component$(() => (
           <p class="text-muted">
             Browse sounds gathered from every hive, like and tag them, and see what's buzzing across the swarm.
           </p>
+          <Link href={`${SOUNDS_PATH}/`}>Browse public sounds</Link>
         </header>
         <ul class="feature__sounds">
           {sounds.map((sound) => (

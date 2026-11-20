@@ -9,7 +9,7 @@ import {
   useSetSoundboardThumbnail,
   useSoundboard,
 } from '../../routes/dashboard/[guildId]/soundboards/[boardId]/index';
-import { IMAGE_TYPES } from '../../lib/catalog';
+import { IMAGE_TYPES, SOUNDS_PATH } from '../../lib/catalog';
 import { LOAD_ERROR } from '../../lib/sound-library';
 import { formatCompact, formatLength } from '../../lib/sound-stats';
 import { Soundboards, type Soundboard } from '../../lib/soundboards';
@@ -34,6 +34,13 @@ function ActionError({ message }: { message: string | null | undefined }) {
       <p>{message}</p>
     </div>
   );
+}
+
+function SlotName({ sound, guildId }: { sound: Sound; guildId: string }) {
+  const guildHref = Soundboards.guildSoundPath(sound, guildId);
+  if ( guildHref ) { return <Link href={guildHref} class="board-slot__name">{sound.name}</Link>; }
+  if ( sound.public ) { return <a href={`${SOUNDS_PATH}/${sound.id}/`} class="board-slot__name">{sound.name}</a>; }
+  return <span class="board-slot__name">{sound.name}</span>;
 }
 
 export function DetailSkeleton() {
@@ -101,7 +108,7 @@ const BoardGrid = component$<{ board: Soundboard; sounds: Sound[] }>(({ board, s
                 >
                   <Icon name={isPlaying ? 'pause' : 'play'} />
                 </button>
-                <span class="board-slot__name">{sound.name}</span>
+                <SlotName sound={sound} guildId={board.guildId} />
                 <span class="caption board-slot__meta">{meta}</span>
                 {board.canEdit && (
                   <button type="submit" name="soundId" value={sound.id} class="board-slot__remove" aria-label={`Remove ${sound.name} from the board`} disabled={remove.isRunning}>

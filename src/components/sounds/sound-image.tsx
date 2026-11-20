@@ -1,7 +1,7 @@
 import { component$, useSignal } from '@qwik.dev/core';
 import { Form } from '@qwik.dev/router';
 import { IMAGE_TYPES } from '../../lib/catalog';
-import { useRemoveSoundImage, useSetSoundImage, useSoundImage } from '../../routes/dashboard/me/sounds/[soundId]/edit/index';
+import { useRemoveSoundImage, useSetSoundImage, useSoundImage } from '../../lib/sound-editor';
 import { Icon } from '../dashboard/icons';
 
 export const SoundImage = component$<{ name: string }>(({ name }) => {

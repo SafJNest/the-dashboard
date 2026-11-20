@@ -89,6 +89,15 @@ export function mySoundsPath(guildId: string | null) {
   return guildId ? `${MY_SOUNDS_PATH}guild/${guildId}/` : MY_SOUNDS_PATH;
 }
 
+export function soundDetailPath(soundId: string, guildId: string | null) {
+  const base = guildId ? guildSoundsPath(guildId) : MY_SOUNDS_PATH;
+  return `${base}${soundId}/`;
+}
+
+export function editSoundPath(soundId: string, guildId: string | null) {
+  return `${soundDetailPath(soundId, guildId)}edit/`;
+}
+
 export function soundHref(model: Pick<LibraryModel, 'basePath'>, soundId: string) {
   return `${model.basePath}${soundId}/`;
 }

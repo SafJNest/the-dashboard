@@ -1,9 +1,10 @@
 import { $, component$, useStyles$ } from '@qwik.dev/core';
-import { routeLoader$, type DocumentHead } from '@qwik.dev/router';
+import { Link, routeLoader$, type DocumentHead } from '@qwik.dev/router';
 import { CommandEntryCard } from '../../../components/commands/command-entry';
 import { Icon } from '../../../components/dashboard/icons';
 import { EmptyState } from '../../../components/empty-state/empty-state';
 import { getCommandSource } from '../../../lib/beebot/commands.server';
+import { SOUNDS_PATH } from '../../../lib/catalog';
 import { buildCommandCatalog, DEFAULT_PREFIX } from '../../../lib/commands';
 import styles from './commands.css?inline';
 
@@ -56,7 +57,9 @@ export default component$(() => {
             {catalog.value.total} commands · {catalog.value.categories.length} categories
           </p>
           <h1 class="display display--lg page-hero__title">Every command in the hive.</h1>
-          <p class="lead page-hero__lead">Use Beebot with slash commands or with your server prefix. Here is how to read each card.</p>
+          <p class="lead page-hero__lead">
+            Use Beebot with slash commands or with your server prefix. Here is how to read each card. Looking for something to play? <Link href={`${SOUNDS_PATH}/`}>Browse public sounds</Link>.
+          </p>
           <div class="command-legend">
             <div class="command-legend__item">
               <div class="command-tags">

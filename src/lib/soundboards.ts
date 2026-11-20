@@ -1,3 +1,4 @@
+import { guildSoundsPath } from './sound-library';
 import { count, list, object, parseSound, SOUND_ID, text, type Sound } from './sounds';
 
 export interface Soundboard {
@@ -27,6 +28,13 @@ export class Soundboards {
   static path(guildId: string, boardId?: string) {
     const base = `/dashboard/${guildId}/soundboards/`;
     return boardId ? `${base}${boardId}/` : base;
+  }
+
+  static guildSoundPath(sound: Sound, guildId: string) {
+    const isGuildSound = sound.guildId === guildId;
+    const isListed = sound.public || sound.ownedByMe;
+    if ( !isGuildSound || !isListed ) { return null; }
+    return `${guildSoundsPath(guildId)}${sound.id}/`;
   }
 
   static readName(value: unknown) {
