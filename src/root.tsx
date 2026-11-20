@@ -1,9 +1,15 @@
-import { component$ } from '@qwik.dev/core';
+import { component$, useVisibleTask$ } from '@qwik.dev/core';
 import { DocumentHeadTags, RouterOutlet, useQwikRouter } from '@qwik.dev/router';
+import { inject } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 import './global.css';
 
 export default component$(() => {
   useQwikRouter();
+  useVisibleTask$(() => {
+    inject({ framework: 'qwik' });
+    injectSpeedInsights({ framework: 'qwik' });
+  }, { strategy: 'document-idle' });
   return (
     <>
       <head>
