@@ -1,9 +1,9 @@
-import type { Signal } from '@qwik.dev/core';
+import type { ReadonlySignal } from '@qwik.dev/core';
 import { useLocation, usePreventNavigate$ } from '@qwik.dev/router';
 
 export const NAVIGATION_CANCELLED = 'dashboard:navigation-cancelled';
 
-export function useUnsavedChangesGuard(dirty: Signal<boolean>, action: { readonly isRunning: boolean }) {
+export function useUnsavedChangesGuard(dirty: ReadonlySignal<boolean>, action: { readonly isRunning: boolean }) {
   const location = useLocation();
   usePreventNavigate$((url) => {
     const saving = action.isRunning;

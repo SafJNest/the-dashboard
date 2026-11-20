@@ -131,8 +131,19 @@ Limiti e scelte sul contratto:
 - La cronologia personale mostra gli eventi ricevuti (massimo 100 per suono); la paginazione con `nextCursor` non è ancora usata. Con un server selezionato i propri play sono contati sugli eventi ricevuti.
 - La classifica `users` delle analytics non viene mostrata.
 - Descrizione: facoltativa, fino a 500 caratteri anche su più righe, nel form di upload (parte `metadata`) e nell'editor (`PATCH /sounds/{id}`: vuota invia `null` e la cancella). Si legge sotto il titolo nel dettaglio della dashboard e nel pannello pubblico.
-- Upload e soundboard non sono implementati. Il limite di 5 tag segue il comando `/sound upload`.
+- Il limite di 5 tag segue il comando `/sound upload`.
 - Gli errori 400 di modifica mostrano il messaggio generico di `sessionFetch`, non il `message` del backend.
+
+## Soundboard
+
+Tab Soundboards del server: `/dashboard/{guildId}/soundboards/` (elenco e invito a scegliere o creare) e `/dashboard/{guildId}/soundboards/{boardId}/` (board aperta). Contratto: `GET|POST /guilds/{id}/soundboards`, `GET|PATCH|DELETE /guilds/{id}/soundboards/{boardId}`, `PUT|DELETE …/sounds/{soundId}`, `PUT …/thumbnail`, tutti con sessione. Modello, parser e validazioni stanno in `Soundboards` (`src/lib/soundboards.ts`), le chiamate in `BeebotClient`.
+
+- Elenco (`useSoundboards`, layout) e board aperta (`useSoundboard`, route `[boardId]`) sono loader separati con `blockSSR: false` e confini `Pending`; la libreria del server per scegliere i suoni riusa `useGuildSoundLibrary`. Cambiando board l'elenco resta e si ricarica solo il dettaglio. Board o id inesistenti: 404 nell'accesso diretto, errore locale nella navigazione interna.
+- Filtro Made by (All/Mine/Others) locale; "Yours" confronta `userId` della board con l'utente di `/me`. Le modifiche sono abilitate da `canEdit` (creatore, owner o Administrator); le altre board sono in sola lettura e si possono duplicare.
+- Griglia 5×5 con riproduzione tramite `SoundPlayer`, rimozione dei suoni, aggiunta dalla libreria del server (max 25), rinomina con `SaveDock`, miniatura (PNG/JPEG/GIF fino a 1 MB, il contratto non prevede la rimozione) ed eliminazione con conferma.
+- Creazione e duplicazione usano un pannello locale (non cambia l'URL) con nome e 1–25 suoni, salvato con `SaveDock`. Creazione ed eliminazione non usano `event.redirect`: in rc.5 un'azione che reindirizza non applica `invalidate` (l'elenco arriva dalla cache del browser) e la guardia delle modifiche non salvate chiederebbe conferma dopo il successo; l'azione restituisce l'esito e il client naviga dopo aver chiuso la bozza.
+- I conflitti `409` (`duplicate_soundboard_name`, `soundboard_full`) hanno messaggi dedicati.
+- Non disponibili nel contratto e quindi assenti: statistiche per board, canale di pubblicazione e visibilità della board, nome del creatore delle board altrui, elenco "My soundboards" trasversale ai server.
 
 ## Sito pubblico Sounds
 

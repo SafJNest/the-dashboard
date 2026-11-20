@@ -23,7 +23,7 @@ export const useAccount = routeLoader$(async (event) => {
   if (!result.ok) throw apiError(event, result);
   const { user, servers, greets } = result.data;
   const account: { user: DashboardUser; guilds: DashboardGuild[]; greets: Greets } = {
-    user: { name: user.globalName || user.username, avatarUrl: user.avatarUrl },
+    user: { id: user.id, name: user.globalName || user.username, avatarUrl: user.avatarUrl },
     guilds: servers,
     greets,
   };

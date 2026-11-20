@@ -18,7 +18,8 @@ export function selectionRedirect(url: URL, legacyParam: string, guildId: string
 
 export function pageKey(pathname: string) {
   const parts = pathname.split('/').filter(Boolean);
-  if (parts[2] === 'sounds' && parts.at(-1) !== 'edit') return parts.slice(0, 3).join('/');
+  const isLibrary = parts[2] === 'sounds' || parts[2] === 'soundboards';
+  if ( isLibrary && parts.at(-1) !== 'edit' ) { return parts.slice(0, 3).join('/'); }
   if (parts[2] === 'settings' && (parts[3] === 'rewards' || parts[3] === 'twitch')) return parts.slice(0, 4).join('/');
   return parts.join('/');
 }

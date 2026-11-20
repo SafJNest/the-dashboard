@@ -4,6 +4,7 @@ import { EmptyState } from '../empty-state/empty-state';
 import { GuildAvatar } from './guild-avatar';
 
 export interface DashboardUser {
+  id: string;
   name: string;
   avatarUrl: string | null;
 }

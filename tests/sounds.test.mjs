@@ -17,12 +17,15 @@ const library = (await load('../src/lib/sound-library.ts', { "'./sound-stats'": 
 const endpoints = await load('../src/lib/beebot/endpoints.ts');
 const helper = await load('../src/lib/beebot.server.ts');
 const guild = await load('../src/lib/guild.ts');
+const soundboards = await load('../src/lib/soundboards.ts', { "'./sounds'": JSON.stringify(sounds.url) });
 const { BeebotClient } = (await load('../src/lib/beebot/client.server.ts', {
   "'../beebot.server'": JSON.stringify(helper.url),
   "'../guild'": JSON.stringify(guild.url),
   "'../sounds'": JSON.stringify(sounds.url),
+  "'../soundboards'": JSON.stringify(soundboards.url),
   "'./endpoints'": JSON.stringify(endpoints.url),
 })).module;
+const { Soundboards } = soundboards.module;
 
 const { parseSound, parseGuildSoundLibrary, parseMySoundLibrary, parseGuildSoundAnalytics, parseSoundAnalytics, parseGreets, parseGreetResults, readPeriod } = sounds.module;
 const { heatRows, replayRows, topShare, viewFromSoundAnalytics, dayBars, formatLength } = stats.module;
@@ -246,4 +249,47 @@ test('the client turns unexpected shapes into an invalid response', async (t) =>
   const result = await new BeebotClient(sessionEvent()).mySounds('30d');
   assert.equal(result.ok, false);
   assert.equal(result.status, 502);
+});
+
+const rawBoard = { id: '9', guildId: '123', userId: '456', name: 'Arcade', thumbnailUrl: null, soundCount: 1, canEdit: true };
+
+test('soundboards are parsed only for the requested guild and board', () => {
+  assert.deepEqual(Soundboards.parseList([rawBoard], '123'), [rawBoard]);
+  assert.equal(Soundboards.parseList([{ ...rawBoard, guildId: '999' }], '123'), null);
+  assert.equal(Soundboards.parse({ ...rawBoard, canEdit: 'yes' }, '123').canEdit, false);
+  const detail = Soundboards.parseDetail({ board: rawBoard, sounds: [rawSound] }, '123', '9');
+  assert.equal(detail.sounds[0].name, 'airhorn');
+  assert.equal(Soundboards.parseDetail({ board: rawBoard, sounds: [rawSound] }, '123', '10'), null);
+  assert.equal(Soundboards.parseDetail({ board: rawBoard, sounds: 'nope' }, '123', '9'), null);
+});
+
+test('soundboard names and sound ids follow the contract', () => {
+  assert.equal(Soundboards.readName('  Arcade  '), 'Arcade');
+  assert.equal(Soundboards.readName('   '), null);
+  assert.equal(Soundboards.readName('2026'), null);
+  assert.equal(Soundboards.readName('a'.repeat(256)), null);
+  assert.deepEqual(Soundboards.readSoundIds(['42', '42', '73', 'x', 5]), ['42', '73']);
+  assert.deepEqual(Soundboards.readSoundIds('42'), ['42']);
+  assert.equal(Soundboards.path('123', '9'), '/dashboard/123/soundboards/9/');
+});
+
+test('the client manages soundboards and reports conflicts', async (t) => {
+  const calls = [];
+  t.mock.method(console, 'error', () => {});
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    calls.push({ url, method: options.method, body: typeof options.body === 'string' ? JSON.parse(options.body) : options.body });
+    if (options.method === 'POST') return Response.json({ code: 'duplicate_soundboard_name', message: 'x' }, { status: 409 });
+    if (options.method === 'PUT') return new Response(null, { status: 204 });
+    if (url.endsWith('/soundboards/10')) return Response.json({ code: 'not_found', message: 'x' }, { status: 404 });
+    return Response.json({ board: rawBoard, sounds: [rawSound] });
+  });
+  const client = new BeebotClient(sessionEvent());
+  const created = await client.createSoundboard('123', 'Arcade', ['42']);
+  assert.equal(created.status, 409);
+  assert.equal(created.message, 'A soundboard with this name already exists in this server.');
+  assert.deepEqual(calls[0], { url: 'https://api.safjnest.com/beebot/guilds/123/soundboards', method: 'POST', body: { name: 'Arcade', soundIds: ['42'] } });
+  assert.deepEqual(await client.addSoundboardSound('123', '9', '42'), { ok: true, data: true });
+  assert.equal(calls[1].url, 'https://api.safjnest.com/beebot/guilds/123/soundboards/9/sounds/42');
+  assert.equal((await client.soundboard('123', '9')).data.board.name, 'Arcade');
+  assert.equal((await client.soundboard('123', '10')).message, Soundboards.NOT_FOUND);
 });

@@ -18,6 +18,8 @@ const FAILURE_MESSAGES: Record<string, string> = {
   settings_unavailable: 'Server settings are temporarily unavailable. Please try again.',
   guild_forbidden: "Access denied. You don't have permission to manage this server.",
   guild_not_found: GUILD_NOT_AVAILABLE,
+  duplicate_soundboard_name: 'A soundboard with this name already exists in this server.',
+  soundboard_full: 'This soundboard is full. Remove a sound before adding another.',
 };
 
 export interface User {
@@ -39,7 +41,7 @@ export interface Me {
   servers: Server[];
 }
 
-type FailureStatus = 400 | 401 | 403 | 404 | 500 | 502 | 503;
+type FailureStatus = 400 | 401 | 403 | 404 | 409 | 500 | 502 | 503;
 
 export interface ApiFailure {
   ok: false;
@@ -173,7 +175,7 @@ async function requestBeebot(event: ServerEvent, path: string, options: { method
   if (response.status === 401 && code === 'invalid_api_key') return { ok: false, status: 500, code, message: MISCONFIGURED, retryAfter: null };
   if (response.status === 401) return UNAUTHORIZED;
   const retryAfter = code === 'discord_rate_limited' ? retryAfterSeconds(payload, response.headers.get('Retry-After')) : null;
-  const status = ([400, 403, 404, 503] as const).find((value) => value === response.status) ?? 502;
+  const status = ([400, 403, 404, 409, 503] as const).find((value) => value === response.status) ?? 502;
   return { ok: false, status, code, message: failureMessage(response.status, code, retryAfter), retryAfter };
 }
 

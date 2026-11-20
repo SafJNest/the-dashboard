@@ -1,15 +1,16 @@
-import { component$, useStyles$, type QRL, type Signal } from '@qwik.dev/core';
+import { component$, useStyles$, type QRL, type ReadonlySignal } from '@qwik.dev/core';
 import { Bee } from '../bee/bee';
 import { useUnsavedChangesGuard } from './unsaved-guard';
 import styles from './save-dock.css?inline';
 
 interface SaveDockProps {
-  dirty: Signal<boolean>;
+  dirty: ReadonlySignal<boolean>;
   action: { readonly isRunning: boolean };
   onReset$: QRL<() => void>;
+  label?: string;
 }
 
-export const SaveDock = component$<SaveDockProps>(({ dirty, action, onReset$ }) => {
+export const SaveDock = component$<SaveDockProps>(({ dirty, action, onReset$, label = 'Save changes' }) => {
   useStyles$(styles);
   useUnsavedChangesGuard(dirty, action);
   return (
@@ -26,7 +27,7 @@ export const SaveDock = component$<SaveDockProps>(({ dirty, action, onReset$ }) 
           <span class="save-dock__save bee-host">
             <Bee flight="save" size={26} enter />
             <button type="submit" class="button button--primary button--sm save-dock__submit bee-host__target" disabled={action.isRunning} aria-busy={action.isRunning}>
-              {action.isRunning ? 'Saving…' : 'Save changes'}
+              {action.isRunning ? 'Saving…' : label}
             </button>
           </span>
         </div>

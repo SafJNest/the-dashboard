@@ -11,6 +11,7 @@ import { settingsPath, settingsSection } from '../../../lib/dashboard-path';
 import { peekValue } from '../../../lib/loader-value';
 import type { SettingsResult } from '../../../lib/guild';
 import { buildSettingsBody, readSettingsResult } from '../../../lib/settings';
+import { Soundboards } from '../../../lib/soundboards';
 import { GUILD_ID } from '../../../lib/sounds';
 import { useAccount } from '../layout';
 
@@ -86,10 +87,14 @@ export default component$(() => {
   const current = (stale ? account.value.guilds.find((item) => item.id === guildId) : loaded) ?? { id: guildId, name: 'Server', iconUrl: null };
   const settingsPath = `/dashboard/${guildId}/settings/`;
   const soundsPath = `/dashboard/${guildId}/sounds/`;
+  const soundboardsPath = Soundboards.path(guildId);
   const inSettings = location.url.pathname.startsWith(settingsPath);
   const inSounds = location.url.pathname.startsWith(soundsPath);
+  const inSoundboards = location.url.pathname.startsWith(soundboardsPath);
   const section = findSection(settingsSection(location.url.pathname))?.slug;
-  const switchPath = inSounds ? 'sounds/' : `settings/${section ? `${section}/` : ''}`;
+  const settingsSwitch = `settings/${section ? `${section}/` : ''}`;
+  const libraryPath = inSounds ? 'sounds/' : 'soundboards/';
+  const switchPath = inSounds || inSoundboards ? libraryPath : settingsSwitch;
 
   return (
     <>
@@ -112,11 +117,10 @@ export default component$(() => {
             <span>Leaderboard</span>
             <span class="badge">Soon</span>
           </span>
-          <span class="ctxtab" aria-disabled="true">
+          <Link href={soundboardsPath} class="ctxtab" aria-current={inSoundboards ? 'page' : undefined}>
             <Icon name="soundboards" />
             <span>Soundboards</span>
-            <span class="badge">Soon</span>
-          </span>
+          </Link>
           <Link href={soundsPath} class="ctxtab" aria-current={inSounds ? 'page' : undefined}>
             <Icon name="sounds" />
             <span>Sounds</span>

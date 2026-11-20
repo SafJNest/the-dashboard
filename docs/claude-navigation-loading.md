@@ -67,6 +67,8 @@ Data: 12 novembre 2026. Progetto: Beebot Dashboard, Qwik 2 / Qwik Router 2, attu
 | `/dashboard/{guildId}/settings/twitch/{streamerId}/` | Struttura Settings, elenco streamer e form richiesto | Nessuno |
 | `/dashboard/{guildId}/sounds/` | Contesto e libreria, identità del suono selezionato se esiste | Analytics e overview |
 | `/dashboard/{guildId}/sounds/{soundId}/` | Libreria e dettaglio base del suono richiesto | Analytics del dettaglio e overview |
+| `/dashboard/{guildId}/soundboards/` | Contesto, elenco delle board e invito a scegliere o creare | Libreria del server per il pannello di creazione |
+| `/dashboard/{guildId}/soundboards/{boardId}/` | Elenco e board richiesta (griglia, permessi) | Libreria del server per aggiungere suoni |
 | `/dashboard/me/` | Redirect verso libreria personale | Nessuno |
 | `/dashboard/me/sounds/` | Account, libreria personale e dettaglio base se selezionato | Analytics e overview |
 | `/dashboard/me/sounds/{soundId}/` | Libreria personale e dettaglio base richiesto | Analytics del dettaglio e overview |
@@ -141,7 +143,7 @@ Data: 12 novembre 2026. Progetto: Beebot Dashboard, Qwik 2 / Qwik Router 2, attu
 - Il selettore usa i server dell'account già caricato. Aprire il menu, Escape e click esterno sono operazioni locali senza rete.
 - “All servers” torna a `/dashboard/` con navigazione interna e senza richiedere il dettaglio di altre guild.
 - Route `/dashboard/{guildId}/`: normalizzazione verso `/settings/` anche nella navigazione interna; le richieste interne dei loader non devono essere intercettate dal redirect. Non lasciare una route centrale vuota.
-- Tab Leaderboard e Soundboards attualmente disabilitati restano tali: nessun prefetch, loader o nuova API per essi.
+- Il tab Leaderboard resta disabilitato: nessun prefetch, loader o nuova API. Soundboards è implementato (20/11/2026): il selettore da Soundboards apre Soundboards del nuovo server, senza trasferire il `boardId`; vedi README, sezione Soundboard.
 
 ## SettingsNav e panoramica Settings
 
