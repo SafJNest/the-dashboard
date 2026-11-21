@@ -1,12 +1,13 @@
 import { component$, useStyles$ } from '@qwik.dev/core';
 import { Link, useLocation } from '@qwik.dev/router';
 import { SOUNDS_PATH } from '../../lib/catalog';
+import { AccountMenu } from '../dashboard/account-menu';
 import { HexMark } from '../hex-mark/hex-mark';
 import styles from './site-header.css?inline';
 
 interface SiteHeaderProps {
   inviteUrl: string | null;
-  account?: { name: string; avatarUrl: string | null } | null;
+  account?: { name: string; avatarUrl: string | null; globalGreetName?: string | null } | null;
   signedIn?: boolean;
 }
 
@@ -35,13 +36,7 @@ export const SiteHeader = component$<SiteHeaderProps>(({ inviteUrl, account = nu
         </nav>
         <span class="site-header__separator" aria-hidden="true" />
         {account ? (
-          <>
-            <a href="/dashboard/" class="button button--secondary">Dashboard</a>
-            <a href="/dashboard/me/" class="site-header__account">
-              {account.avatarUrl ? <img class="avatar" src={account.avatarUrl} alt="" width={30} height={30} /> : <span class="avatar avatar--violet" aria-hidden="true">{account.name.slice(0, 1).toUpperCase()}</span>}
-              <span>{account.name}</span>
-            </a>
-          </>
+          <AccountMenu user={account} greetName={account.globalGreetName ?? null} withLinks />
         ) : signedIn ? (
           <a href="/dashboard/" class="button button--secondary">Dashboard</a>
         ) : (

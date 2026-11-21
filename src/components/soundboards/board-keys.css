@@ -1,0 +1,294 @@
+@layer components {
+  .keys {
+    --key-gap: var(--bb-space-2);
+    --key-step: calc((100% - 9 * var(--key-gap)) / 10 + var(--key-gap));
+    --key-height: 4.25rem;
+    --key-edge: 0.25rem;
+
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-4);
+    padding: var(--bb-space-4);
+    border: 1px solid var(--bb-border-default);
+    border-radius: var(--bb-radius-box);
+    background: var(--bb-bg-inset);
+  }
+
+  .keys__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--bb-space-2) var(--bb-space-4);
+  }
+
+  .keys__status {
+    flex: 1 1 12rem;
+    min-width: 0;
+    color: var(--bb-fg-muted);
+    font-size: var(--bb-text-sm);
+  }
+
+  .keys__switch {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bb-space-2);
+    color: var(--bb-fg-muted);
+    font-size: var(--bb-text-sm);
+  }
+
+  .keys__eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 0.875rem;
+
+    & > span {
+      width: 3px;
+      height: 30%;
+      border-radius: var(--bb-radius-pill);
+      background: var(--bb-fg-subtle);
+    }
+  }
+
+  .keys__eq--on > span {
+    background: var(--bb-accent);
+    animation: keys-eq 0.8s ease-in-out infinite alternate;
+
+    &:nth-child(2) { animation-delay: -0.2s }
+    &:nth-child(3) { animation-delay: -0.5s }
+    &:nth-child(4) { animation-delay: -0.35s }
+  }
+
+  .keys__board {
+    display: flex;
+    flex-direction: column;
+    gap: var(--key-gap);
+  }
+
+  .keys__row {
+    display: flex;
+    gap: var(--key-gap);
+  }
+
+  .keys__row--2 {
+    padding-inline-start: calc(var(--key-step) * 0.25);
+  }
+
+  .keys__row--3 {
+    padding-inline-start: calc(var(--key-step) * 0.75);
+  }
+
+  .key {
+    position: relative;
+    display: flex;
+    flex: 0 0 calc(var(--key-step) - var(--key-gap));
+    min-width: 0;
+    height: var(--key-height);
+    border-radius: var(--bb-radius-control);
+  }
+
+  .key__hit,
+  .key--empty,
+  .key--stop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--bb-space-1);
+    width: 100%;
+    padding: var(--bb-space-2) var(--bb-space-2) var(--bb-space-2) 0.625rem;
+    overflow: hidden;
+    border: 1px solid var(--bb-border-default);
+    border-bottom-width: var(--key-edge);
+    border-radius: var(--bb-radius-control);
+    background: var(--bb-bg-raised);
+    color: var(--bb-fg-default);
+    font: var(--bb-weight-medium) var(--bb-text-sm) / 1.2 var(--bb-font-ui);
+    text-align: start;
+    cursor: pointer;
+    transition: transform var(--bb-duration-fast, 0.12s) ease, border-bottom-width var(--bb-duration-fast, 0.12s) ease;
+
+    &:focus-visible {
+      outline: 2px solid var(--bb-focus-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .key__hit {
+    height: 100%;
+  }
+
+  .key--empty {
+    border-style: dashed;
+    border-bottom-width: 1px;
+    background: transparent;
+    color: var(--bb-fg-subtle);
+
+    &:disabled {
+      cursor: default;
+    }
+
+    & .key__cap {
+      border-style: dashed;
+      background: transparent;
+      color: var(--bb-fg-subtle);
+    }
+  }
+
+  .keys--placing .key--empty {
+    border-color: var(--bb-accent-border);
+    background: var(--bb-accent-subtle);
+    color: var(--bb-fg-accent);
+  }
+
+  .key--stop {
+    background: var(--bb-bg-surface);
+    color: var(--bb-fg-muted);
+  }
+
+  .key__cap {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding-inline: var(--bb-space-1);
+    border: 1px solid var(--bb-border-default);
+    border-radius: var(--bb-radius-part);
+    background: var(--bb-bg-surface);
+    color: var(--bb-fg-muted);
+    font: var(--bb-weight-medium) var(--bb-text-2xs) / 1 var(--bb-font-mono);
+  }
+
+  .key__name {
+    display: -webkit-box;
+    max-width: 100%;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .key--pressed .key__hit {
+    transform: translateY(2px);
+    border-bottom-width: 1px;
+  }
+
+  .key--playing .key__hit {
+    border-color: var(--bb-accent-border);
+    background: var(--bb-accent-subtle);
+    animation: keys-press 0.18s ease-out;
+  }
+
+  .key--playing .key__cap {
+    border-color: var(--bb-accent);
+    background: var(--bb-accent);
+    color: var(--bb-fg-on-accent);
+  }
+
+  .key--sustained .key__hit {
+    outline: 1px dashed var(--bb-accent-border);
+    outline-offset: 2px;
+  }
+
+  .key--selected .key__hit {
+    border-color: var(--bb-accent);
+  }
+
+  .key__progress {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-end: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--bb-accent);
+    transform-origin: left;
+    animation: keys-progress calc(var(--key-duration) * 1s) linear forwards;
+  }
+
+  .key__remove {
+    position: absolute;
+    inset-block-start: calc(var(--bb-space-1) * -1);
+    inset-inline-end: calc(var(--bb-space-1) * -1);
+    display: grid;
+    place-items: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+    border: 1px solid var(--bb-border-strong);
+    border-radius: var(--bb-radius-pill);
+    background: var(--bb-bg-overlay);
+    color: var(--bb-fg-muted);
+    cursor: pointer;
+
+    & svg {
+      width: 0.625rem;
+      height: 0.625rem;
+    }
+
+    &:hover {
+      color: var(--bb-danger-fg);
+    }
+  }
+
+  .keys__hint {
+    margin: 0;
+  }
+
+  @container (min-width: 50rem) {
+    .keys__board {
+      --key-height: 4.75rem;
+    }
+  }
+
+  @container (max-width: 37.5rem) {
+    .keys__board {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .keys__row {
+      display: contents;
+    }
+
+    .key {
+      height: 4.25rem;
+    }
+
+    .key--empty,
+    .key--stop {
+      display: none;
+    }
+
+    .keys--edit .key--empty,
+    .keys--placing .key--empty {
+      display: grid;
+    }
+  }
+
+  @keyframes keys-progress {
+    from { transform: scaleX(0) }
+    to { transform: scaleX(1) }
+  }
+
+  @keyframes keys-press {
+    from { transform: scale(0.96) }
+    to { transform: scale(1) }
+  }
+
+  @keyframes keys-eq {
+    from { height: 25% }
+    to { height: 100% }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .key__hit,
+    .key--playing .key__hit,
+    .keys__eq--on > span,
+    .key__progress {
+      transition: none;
+      animation: none;
+    }
+  }
+}

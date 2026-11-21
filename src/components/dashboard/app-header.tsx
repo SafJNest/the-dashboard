@@ -1,23 +1,20 @@
-import { $, component$, useOnWindow, useSignal } from '@qwik.dev/core';
+import { component$ } from '@qwik.dev/core';
 import { Link, useLocation } from '@qwik.dev/router';
-import { SOUNDS_PATH } from '../../lib/catalog';
 import { HexMark } from '../hex-mark/hex-mark';
+import { AccountMenu } from './account-menu';
 import { Icon } from './icons';
+import { QuickSearch } from './quick-search';
 import type { DashboardUser } from './servers';
 
 interface AppHeaderProps {
   user: DashboardUser;
+  greetName: string | null;
   navigating: boolean;
 }
 
-export const AppHeader = component$<AppHeaderProps>(({ user, navigating }) => {
+export const AppHeader = component$<AppHeaderProps>(({ user, greetName, navigating }) => {
   const location = useLocation();
-  const leaving = useSignal(false);
-  const onMine = location.url.pathname.startsWith('/dashboard/me/');
-
-  useOnWindow('pageshow', $(() => {
-    leaving.value = false;
-  }));
+  const onProfile = location.url.pathname.startsWith('/dashboard/me/');
 
   return (
     <header class="appbar">
@@ -27,46 +24,18 @@ export const AppHeader = component$<AppHeaderProps>(({ user, navigating }) => {
           <span>Beebot</span>
         </a>
         <nav class="appbar__nav" aria-label="Main">
-          <Link href="/dashboard/" class="appbar__link" aria-current={onMine ? undefined : 'page'}>
+          <Link href="/dashboard/" class="appbar__link" aria-current={onProfile ? undefined : 'page'}>
             <Icon name="servers" />
             <span>Servers</span>
           </Link>
-          <Link href="/dashboard/me/sounds/" class="appbar__link" aria-current={onMine ? 'page' : undefined}>
-            <Icon name="sounds" />
-            <span>Sounds</span>
+          <Link href="/dashboard/me/" class="appbar__link" aria-current={onProfile ? 'page' : undefined}>
+            <Icon name="greet" />
+            <span>Your profile</span>
           </Link>
-          <span class="appbar__link" aria-disabled="true">
-            <Icon name="playlists" />
-            <span>Playlists</span>
-          </span>
         </nav>
         <span class="appbar__spacer" />
-        <a href={`${SOUNDS_PATH}/`} class="appbar__link">
-          <Icon name="search" />
-          <span>Explore sounds</span>
-        </a>
-        <div class="appbar__account">
-          <span class="appbar__user">
-            {user.avatarUrl ? (
-              <img class="avatar dashboard__avatar" src={user.avatarUrl} alt="" width="30" height="30" />
-            ) : (
-              <span class="avatar" aria-hidden="true">{user.name.slice(0, 1).toUpperCase()}</span>
-            )}
-            <span>{user.name}</span>
-          </span>
-          <form
-            method="post"
-            action="/auth/logout/"
-            preventdefault:submit={leaving.value}
-            onSubmit$={() => {
-              leaving.value = true;
-            }}
-          >
-            <button type="submit" class="button button--ghost button--sm" disabled={leaving.value} aria-busy={leaving.value}>
-              {leaving.value ? 'Logging out…' : 'Log out'}
-            </button>
-          </form>
-        </div>
+        <QuickSearch />
+        <AccountMenu user={user} greetName={greetName} withLinks={false} />
       </div>
       <div class={['nav-progress', navigating && 'nav-progress--active']} aria-hidden="true" />
     </header>

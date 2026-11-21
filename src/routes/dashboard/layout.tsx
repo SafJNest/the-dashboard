@@ -9,8 +9,7 @@ import { apiError, loginRedirect, SESSION_COOKIE } from '../../lib/beebot.server
 import { BeebotClient } from '../../lib/beebot/client.server';
 import { pageKey } from '../../lib/dashboard-path';
 import { NOINDEX } from '../../lib/seo';
-import { useGuildSoundLibrary, useMySounds } from '../../lib/sound-loaders';
-import { GLOBAL_GREET, GUILD_ID, PERIODS, SOUND_ID, type FieldError, type Greets, type Period, type MyPlays, type VoteState } from '../../lib/sounds';
+import { GLOBAL_GREET, GUILD_ID, SOUND_ID, type FieldError, type Greets } from '../../lib/sounds';
 import styles from './dashboard.css?inline';
 
 export const onRequest: RequestHandler = (event) => {
@@ -32,35 +31,6 @@ export const useAccount = routeLoader$(async (event) => {
   };
   return account;
 }, { search: [], serializationStrategy: 'always', cacheControl: { private: true, maxAge: 300 } });
-
-export const useLoadSoundHistory = routeAction$(async (form, event): Promise<{ page: MyPlays | null; message: string | null }> => {
-  const soundId = typeof form.soundId === 'string' ? form.soundId : '';
-  const guildId = typeof form.guildId === 'string' && form.guildId ? form.guildId : undefined;
-  const timezone = typeof form.timezone === 'string' ? form.timezone : '';
-  const period = form.period as Period;
-  const cursor = typeof form.cursor === 'string' ? form.cursor : '';
-
-  if (!SOUND_ID.test(soundId) || (guildId && !GUILD_ID.test(guildId)) || !PERIODS.includes(period) || !timezone || !cursor) {
-    return { page: null, message: 'This history page is unavailable.' };
-  }
-
-  const result = await new BeebotClient(event).soundAnalytics(soundId, { guildId, period, timezone, cursor });
-  return result.ok ? { page: result.data.my, message: null } : { page: null, message: result.message };
-}, { invalidate: [] });
-
-export interface VoteResult {
-  soundId: string;
-  state: VoteState | null;
-  message: string | null;
-}
-
-export const useVoteSound = routeAction$(async (form, event): Promise<VoteResult> => {
-  const soundId = typeof form.soundId === 'string' ? form.soundId : '';
-  const vote = form.vote;
-  if (!SOUND_ID.test(soundId) || (vote !== 'like' && vote !== 'dislike')) return { soundId, state: null, message: 'This vote is not valid.' };
-  const result = await new BeebotClient(event).setVote(soundId, vote, form.enabled === 'true');
-  return result.ok ? { soundId, state: result.data, message: null } : { soundId, state: null, message: result.message };
-}, { invalidate: [useGuildSoundLibrary, useMySounds] });
 
 export interface GreetResult {
   key: string;
@@ -172,7 +142,7 @@ export default component$(() => {
 
   return (
     <div class="dashboard" aria-busy={pending.value !== null}>
-      <AppHeader user={account.value.user} navigating={pending.value !== null} />
+      <AppHeader user={account.value.user} greetName={account.value.greets[GLOBAL_GREET]?.name ?? null} navigating={pending.value !== null} />
       <Slot />
     </div>
   );

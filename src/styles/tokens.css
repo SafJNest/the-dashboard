@@ -78,6 +78,7 @@
   --bb-accent-subtle: rgb(255 196 0 / 0.08);
   --bb-accent-border: rgb(255 196 0 / 0.35);
   --bb-accent-line: rgb(255 196 0 / 0.22);
+  --bb-scrollbar: var(--bb-accent);
   --bb-focus-ring: var(--bb-yellow-9);
 
   --bb-success-fg: var(--bb-green-9);

@@ -110,23 +110,6 @@ a.appbar__link:hover {
   flex: 1 1 0;
 }
 
-.appbar__account {
-  display: flex;
-  align-items: center;
-  gap: var(--bb-space-2);
-}
-
-.appbar__user {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.625rem;
-  height: 2.5rem;
-  padding: 0 var(--bb-space-3) 0 var(--bb-space-1);
-  border: 1px solid var(--bb-border-default);
-  border-radius: var(--bb-radius-pill);
-  font: var(--bb-weight-medium) var(--bb-text-md) / 1 var(--bb-font-ui);
-}
-
 .guild-bar {
   display: flex;
   flex-wrap: wrap;
@@ -522,10 +505,6 @@ a.ctxtab:hover,
 
 .dashboard__guild-text {
   min-width: 0;
-}
-
-.dashboard__avatar {
-  object-fit: cover;
 }
 
 .dashboard__guild-name {

@@ -1,6 +1,6 @@
 import { $, component$, useSignal, useStore, type QRL, type Signal } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
-import { COMMENT_MAX, COMMENT_SORT_LABELS, COMMENT_SORTS, SOUNDS_PATH, type CatalogVote, type CommentPage, type CommentSort, type SoundComment } from '../../lib/catalog';
+import { COMMENT_MAX, COMMENT_SORT_LABELS, COMMENT_SORTS, SOUNDS_PATH, type CatalogVote, type CommentPage, type CommentSort, type CommentTarget, type SoundComment } from '../../lib/catalog';
 import { formatCount } from '../../lib/sound-stats';
 import { Icon } from '../dashboard/icons';
 import { createComment, deleteComment, loadComments, updateComment, voteComment } from './catalog-server';
@@ -20,7 +20,7 @@ function timeAgo(iso: string) {
 }
 
 interface ThreadContext {
-  soundId: string;
+  target: CommentTarget;
   signedIn: boolean;
   soundOwned: boolean;
   loginHref: string;
@@ -42,7 +42,7 @@ const CommentItem = component$<CommentItemProps>(({ comment, depth, thread }) =>
 
   const loadReplies = $(async (cursor: string | null) => {
     state.loading = true;
-    const result = await loadComments(thread.soundId, { parentId: comment.id, sort: 'oldest', cursor });
+    const result = await loadComments(thread.target, { parentId: comment.id, sort: 'oldest', cursor });
     state.loading = false;
     if ( !result.ok ) { state.error = result.message; return; }
     state.replies = [...(cursor ? state.replies ?? [] : []), ...result.data.items];
@@ -52,7 +52,7 @@ const CommentItem = component$<CommentItemProps>(({ comment, depth, thread }) =>
   const vote = $(async (next: CatalogVote) => {
     if ( !thread.signedIn ) { state.gate = true; return; }
     const value = comment.viewer?.vote === next ? null : next;
-    const result = await voteComment(thread.soundId, comment.id, value);
+    const result = await voteComment(thread.target, comment.id, value);
     if ( !result.ok ) { state.error = result.message; return; }
     comment.likes = result.data.likes;
     comment.viewer = { ownedByMe: comment.viewer?.ownedByMe ?? false, vote: result.data.vote };
@@ -62,7 +62,7 @@ const CommentItem = component$<CommentItemProps>(({ comment, depth, thread }) =>
     const text = draft.value.trim();
     if ( !text || busy.value ) { return; }
     busy.value = true;
-    const result = await createComment(thread.soundId, text, comment.id);
+    const result = await createComment(thread.target, text, comment.id);
     busy.value = false;
     if ( !result.ok ) { state.error = result.message; return; }
     thread.total.value = result.data.commentCount;
@@ -77,7 +77,7 @@ const CommentItem = component$<CommentItemProps>(({ comment, depth, thread }) =>
     const text = draft.value.trim();
     if ( !text || busy.value ) { return; }
     busy.value = true;
-    const result = await updateComment(thread.soundId, comment.id, { text });
+    const result = await updateComment(thread.target, comment.id, { text });
     busy.value = false;
     if ( !result.ok ) { state.error = result.message; return; }
     comment.text = result.data.comment.text;
@@ -86,7 +86,7 @@ const CommentItem = component$<CommentItemProps>(({ comment, depth, thread }) =>
   });
 
   const remove = $(async () => {
-    const result = await deleteComment(thread.soundId, comment.id);
+    const result = await deleteComment(thread.target, comment.id);
     if ( !result.ok ) { state.error = result.message; return; }
     thread.total.value = result.data.commentCount;
     comment.deleted = true;
@@ -95,7 +95,7 @@ const CommentItem = component$<CommentItemProps>(({ comment, depth, thread }) =>
   });
 
   const toggle = $(async (field: 'pinned' | 'hearted') => {
-    const result = await updateComment(thread.soundId, comment.id, { [field]: !comment[field] });
+    const result = await updateComment(thread.target, comment.id, { [field]: !comment[field] });
     if ( !result.ok ) { state.error = result.message; return; }
     comment[field] = result.data.comment[field];
     field === 'pinned' && thread.onPinned$(comment.id, result.data.previousPinnedId);
@@ -191,7 +191,7 @@ const CommentItem = component$<CommentItemProps>(({ comment, depth, thread }) =>
 });
 
 interface CommentsProps {
-  soundId: string;
+  target: CommentTarget;
   commentCount: number;
   seed: CommentPage;
   signedIn: boolean;
@@ -199,7 +199,7 @@ interface CommentsProps {
   loginHref: string;
 }
 
-export const Comments = component$<CommentsProps>(({ soundId, commentCount, seed, signedIn, soundOwned, loginHref }) => {
+export const Comments = component$<CommentsProps>(({ target, commentCount, seed, signedIn, soundOwned, loginHref }) => {
   const list = useStore({ items: seed.items, cursor: seed.nextCursor, sort: 'top' as CommentSort, loading: false, error: null as string | null });
   const total = useSignal(commentCount);
   const draft = useSignal('');
@@ -207,7 +207,7 @@ export const Comments = component$<CommentsProps>(({ soundId, commentCount, seed
 
   const load = $(async (sort: CommentSort, cursor: string | null) => {
     list.loading = true;
-    const result = await loadComments(soundId, { sort, cursor });
+    const result = await loadComments(target, { sort, cursor });
     list.loading = false;
     if ( !result.ok ) { list.error = result.message; return; }
     list.items = cursor ? [...list.items, ...result.data.items] : result.data.items;
@@ -219,7 +219,7 @@ export const Comments = component$<CommentsProps>(({ soundId, commentCount, seed
     const text = draft.value.trim();
     if ( !text || busy.value ) { return; }
     busy.value = true;
-    const result = await createComment(soundId, text, null);
+    const result = await createComment(target, text, null);
     busy.value = false;
     if ( !result.ok ) { list.error = result.message; return; }
     total.value = result.data.commentCount;
@@ -234,25 +234,27 @@ export const Comments = component$<CommentsProps>(({ soundId, commentCount, seed
     }
   });
 
-  const thread: ThreadContext = { soundId, signedIn, soundOwned, loginHref, sort: list.sort, total, onPinned$ };
+  const thread: ThreadContext = { target, signedIn, soundOwned, loginHref, sort: list.sort, total, onPinned$ };
 
   return (
     <section class="comments" aria-labelledby="comments-title">
       <div class="catalog-section__head">
         <h3 id="comments-title" class="heading--sm">{formatCount(total.value)} {total.value === 1 ? 'comment' : 'comments'}</h3>
-        <div class="segmented" role="group" aria-label="Sort comments">
-          {COMMENT_SORTS.map((sort) => (
-            <label key={sort} class="segmented__item">
-              <input type="radio" name="comment-sort" class="visually-hidden" checked={list.sort === sort} disabled={list.loading} onChange$={() => load(sort, null)} />
-              {COMMENT_SORT_LABELS[sort]}
-            </label>
-          ))}
-        </div>
+        {total.value > 0 && (
+          <div class="segmented" role="group" aria-label="Sort comments">
+            {COMMENT_SORTS.map((sort) => (
+              <label key={sort} class="segmented__item">
+                <input type="radio" name="comment-sort" class="visually-hidden" checked={list.sort === sort} disabled={list.loading} onChange$={() => load(sort, null)} />
+                {COMMENT_SORT_LABELS[sort]}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
       {signedIn ? (
         <div class="comments__compose">
-          <label for="comment-new" class="visually-hidden">Add a comment</label>
-          <textarea id="comment-new" class="textarea" rows={2} maxLength={COMMENT_MAX} placeholder="Add a comment…" bind:value={draft} />
+          <label for={`comment-new-${target.id}`} class="visually-hidden">Add a comment</label>
+          <textarea id={`comment-new-${target.id}`} class="textarea" rows={2} maxLength={COMMENT_MAX} placeholder="Add a comment…" bind:value={draft} />
           {draft.value.trim() && (
             <div class="catalog-gate__actions">
               <button type="button" class="button button--ghost button--sm" onClick$={() => (draft.value = '')}>Cancel</button>
@@ -273,7 +275,7 @@ export const Comments = component$<CommentsProps>(({ soundId, commentCount, seed
           {list.items.map((comment) => <CommentItem key={comment.id} comment={comment} depth={0} thread={thread} />)}
         </ul>
       ) : (
-        <p class="text-muted">No comments yet.</p>
+        <p class="text-muted">No comments yet. Be the first.</p>
       )}
       {list.cursor && <button type="button" class="button button--secondary button--sm" disabled={list.loading} onClick$={() => load(list.sort, list.cursor)}>Show more comments</button>}
     </section>

@@ -13,7 +13,7 @@ async function load(path, replacements = {}) {
 
 const sounds = await load('../src/lib/sounds.ts');
 const stats = await load('../src/lib/sound-stats.ts');
-const library = (await load('../src/lib/sound-library.ts', { "'./sound-stats'": JSON.stringify(stats.url), "'./sounds'": JSON.stringify(sounds.url) })).module;
+const { SoundLibrary } = (await load('../src/lib/sound-library.ts', { "'./sounds'": JSON.stringify(sounds.url) })).module;
 const endpoints = await load('../src/lib/beebot/endpoints.ts');
 const helper = await load('../src/lib/beebot.server.ts');
 const guild = await load('../src/lib/guild.ts');
@@ -28,7 +28,7 @@ const { BeebotClient } = (await load('../src/lib/beebot/client.server.ts', {
 const { Soundboards } = soundboards.module;
 
 const { parseSound, parseGuildSoundLibrary, parseMySoundLibrary, parseGuildSoundAnalytics, parseSoundAnalytics, parseGreets, parseGreetResults, readPeriod } = sounds.module;
-const { heatRows, replayRows, topShare, viewFromSoundAnalytics, dayBars, formatLength } = stats.module;
+const { dayBars, formatLength } = stats.module;
 const { withQuery, ENDPOINTS } = endpoints.module;
 
 const rawSound = {
@@ -60,7 +60,8 @@ test('a Sound keeps the shared contract and drops unknown fields', () => {
   const sound = parseSound(rawSound);
   assert.equal(sound.id, '42');
   assert.equal(sound.uploader.name, 'Luna');
-  assert.equal('soundboardCount' in sound, false);
+  assert.equal(sound.soundboardCount, 2);
+  assert.equal(parseSound({ ...rawSound, soundboardCount: undefined }).soundboardCount, 0);
   assert.equal(parseSound({ ...rawSound, durationMs: null }).durationMs, null);
   assert.equal(parseSound({ ...rawSound, tags: 'meme' }), null);
   assert.equal(parseSound({ ...rawSound, id: 42 }), null);
@@ -97,114 +98,37 @@ test('analytics accept abbreviated series and reject malformed ones', () => {
   assert.equal(parseSoundAnalytics({ soundId: '42', totals: aggregate(1, { heatmap: [{ weekday: 8, hour: 1, plays: 1 }] }) }), null);
 });
 
-test('the all-servers view sums additive series but never listener distributions', () => {
-  const analytics = parseSoundAnalytics({
-    soundId: '42', period: '30d', timezone: 'Europe/Rome',
-    totals: { plays: 70, listeners: 15, averagePlaysPerListener: 4.6667, likes: 8, dislikes: 1 },
-    guilds: { 123: { ...aggregate(50), users: [] } },
-    otherGuilds: aggregate(20),
-    my: { plays: 4, history: [{ id: '1', playedAt: '2026-11-10T20:30:00Z', guildId: '123', source: 'AUDIO' }, { id: '2', playedAt: '2026-11-09T20:30:00Z', guildId: null, source: 'AUDIO' }], nextCursor: null },
-  });
-  const all = viewFromSoundAnalytics(analytics, null);
-  assert.equal(all.plays, 70);
-  assert.equal(all.listeners, 15);
-  assert.deepEqual(all.playsPerDay, [{ date: '2026-11-10', plays: 70 }]);
-  assert.deepEqual(all.heatmap, [{ weekday: 6, hour: 21, plays: 70 }]);
-  assert.deepEqual(all.replay, []);
-  assert.deepEqual(all.where.map((row) => [row.guildId, row.plays]), [['123', 50], [null, 20]]);
-  const scoped = viewFromSoundAnalytics(analytics, '123');
-  assert.equal(scoped.plays, 50);
-  assert.equal(scoped.myPlays, 1);
-});
-
-test('heatmap, replay groups and percentile describe aggregate data only', () => {
-  const heat = heatRows([{ weekday: 6, hour: 21, plays: 7 }, { weekday: 6, hour: 20, plays: 3 }, { weekday: 1, hour: 9, plays: 10 }]);
-  assert.deepEqual(heat.peak, { weekday: 1, hour: 9, plays: 10 });
-  assert.equal(heat.peakDayShare, 50);
-  assert.equal(heat.rows[5].cells[21].level, 3);
-  const buckets = [{ min: 1, max: 1, users: 4 }, { min: 2, max: 5, users: 3 }, { min: 6, max: 20, users: 3 }, { min: 21, max: 50, users: 0 }, { min: 51, max: null, users: 0 }];
-  assert.deepEqual(replayRows(buckets, 4).map((row) => row.mine), [false, true, false, false, false]);
-  assert.equal(topShare(buckets, 4), 45);
-  assert.equal(topShare(buckets, 0), null);
+test('daily bars switch to weeks for long periods and lengths are readable', () => {
   assert.equal(dayBars(Array.from({ length: 100 }, (_, index) => ({ date: `d${index}`, plays: 1 }))).weekly, true);
+  assert.equal(dayBars([{ date: 'd1', plays: 0 }]).bars[0].peak, false);
   assert.equal(formatLength(2000), '0:02');
   assert.equal(formatLength(null), '—');
 });
 
-test('library model needs only the library and keeps a stable name order', () => {
+test('the library filters, sorts and ranks sounds of the current view', () => {
   const sound = parseSound(rawSound);
-  const mineSound = { ...sound, id: '43', name: 'bonk', ownedByMe: true, canEdit: true };
-  const twin = { ...sound, id: '7', name: 'bonk', ownedByMe: true };
-  const data = {
-    period: '30d', guildId: '123',
-    library: { guildId: '123', counts: { all: 3, mine: 2, others: 1 }, tags: [], summary: { period: '30d', plays: 0, previousPlays: null, playsChangePercent: null, listeners: 0, likes: 0, myPlays: 0 }, sounds: [sound, mineSound, twin] },
-  };
-  const base = library.guildLibraryModel(data, undefined, 'Night Shift');
-  assert.deepEqual(base.entries.map((entry) => entry.sound.id), ['42', '7', '43']);
-  assert.equal(base.selected.sound.id, '42');
-  assert.equal(base.sort, 'name');
-
-  const mine = library.guildLibraryModel(data, undefined, 'Night Shift', { owner: 'mine', sort: 'name', tab: 'everyone', period: null });
-  assert.deepEqual(mine.entries.map((entry) => entry.sound.id), ['7', '43']);
-  assert.equal(mine.selected.sound.id, '7');
-  assert.deepEqual(mine.ownerCounts, { all: 3, mine: 2, others: 1 });
-
-  const filtered = library.guildLibraryModel(data, '42', 'Night Shift', { owner: 'mine', sort: 'plays', tab: 'mine', period: null });
-  assert.equal(filtered.sort, 'plays');
-  assert.equal(filtered.tab, 'mine');
-  assert.equal(filtered.selected.sound.id, '42');
-  assert.equal(filtered.missing, false);
-
-  const missing = library.guildLibraryModel(data, '999', 'Night Shift');
-  assert.equal(missing.selected, null);
-  assert.equal(missing.missing, true);
-
-  const analytics = { guildId: '123', period: '30d', timezone: 'Europe/Rome', summary: {}, playsPerDay: [], topSounds: [{ soundId: '43', value: 3 }], mostLiked: [], users: [], sounds: [{ soundId: '43', ...aggregate(9), likes: 0, dislikes: 0, my: { plays: 0, history: [], nextCursor: null } }] };
-  const stats = library.guildLibraryStats(base, { period: '30d', analytics });
-  assert.deepEqual(stats.overview.top, [{ id: '43', name: 'bonk', detail: 'you', value: 3 }]);
-  const byPlays = library.guildLibraryModel({ ...data, library: { ...data.library, sounds: [sound, { ...mineSound, plays: 9000 }, { ...twin, plays: 1 }] } }, undefined, 'Night Shift', { owner: 'all', sort: 'plays', tab: 'everyone', period: null });
-  assert.deepEqual(byPlays.entries.map((entry) => entry.sound.id), ['43', '42', '7']);
-  assert.equal(byPlays.selected.sound.id, '43');
-
-  assert.equal(library.soundHref(base, '43'), '/dashboard/123/sounds/43/');
+  const mine = { ...sound, id: '43', name: 'bonk', ownedByMe: true, public: false, plays: 9000, createdAt: '2026-04-01T10:00:00Z', tags: [{ id: '2', name: 'arcade' }] };
+  const twin = { ...sound, id: '7', name: 'Bonk', ownedByMe: true, plays: 1, createdAt: '2026-01-01T10:00:00Z' };
+  const guildLibrary = { guildId: '123', counts: { all: 3, mine: 2, others: 1 }, tags: [], summary: {}, sounds: [sound, mine, twin] };
+  const entries = SoundLibrary.guildEntries(guildLibrary);
+  const query = { text: '', owner: 'all', visibility: 'all', sort: 'plays' };
+  assert.deepEqual(SoundLibrary.filter(entries, query).map((entry) => entry.sound.id), ['43', '42', '7']);
+  assert.deepEqual(SoundLibrary.filter(entries, { ...query, sort: 'name' }).map((entry) => entry.sound.id), ['42', '43', '7']);
+  assert.deepEqual(SoundLibrary.filter(entries, { ...query, sort: 'newest' }).map((entry) => entry.sound.id), ['43', '42', '7']);
+  assert.deepEqual(SoundLibrary.filter(entries, { ...query, owner: 'others' }).map((entry) => entry.sound.id), ['42']);
+  assert.deepEqual(SoundLibrary.filter(entries, { ...query, visibility: 'private' }).map((entry) => entry.sound.id), ['43']);
+  assert.deepEqual(SoundLibrary.filter(entries, { ...query, text: '#arc' }).map((entry) => entry.sound.id), ['43']);
+  assert.deepEqual(SoundLibrary.ranked([{ soundId: '43', value: 3 }, { soundId: '999', value: 9 }, { soundId: '42', value: 0 }], guildLibrary.sounds).map((entry) => [entry.sound.id, entry.plays]), [['43', 3]]);
+  assert.equal(SoundLibrary.guildPath('123', '43'), '/dashboard/123/sounds/43/');
+  assert.equal(SoundLibrary.myPath('43'), '/dashboard/me/sounds/43/');
+  assert.equal(SoundLibrary.recentDays(Array.from({ length: 30 }, (_, index) => ({ date: String(index), plays: index }))).length, 14);
 });
 
-test('library state separates stale, updating and failed results', () => {
-  const sound = parseSound(rawSound);
-  const libraryData = { guildId: '123', counts: { all: 1, mine: 0, others: 1 }, tags: [], summary: { period: '30d', plays: 0, previousPlays: null, playsChangePercent: null, listeners: 0, likes: 0, myPlays: 0 }, sounds: [sound] };
-  const load = (data, guildId = '123') => ({ scope: 'guild', guildId, guildName: 'Night Shift', library: data });
-  const later = { owner: 'all', sort: 'name', tab: 'everyone', period: '7d' };
-  assert.equal(library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }), {}).status, 'ready');
-  assert.equal(library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }, '456'), {}).status, 'stale');
-  assert.equal(library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }), {}, later).updating, true);
-  const failed = library.readLibrary(load({ failed: true, status: 503, message: 'Down', retryAfter: null, period: '30d', guildId: '123' }), {});
-  assert.equal(failed.status, 'failed');
-  assert.equal(failed.failure.message, 'Down');
-  const ready = library.readLibrary(load({ period: '30d', guildId: '123', library: libraryData }), {});
-  const stats = { period: '30d', guildId: '123', analytics: { guildId: '123', period: '30d', timezone: 'UTC', summary: {}, playsPerDay: [], topSounds: [], mostLiked: [], users: [], sounds: [] } };
-  assert.equal(library.readStats({ ...load(null), analytics: stats }, ready.model, later), null);
-  assert.equal(library.readStats({ ...load(null), analytics: stats }, ready.model).timezone, 'UTC');
-});
-
-test('the personal library filters by the guild in the path', () => {
+test('the personal library keeps the server of each sound', () => {
   const sound = parseSound(rawSound);
   const other = { ...sound, id: '50', name: 'alpha', guildId: '789' };
-  const data = {
-    period: '30d', guildId: null,
-    library: { counts: { all: 2 }, tags: [], summary: { period: '30d', plays: 0, previousPlays: null, playsChangePercent: null, listeners: 0, likes: 0, myPlays: 0 }, guilds: [{ guildId: '123', name: 'Night Shift', sounds: [sound] }, { guildId: '789', name: null, sounds: [other] }] },
-  };
-  const all = library.myLibraryModel(data, undefined, undefined);
-  assert.deepEqual(all.entries.map((entry) => entry.sound.id), ['42', '50']);
-  assert.equal(all.basePath, '/dashboard/me/sounds/');
-  const scoped = library.myLibraryModel(data, undefined, '123');
-  assert.deepEqual(scoped.entries.map((entry) => entry.sound.id), ['42']);
-  assert.equal(scoped.basePath, '/dashboard/me/sounds/guild/123/');
-  assert.equal(library.soundHref(scoped, '42'), '/dashboard/me/sounds/guild/123/42/');
-  const unknown = library.myLibraryModel(data, undefined, '555');
-  assert.equal(unknown.guildMissing, true);
-  assert.equal(unknown.selected, null);
-  assert.equal(all.guilds.find((group) => group.id === '789').name, 'Unavailable server');
-  assert.equal(library.mySoundTitle(data, { guildId: '123' }), 'My sounds in Night Shift · Beebot');
+  const entries = SoundLibrary.myEntries({ counts: { all: 2 }, tags: [], summary: {}, guilds: [{ guildId: '123', name: 'Night Shift', sounds: [sound] }, { guildId: '789', name: null, sounds: [other] }] });
+  assert.deepEqual(entries.map((entry) => [entry.sound.id, entry.guildName]), [['42', 'Night Shift'], ['50', 'Unavailable server']]);
 });
 
 test('greets map the global key and report each entry separately', () => {
@@ -218,16 +142,16 @@ test('greets map the global key and report each entry separately', () => {
 
 test('endpoints encode ids and skip empty query values', () => {
   assert.equal(withQuery(ENDPOINTS.guildSounds('123'), { period: '7d', timezone: '' }), '/guilds/123/sounds?period=7d');
-  assert.equal(ENDPOINTS.soundVote('4/2', 'like'), '/sounds/4%2F2/like');
+  assert.equal(ENDPOINTS.soundVote('4/2'), '/sounds/4%2F2/vote');
+  assert.equal(ENDPOINTS.soundboardSound('9', '4/2'), '/soundboards/9/sounds/4%2F2');
 });
 
-test('the client sends edits and votes and validates the response', async (t) => {
+test('the client sends edits and validates the response', async (t) => {
   const calls = [];
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     calls.push({ url, method: options.method, body: options.body && JSON.parse(options.body) });
-    if (url.endsWith('/like')) return Response.json({ soundId: '42', likes: 215, dislikes: 13, likedByMe: true, dislikedByMe: false });
-    if (options.method === 'DELETE') return new Response(null, { status: 204 });
     if (url.endsWith('/sounds/7')) return Response.json({ code: 'not_found', message: 'x' }, { status: 404 });
+    if (options.method === 'DELETE') return new Response(null, { status: 204 });
     return Response.json({ ...rawSound, name: 'airhorn nuovo', description: 'A short blast.\nLoud.' });
   });
   const client = new BeebotClient(sessionEvent());
@@ -235,10 +159,8 @@ test('the client sends edits and votes and validates the response', async (t) =>
   assert.equal(updated.data.name, 'airhorn nuovo');
   assert.equal(updated.data.description, 'A short blast.\nLoud.');
   assert.deepEqual(calls[0], { url: 'https://api.safjnest.com/beebot/sounds/42', method: 'PATCH', body: { name: 'airhorn nuovo', description: null, public: true, tags: ['meme'] } });
-  assert.deepEqual((await client.setVote('42', 'like', true)).data.likes, 215);
-  assert.deepEqual(calls[1].body, { enabled: true });
   assert.deepEqual(await client.deleteSound('42'), { ok: true, data: null });
-  const missing = await client.sound('7');
+  const missing = await client.updateSound('7', { name: 'x' });
   assert.equal(missing.status, 404);
   assert.equal(missing.message, "This sound doesn't exist, or you can't see it.");
 });
@@ -251,45 +173,65 @@ test('the client turns unexpected shapes into an invalid response', async (t) =>
   assert.equal(result.status, 502);
 });
 
-const rawBoard = { id: '9', guildId: '123', userId: '456', name: 'Arcade', thumbnailUrl: null, soundCount: 1, canEdit: true };
+const rawBoard = { id: '9', guildId: null, userId: '456', name: 'Arcade', thumbnailUrl: null, soundCount: 2, canEdit: true, public: true, sortMode: 'MANUAL', likes: 12, plays: 42, commentCount: 3, viewer: { vote: 'LIKE' } };
+const otherSound = { ...rawSound, id: '43', name: 'bonk' };
 
-test('soundboards are parsed only for the requested guild and board', () => {
-  assert.deepEqual(Soundboards.parseList([rawBoard], '123'), [rawBoard]);
-  assert.equal(Soundboards.parseList([{ ...rawBoard, guildId: '999' }], '123'), null);
-  assert.equal(Soundboards.parse({ ...rawBoard, canEdit: 'yes' }, '123').canEdit, false);
-  const detail = Soundboards.parseDetail({ board: rawBoard, sounds: [rawSound] }, '123', '9');
-  assert.equal(detail.sounds[0].name, 'airhorn');
-  assert.equal(Soundboards.parseDetail({ board: rawBoard, sounds: [rawSound] }, '123', '10'), null);
-  assert.equal(Soundboards.parseDetail({ board: rawBoard, sounds: 'nope' }, '123', '9'), null);
+test('soundboards follow the user contract and keep the manual key order', () => {
+  const board = Soundboards.parse(rawBoard);
+  assert.equal(board.guildId, null);
+  assert.equal(board.vote, 'LIKE');
+  assert.equal(board.sortMode, 'MANUAL');
+  assert.equal(Soundboards.parse({ ...rawBoard, viewer: undefined, sortMode: 'X' }).vote, null);
+  assert.equal(Soundboards.parse({ ...rawBoard, sortMode: 'X' }).sortMode, 'NAME_ASC');
+  assert.equal(Soundboards.parse({ ...rawBoard, soundCount: undefined }).soundCount, null);
+  const detail = Soundboards.parseDetail({ board: rawBoard, sounds: [rawSound, otherSound], soundIds: ['43', '77', '42'] }, '9');
+  assert.deepEqual(detail.sounds.map((sound) => sound.id), ['43', '42']);
+  assert.deepEqual(detail.hiddenIds, ['77']);
+  assert.deepEqual(Soundboards.storedIds(detail), ['43', '42', '77']);
+  assert.equal(detail.sounds[1].audioUrl, rawSound.url);
+  const card = Soundboards.parseDetail({ board: rawBoard, sounds: [{ id: '5', name: 'Card', audioUrl: 'https://cdn.example.com/5.mp3', imageUrl: 'https://cdn.example.com/5.png' }] });
+  assert.equal(card.sounds[0].imageUrl, 'https://cdn.example.com/5.png');
+  assert.equal(Soundboards.parseDetail({ board: rawBoard, sounds: [rawSound] }, '10'), null);
+  assert.equal(Soundboards.parseDetail({ board: rawBoard, sounds: 'nope' }, '9'), null);
+  assert.deepEqual(Soundboards.parseVote({ soundboardId: '9', commentId: null, likes: 13, vote: null }), { likes: 13, vote: null });
+  assert.equal(Soundboards.parseVote({ likes: 13, vote: 'DISLIKE' }), null);
 });
 
-test('soundboard names and sound ids follow the contract', () => {
+test('soundboard names, keys and paths follow the contract', () => {
   assert.equal(Soundboards.readName('  Arcade  '), 'Arcade');
   assert.equal(Soundboards.readName('   '), null);
   assert.equal(Soundboards.readName('2026'), null);
-  assert.equal(Soundboards.readName('a'.repeat(256)), null);
+  assert.equal(Soundboards.readName('a'.repeat(41)), null);
   assert.deepEqual(Soundboards.readSoundIds(['42', '42', '73', 'x', 5]), ['42', '73']);
   assert.deepEqual(Soundboards.readSoundIds('42'), ['42']);
-  assert.equal(Soundboards.path('123', '9'), '/dashboard/123/soundboards/9/');
+  assert.equal(Soundboards.KEYS.length, Soundboards.MAX_SOUNDS);
+  assert.equal(Soundboards.KEYS.includes('M'), false);
+  assert.equal(Soundboards.keyOf(0), 'Q');
+  assert.equal(Soundboards.keyOf(24), 'N');
+  assert.equal(Soundboards.keyOf(25), null);
+  assert.equal(Soundboards.guildPath('123', '9'), '/dashboard/123/soundboards/9/');
+  assert.equal(Soundboards.placePath('9', '42'), '/dashboard/me/soundboards/9/add/42/');
+  assert.equal(Soundboards.command('9'), '/soundboard play 9');
 });
 
-test('the client manages soundboards and reports conflicts', async (t) => {
+test('the client manages soundboards by id and reports errors', async (t) => {
   const calls = [];
   t.mock.method(console, 'error', () => {});
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     calls.push({ url, method: options.method, body: typeof options.body === 'string' ? JSON.parse(options.body) : options.body });
-    if (options.method === 'POST') return Response.json({ code: 'duplicate_soundboard_name', message: 'x' }, { status: 409 });
-    if (options.method === 'PUT') return new Response(null, { status: 204 });
+    if (options.method === 'PUT') return Response.json({ code: 'soundboard_full', message: 'x' }, { status: 409 });
     if (url.endsWith('/soundboards/10')) return Response.json({ code: 'not_found', message: 'x' }, { status: 404 });
     return Response.json({ board: rawBoard, sounds: [rawSound] });
   });
   const client = new BeebotClient(sessionEvent());
-  const created = await client.createSoundboard('123', 'Arcade', ['42']);
-  assert.equal(created.status, 409);
-  assert.equal(created.message, 'A soundboard with this name already exists in this server.');
-  assert.deepEqual(calls[0], { url: 'https://api.safjnest.com/beebot/guilds/123/soundboards', method: 'POST', body: { name: 'Arcade', soundIds: ['42'] } });
-  assert.deepEqual(await client.addSoundboardSound('123', '9', '42'), { ok: true, data: true });
-  assert.equal(calls[1].url, 'https://api.safjnest.com/beebot/guilds/123/soundboards/9/sounds/42');
-  assert.equal((await client.soundboard('123', '9')).data.board.name, 'Arcade');
-  assert.equal((await client.soundboard('123', '10')).message, Soundboards.NOT_FOUND);
+  const full = await client.addSoundboardSound('9', '42');
+  assert.equal(full.status, 409);
+  assert.equal(full.message, 'This soundboard is full. Remove a sound before adding another.');
+  assert.equal(calls[0].url, 'https://api.safjnest.com/beebot/soundboards/9/sounds/42');
+  const updated = await client.updateSoundboard('9', { sortMode: 'MANUAL', soundIds: ['42'] });
+  assert.equal(updated.data.board.name, 'Arcade');
+  assert.deepEqual(calls[1], { url: 'https://api.safjnest.com/beebot/soundboards/9', method: 'PATCH', body: { sortMode: 'MANUAL', soundIds: ['42'] } });
+  assert.equal((await client.guildSoundboard('123', '9')).data.board.id, '9');
+  assert.equal(calls[2].url, 'https://api.safjnest.com/beebot/guilds/123/soundboards/9');
+  assert.equal((await client.soundboard('10')).message, Soundboards.NOT_FOUND);
 });

@@ -1,10 +1,11 @@
 import { $, component$, noSerialize, useContext, useSignal, useTask$, type NoSerialize, type QRL } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
-import { QUERY_MAX, SOUNDS_PATH, type SoundCard, type Suggestions } from '../../lib/catalog';
+import { boardPath, QUERY_MAX, soundPath, type SoundCard, type Suggestions } from '../../lib/catalog';
 import { formatCompact, formatLength } from '../../lib/sound-stats';
 import { Icon } from '../dashboard/icons';
 import { SearchContext } from './catalog-context';
 import { suggestSounds } from './catalog-server';
+import { BoardThumb } from './board-items';
 import { Highlight, PersonAvatar, SoundThumb } from './sound-items';
 
 const SUGGEST_DELAY_MS = 180;
@@ -64,7 +65,8 @@ export const SearchBox = component$<SearchBoxProps>(({ compact, onSearch$, onTag
   });
 
   const typed = search.query.trim().replace(/^#/, '');
-  const hasSuggestions = !!suggestions.value && (suggestions.value.sounds.length > 0 || suggestions.value.tags.length > 0);
+  const found = suggestions.value;
+  const hasSuggestions = !!found && (found.sounds.length > 0 || found.boards.length > 0 || found.tags.length > 0);
 
   return (
     <form
@@ -117,7 +119,7 @@ export const SearchBox = component$<SearchBoxProps>(({ compact, onSearch$, onTag
                   <Icon name="play" />
                 </button>
                 <SoundThumb sound={sound} size="sm" />
-                <Link href={`${SOUNDS_PATH}/${sound.id}/`} class="catalog-row__link" aria-label={`Open ${sound.name}`} prefetchData="off" scroll={false} onClick$={async () => {
+                <Link href={soundPath(sound.id)} class="catalog-row__link" aria-label={`Open ${sound.name}`} prefetchData="off" scroll={false} onClick$={async () => {
                   search.preview = sound;
                   await close();
                 }} />
@@ -131,6 +133,17 @@ export const SearchBox = component$<SearchBoxProps>(({ compact, onSearch$, onTag
                 <span class="caption catalog-length">{formatLength(sound.durationMs)}</span>
               </div>
             ))}
+            {found!.boards.length > 0 && <p class="suggest__group">Soundboards</p>}
+            {found!.boards.map((board) => (
+              <div key={board.id} class="suggest__item" role="option" aria-selected="false">
+                <BoardThumb board={board} />
+                <Link href={boardPath(board.id)} class="catalog-row__link" aria-label={`Open soundboard ${board.name}`} prefetchData="off" scroll={false} onClick$={close} />
+                <span class="catalog-row__main">
+                  <Highlight text={board.name} query={typed} />
+                  <span class="catalog-who">Soundboard{board.soundCount === null ? '' : ` · ${board.soundCount} sounds`}</span>
+                </span>
+              </div>
+            ))}
             {suggestions.value!.tags.length > 0 && <p class="suggest__group">Tags</p>}
             {suggestions.value!.tags.map((tag) => (
               <button key={tag.id} type="button" class="suggest__tag" role="option" aria-selected="false" onClick$={async () => {
@@ -142,7 +155,7 @@ export const SearchBox = component$<SearchBoxProps>(({ compact, onSearch$, onTag
                 <span class="caption">{formatCompact(tag.soundCount)} sounds</span>
               </button>
             ))}
-            <p class="suggest__foot">Press Enter to see every result for “{search.query.trim()}”</p>
+            <p class="suggest__foot">↵ to see every result for “{search.query.trim()}”</p>
           </div>
         </>
       )}

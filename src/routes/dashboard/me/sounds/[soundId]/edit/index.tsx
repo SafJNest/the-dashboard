@@ -1,12 +1,9 @@
 import { component$ } from '@qwik.dev/core';
-import type { DocumentHead } from '@qwik.dev/router';
-import { SoundEditorPage } from '../../../../../../components/sounds/sound-editor';
-import { useDeleteSound, useRemoveSoundImage, useSearchTags, useSetSoundImage, useSound, useSoundImage, useUpdateSound } from '../../../../../../lib/sound-editor';
+import type { RequestHandler } from '@qwik.dev/router';
+import { SoundLibrary } from '../../../../../../lib/sound-library';
 
-export { useDeleteSound, useRemoveSoundImage, useSearchTags, useSetSoundImage, useSound, useSoundImage, useUpdateSound };
+export const onGet: RequestHandler = ({ params, redirect }) => {
+  throw redirect(301, SoundLibrary.myPath(params.soundId));
+};
 
-export default component$(() => <SoundEditorPage guildId={null} />);
-
-export const head: DocumentHead = ({ resolveValue }) => ({
-  title: `${resolveValue(useSound).name} | Edit sound`,
-});
+export default component$(() => null);

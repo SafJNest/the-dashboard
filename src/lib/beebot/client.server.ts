@@ -10,9 +10,6 @@ import {
   parseMySoundLibrary,
   parseSound,
   parseSoundAnalytics,
-  parseSoundSearch,
-  parseTags,
-  parseVoteState,
   type GreetChanges,
   type GreetResults,
   type Greets,
@@ -24,13 +21,9 @@ import {
   type Sound,
   type SoundAnalytics,
   type SoundPatch,
-  type SoundSort,
-  type SoundTag,
-  type Vote,
-  type VoteState,
 } from '../sounds';
-import { Soundboards, type Soundboard, type SoundboardDetail } from '../soundboards';
-import { ENDPOINTS, withQuery, type QueryValue } from './endpoints';
+import { Soundboards, type BoardPatch, type Soundboard, type SoundboardDetail } from '../soundboards';
+import { ENDPOINTS, withQuery } from './endpoints';
 
 type SessionEvent = Pick<RequestEvent, 'env' | 'url' | 'cookie' | 'headers' | 'redirect'>;
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -39,14 +32,6 @@ export type ClientResult<T> = { ok: true; data: T } | ApiFailure;
 
 export interface Account extends Me {
   greets: Greets;
-}
-
-export interface SoundSearch {
-  q?: string;
-  tag?: string;
-  sort?: SoundSort;
-  order?: 'asc' | 'desc';
-  limit?: number;
 }
 
 export const SOUND_NOT_FOUND = "This sound doesn't exist, or you can't see it.";
@@ -91,7 +76,7 @@ export class BeebotClient {
   }
 
   guildSounds(guildId: string, period: Period): Promise<ClientResult<GuildSoundLibrary>> {
-    return this.read(withQuery(ENDPOINTS.guildSounds(guildId), { period }), (data) => parseGuildSoundLibrary(data, guildId));
+    return this.read(withQuery(ENDPOINTS.guildSounds(guildId), { period, overview: 'true' }), (data) => parseGuildSoundLibrary(data, guildId));
   }
 
   guildSoundAnalytics(guildId: string, period: Period): Promise<ClientResult<GuildSoundAnalytics>> {
@@ -106,26 +91,8 @@ export class BeebotClient {
     return this.read(withQuery(ENDPOINTS.mySoundAnalytics, { period }), parseMySoundAnalytics);
   }
 
-  sound(soundId: string): Promise<ClientResult<Sound>> {
-    return this.send('GET', ENDPOINTS.sound(soundId), undefined, (data) => {
-      const sound = parseSound(data);
-      return sound?.id === soundId ? sound : null;
-    }, SOUND_NOT_FOUND);
-  }
-
-  soundAnalytics(soundId: string, options: { period: Period; guildId?: string; timezone?: string; cursor?: string }): Promise<ClientResult<SoundAnalytics>> {
-    return this.send('GET', withQuery(ENDPOINTS.soundAnalytics(soundId), options), undefined, (data) => {
-      const analytics = parseSoundAnalytics(data);
-      return analytics?.soundId === soundId ? analytics : null;
-    }, SOUND_NOT_FOUND);
-  }
-
-  searchSounds(search: SoundSearch): Promise<ClientResult<Sound[]>> {
-    return this.read(withQuery(ENDPOINTS.sounds, search as Record<string, QueryValue>), parseSoundSearch);
-  }
-
-  searchTags(prefix: string): Promise<ClientResult<SoundTag[]>> {
-    return this.read(withQuery(ENDPOINTS.tags, { q: prefix }), parseTags);
+  soundAnalytics(soundId: string, period: Period): Promise<ClientResult<SoundAnalytics>> {
+    return this.read(withQuery(ENDPOINTS.soundAnalytics(soundId), { period }), parseSoundAnalytics);
   }
 
   updateSound(soundId: string, patch: SoundPatch): Promise<ClientResult<Sound>> {
@@ -136,43 +103,39 @@ export class BeebotClient {
     return this.send('DELETE', ENDPOINTS.sound(soundId), undefined, () => null, SOUND_NOT_FOUND);
   }
 
-  setVote(soundId: string, vote: Vote, enabled: boolean): Promise<ClientResult<VoteState>> {
-    return this.send('PATCH', ENDPOINTS.soundVote(soundId, vote), { enabled }, (data) => parseVoteState(data, soundId), SOUND_NOT_FOUND);
+  guildSoundboards(guildId: string): Promise<ClientResult<Soundboard[]>> {
+    return this.read(ENDPOINTS.guildSoundboards(guildId), Soundboards.parseList);
   }
 
-  soundboards(guildId: string): Promise<ClientResult<Soundboard[]>> {
-    return this.read(ENDPOINTS.soundboards(guildId), (data) => Soundboards.parseList(data, guildId));
+  guildSoundboard(guildId: string, boardId: string): Promise<ClientResult<SoundboardDetail>> {
+    const parse = (data: unknown) => Soundboards.parseDetail(data, boardId);
+    return this.send('GET', ENDPOINTS.guildSoundboard(guildId, boardId), undefined, parse, Soundboards.NOT_FOUND);
   }
 
-  soundboard(guildId: string, boardId: string): Promise<ClientResult<SoundboardDetail>> {
-    const parse = (data: unknown) => Soundboards.parseDetail(data, guildId, boardId);
-    return this.send('GET', ENDPOINTS.soundboard(guildId, boardId), undefined, parse, Soundboards.NOT_FOUND);
+  soundboard(boardId: string): Promise<ClientResult<SoundboardDetail>> {
+    const parse = (data: unknown) => Soundboards.parseDetail(data, boardId);
+    return this.send('GET', ENDPOINTS.soundboard(boardId), undefined, parse, Soundboards.NOT_FOUND);
   }
 
-  createSoundboard(guildId: string, name: string, soundIds: string[]): Promise<ClientResult<SoundboardDetail>> {
-    const parse = (data: unknown) => Soundboards.parseDetail(data, guildId);
-    return this.send('POST', ENDPOINTS.soundboards(guildId), { name, soundIds }, parse);
+  updateSoundboard(boardId: string, patch: BoardPatch): Promise<ClientResult<SoundboardDetail>> {
+    const parse = (data: unknown) => Soundboards.parseDetail(data, boardId);
+    return this.send('PATCH', ENDPOINTS.soundboard(boardId), patch, parse, Soundboards.NOT_FOUND);
   }
 
-  renameSoundboard(guildId: string, boardId: string, name: string): Promise<ClientResult<SoundboardDetail>> {
-    const parse = (data: unknown) => Soundboards.parseDetail(data, guildId, boardId);
-    return this.send('PATCH', ENDPOINTS.soundboard(guildId, boardId), { name }, parse, Soundboards.NOT_FOUND);
+  addSoundboardSound(boardId: string, soundId: string): Promise<ClientResult<true>> {
+    return this.send('PUT', ENDPOINTS.soundboardSound(boardId, soundId), undefined, () => true, Soundboards.SOUND_NOT_AVAILABLE);
   }
 
-  addSoundboardSound(guildId: string, boardId: string, soundId: string): Promise<ClientResult<true>> {
-    return this.send('PUT', ENDPOINTS.soundboardSound(guildId, boardId, soundId), undefined, () => true, Soundboards.SOUND_NOT_AVAILABLE);
+  removeSoundboardSound(boardId: string, soundId: string): Promise<ClientResult<null>> {
+    return this.send('DELETE', ENDPOINTS.soundboardSound(boardId, soundId), undefined, () => null, Soundboards.SOUND_NOT_AVAILABLE);
   }
 
-  removeSoundboardSound(guildId: string, boardId: string, soundId: string): Promise<ClientResult<null>> {
-    return this.send('DELETE', ENDPOINTS.soundboardSound(guildId, boardId, soundId), undefined, () => null, Soundboards.SOUND_NOT_AVAILABLE);
+  setSoundboardThumbnail(boardId: string, body: FormData): Promise<ClientResult<string>> {
+    return this.send('PUT', ENDPOINTS.soundboardThumbnail(boardId), body, Soundboards.parseThumbnail, Soundboards.NOT_FOUND);
   }
 
-  setSoundboardThumbnail(guildId: string, boardId: string, body: FormData): Promise<ClientResult<string>> {
-    return this.send('PUT', ENDPOINTS.soundboardThumbnail(guildId, boardId), body, Soundboards.parseThumbnail, Soundboards.NOT_FOUND);
-  }
-
-  deleteSoundboard(guildId: string, boardId: string): Promise<ClientResult<null>> {
-    return this.send('DELETE', ENDPOINTS.soundboard(guildId, boardId), undefined, () => null, Soundboards.NOT_FOUND);
+  deleteSoundboard(boardId: string): Promise<ClientResult<null>> {
+    return this.send('DELETE', ENDPOINTS.soundboard(boardId), undefined, () => null, Soundboards.NOT_FOUND);
   }
 
   private read<T>(path: string, parse: (data: unknown) => T | null): Promise<ClientResult<T>> {

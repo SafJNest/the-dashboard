@@ -126,8 +126,8 @@ test('settings selections live in the path and legacy queries are normalized', a
   assert.equal(paths.selectionRedirect(new URL('https://x.test/dashboard/123/settings/rewards/5/?level=10'), 'level', '123', 'rewards', '5'), '/dashboard/123/settings/rewards/5/');
   assert.equal(paths.selectionRedirect(new URL('https://x.test/dashboard/123/settings/rewards/5/'), 'level', '123', 'rewards', '5'), null);
   assert.equal(paths.pageKey('/dashboard/123/sounds/42/'), paths.pageKey('/dashboard/123/sounds/'));
-  assert.equal(paths.pageKey('/dashboard/me/sounds/guild/123/42/'), paths.pageKey('/dashboard/me/sounds/'));
-  assert.notEqual(paths.pageKey('/dashboard/me/sounds/42/edit/'), paths.pageKey('/dashboard/me/sounds/'));
+  assert.equal(paths.pageKey('/dashboard/me/soundboards/9/add/42/'), paths.pageKey('/dashboard/me/soundboards/'));
+  assert.notEqual(paths.pageKey('/dashboard/me/sounds/upload/'), paths.pageKey('/dashboard/me/sounds/'));
   assert.equal(paths.pageKey('/dashboard/123/settings/rewards/10/'), paths.pageKey('/dashboard/123/settings/rewards/'));
   assert.notEqual(paths.pageKey('/dashboard/123/settings/welcome/'), paths.pageKey('/dashboard/123/settings/leave/'));
 });

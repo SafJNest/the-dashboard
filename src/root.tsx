@@ -1,11 +1,13 @@
-import { component$, useVisibleTask$ } from '@qwik.dev/core';
+import { component$, useContextProvider, useStore, useVisibleTask$ } from '@qwik.dev/core';
 import { DocumentHeadTags, RouterOutlet, useQwikRouter } from '@qwik.dev/router';
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
+import { emptySearch, SearchContext } from './components/catalog/catalog-context';
 import './global.css';
 
 export default component$(() => {
   useQwikRouter();
+  useContextProvider(SearchContext, useStore(emptySearch()));
   useVisibleTask$(() => {
     inject({ framework: 'qwik' });
     injectSpeedInsights({ framework: 'qwik' });

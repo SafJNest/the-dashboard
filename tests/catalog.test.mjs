@@ -41,3 +41,17 @@ test('comments keep deleted placeholders and votes', () => {
   assert.equal(page.items[0].author, null);
   assert.deepEqual(catalog.parseSoundVoteResult({ soundId: '42', commentId: null, likes: 5, dislikes: 1, vote: null }), { likes: 5, dislikes: 1, vote: null });
 });
+
+test('board comments, board queries and dashboard sounds share the catalog contract', () => {
+  const comment = { id: '7', soundboardId: '42', parentId: null, author: null, text: null, createdAt: '2026-11-01T10:00:00Z', editedAt: null, deleted: true, pinned: false, hearted: false, likes: 0, replyCount: 0, uploader: false };
+  assert.equal(catalog.parseComment(comment).targetId, '42');
+  assert.equal(catalog.parseComment({ ...comment, soundboardId: undefined }), null);
+  assert.equal(withQuery(ENDPOINTS.publicSoundboards, catalog.boardQuery({ q: ' arc ', limit: 2 })), '/public/soundboards?q=arc&limit=2');
+  assert.equal(withQuery(ENDPOINTS.publicSounds, catalog.catalogQuery({ q: 'air', limit: 8 })), '/public/sounds?q=air&limit=8');
+  assert.equal(catalog.boardPath('9'), '/sounds/board/9/');
+  const sound = { id: '42', name: 'Airhorn', description: null, guildId: '123', userId: '456', uploader: card.uploader, public: false, createdAt: '', url: card.audioUrl, durationMs: 2088, tags: [], plays: 1, listeners: 1, likes: 0, dislikes: 0, myPlays: 0, soundboardCount: 0, likedByMe: false, dislikedByMe: true, ownedByMe: true, canEdit: true, canDelete: true };
+  const converted = catalog.toSoundCard(sound);
+  assert.equal(converted.audioUrl, card.audioUrl);
+  assert.equal(converted.createdAt, null);
+  assert.deepEqual(converted.viewer, { ownedByMe: true, vote: 'DISLIKE' });
+});

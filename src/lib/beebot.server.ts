@@ -18,7 +18,7 @@ const FAILURE_MESSAGES: Record<string, string> = {
   settings_unavailable: 'Server settings are temporarily unavailable. Please try again.',
   guild_forbidden: "Access denied. You don't have permission to manage this server.",
   guild_not_found: GUILD_NOT_AVAILABLE,
-  duplicate_soundboard_name: 'A soundboard with this name already exists in this server.',
+  duplicate_soundboard_name: 'You already have a soundboard with this name.',
   soundboard_full: 'This soundboard is full. Remove a sound before adding another.',
 };
 

@@ -128,24 +128,6 @@
   field-sizing: content;
 }
 
-.textarea,
-.combo__list {
-  scrollbar-color: var(--bb-border-strong) transparent;
-  scrollbar-width: thin;
-}
-
-.textarea::-webkit-scrollbar,
-.combo__list::-webkit-scrollbar {
-  width: 0.625rem;
-}
-
-.textarea::-webkit-scrollbar-thumb,
-.combo__list::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
-  border-radius: var(--bb-radius-pill);
-  background: var(--bb-border-strong) padding-box;
-}
-
 .textarea::placeholder,
 .input::placeholder {
   color: var(--bb-fg-subtle);

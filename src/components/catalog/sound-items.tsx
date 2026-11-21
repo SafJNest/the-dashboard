@@ -1,6 +1,6 @@
 import { component$, useContext, type QRL } from '@qwik.dev/core';
 import { Link } from '@qwik.dev/router';
-import { SOUNDS_PATH, type SoundCard } from '../../lib/catalog';
+import { creatorPath, type SoundCard } from '../../lib/catalog';
 import { formatCompact, formatLength } from '../../lib/sound-stats';
 import type { SoundUser } from '../../lib/sounds';
 import { Icon } from '../dashboard/icons';
@@ -39,25 +39,35 @@ interface SoundRowProps {
   query?: string;
   current: boolean;
   showUploader?: boolean;
+  detail?: string | null;
   onPlay$: QRL<(sound: SoundCard) => void>;
 }
 
-export const SoundRow = component$<SoundRowProps>(({ sound, href, query = '', current, showUploader = true, onPlay$ }) => {
+export function UploaderName({ user, owned }: { user: SoundUser; owned: boolean }) {
+  if ( owned ) { return <span class="catalog-who__name catalog-who__you">You</span>; }
+  return <a href={creatorPath(user.id)} class="catalog-who__name catalog-who__link">{user.name}</a>;
+}
+
+export const SoundRow = component$<SoundRowProps>(({ sound, href, query = '', current, showUploader = true, detail = null, onPlay$ }) => {
   const search = useContext(SearchContext);
   const player = useContext(SoundPlayerContext);
   const playing = player.state.soundId === sound.id && player.state.playing;
+  const owned = sound.viewer?.ownedByMe === true;
   return (
     <div class="catalog-row" aria-current={current ? 'page' : undefined}>
       <Link href={href} class="catalog-row__link" aria-label={`Open ${sound.name}`} prefetchData="off" scroll={false} onClick$={() => (search.preview = sound)} />
-      <button type="button" class="play catalog-row__play" aria-label={`${playing ? 'Pause' : 'Play'} ${sound.name}`} aria-busy={player.state.soundId === sound.id && player.state.loading} onClick$={() => onPlay$(sound)}>
+      <button type="button" class="play catalog-row__play" aria-label={`${playing ? 'Pause' : 'Play'} ${sound.name}`} aria-busy={player.state.soundId === sound.id && player.state.loading} disabled={!sound.audioUrl} onClick$={() => onPlay$(sound)}>
         <Icon name={playing ? 'pause' : 'play'} />
       </button>
       <SoundThumb sound={sound} />
       <span class="catalog-row__main">
-        <Highlight text={sound.name} query={query} />
+        <span class="catalog-row__title">
+          <Highlight text={sound.name} query={query} />
+          {!sound.public && <span class="badge">Private</span>}
+        </span>
         <span class="catalog-who">
-          {showUploader && <PersonAvatar user={sound.uploader} size={16} />}
-          {showUploader && <Link href={`${SOUNDS_PATH}/u/${sound.uploader.id}/`} class="catalog-who__name catalog-who__link" prefetchData="off">{sound.uploader.name}</Link>}
+          {showUploader && <UploaderName user={sound.uploader} owned={owned} />}
+          {detail && <span>{detail}</span>}
           {sound.tags.length > 0 && <span class="catalog-row__tags">{sound.tags.slice(0, 2).map((tag) => `#${tag.name}`).join(' ')}</span>}
         </span>
       </span>
@@ -65,7 +75,6 @@ export const SoundRow = component$<SoundRowProps>(({ sound, href, query = '', cu
         <span class="catalog-length">{formatLength(sound.durationMs)}</span>
         <span class="catalog-row__optional"><Icon name="play" />{formatCompact(sound.plays)}</span>
         <span><Icon name="heart" />{formatCompact(sound.likes)}</span>
-        <span class="catalog-row__optional"><Icon name="message" />{formatCompact(sound.commentCount)}</span>
       </span>
     </div>
   );

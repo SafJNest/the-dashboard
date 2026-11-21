@@ -3,13 +3,15 @@ import { Link, routeLoader$, useLocation, useNavigate, type DocumentHead, type R
 import { SearchContext } from '../../../../components/catalog/catalog-context';
 import { searchSounds } from '../../../../components/catalog/catalog-server';
 import { CreatorSkeleton, RowsSkeleton } from '../../../../components/catalog/catalog-states';
+import { CopyLink } from '../../../../components/catalog/copy-buttons';
+import { neighbours, PanelBar } from '../../../../components/catalog/panel-bar';
 import { PersonAvatar, SoundRow } from '../../../../components/catalog/sound-items';
 import { Icon } from '../../../../components/dashboard/icons';
 import { LoadError } from '../../../../components/sounds/library-states';
 import { SoundPlayerContext } from '../../../../components/sounds/sound-player';
 import { apiError, isDocumentRequest, loadFailure, loaderResolver } from '../../../../lib/beebot.server';
 import { CatalogClient } from '../../../../lib/beebot/catalog.server';
-import { CATALOG_SORT_LABELS, likeShare, NOT_FOUND_STATUS, SOUNDS_PATH, USER_ID, type CatalogSort, type SoundCard } from '../../../../lib/catalog';
+import { CATALOG_SORT_LABELS, creatorPath, likeShare, NOT_FOUND_STATUS, SOUNDS_PATH, USER_ID, type CatalogSort, type SoundCard } from '../../../../lib/catalog';
 import { CACHED_LOADER } from '../../../../lib/catalog-loaders';
 import { requireSound } from '../../../../lib/catalog-guard.server';
 import { peekValue } from '../../../../lib/loader-value';
@@ -136,10 +138,7 @@ const CreatorSounds = component$<CreatorSoundsProps>(({ userId, name, home, sele
         )}
         {selected && (
           <aside class="card card--raised catalog-panel" aria-label="Sound details">
-            <div class="catalog-panel__bar">
-              <span class="overline">Now viewing</span>
-              <Link href={`${home}/`} class="button button--ghost button--sm" aria-label="Close" scroll={false}><Icon name="close" /></Link>
-            </div>
+            <PanelBar kind="Sound" closeHref={`${home}/`} {...neighbours(list.items, list.items.findIndex((sound) => sound.id === selected), (sound) => `${home}/${sound.id}/`)} />
             <Slot />
           </aside>
         )}
@@ -180,13 +179,16 @@ export default component$(() => {
             <div class="creator-hero__id">
               <PersonAvatar user={creator.user} size={96} />
               <div class="sound-card__meta">
-                <p class="eyebrow">Sound creator</p>
+                <p class="eyebrow">Creator</p>
                 <h1 class="display display--md">{creator.user.name}</h1>
                 {creator.uploadingSince && (
                   <p class="text-muted">Uploading since {new Date(creator.uploadingSince).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
                 )}
               </div>
-              {self && <a href="/dashboard/me/sounds/" class="button button--primary">Manage in dashboard</a>}
+              <span class="creator-hero__actions">
+                <CopyLink path={creatorPath(creator.user.id)} />
+                {self && <a href="/dashboard/me/" class="button button--primary">Manage in your profile</a>}
+              </span>
             </div>
             <div class="creator-stats">
               <div><span class="overline">Public sounds</span><strong>{formatCount(creator.soundCount)}</strong></div>
@@ -199,6 +201,11 @@ export default component$(() => {
           <CreatorSkeleton />
         )}
       </section>
+
+      <nav class="creator-tabs" aria-label="Creator content">
+        <span class="creator-tab" aria-current="page">Sounds{creator && <span class="caption">{formatCount(creator.soundCount)}</span>}</span>
+        <span class="creator-tab" aria-disabled="true">Soundboards<span class="badge">Coming soon</span></span>
+      </nav>
 
       <CreatorSounds key={userId} userId={userId} name={creator?.user.name ?? null} home={home} selected={selected} onPlay$={play}>
         <Slot />
@@ -214,7 +221,8 @@ export const head: DocumentHead = ({ resolveValue, params, url }) => {
   return pageHead(url, {
     title: `${creator.user.name} · Beebot sounds`,
     description: `${formatCount(creator.soundCount)} public ${creator.soundCount === 1 ? 'sound' : 'sounds'} by ${creator.user.name} on Beebot.`,
-    path: `${SOUNDS_PATH}/u/${creator.user.id}/`,
+    path: creatorPath(creator.user.id),
     image: creator.user.avatarUrl,
+    indexed: creator.soundCount > 0,
   });
 };

@@ -1,5 +1,6 @@
 import type { QueryValue } from './beebot/endpoints';
-import { count, list, number, object, parseTag, parseTagCount, parseUser, text, type SoundTag, type SoundUser, type TagCount } from './sounds';
+import type { Soundboard } from './soundboards';
+import { count, list, number, object, parseTag, parseTagCount, parseUser, text, type Sound, type SoundTag, type SoundUser, type TagCount } from './sounds';
 
 export const CATALOG_SORTS = ['relevance', 'popular', 'newest', 'mostLiked', 'mostDisliked'] as const;
 export type CatalogSort = (typeof CATALOG_SORTS)[number];
@@ -16,9 +17,17 @@ export const LENGTHS = {
 } as const;
 export type LengthFilter = keyof typeof LENGTHS;
 
+export const SEARCH_TYPES = ['all', 'sounds', 'boards'] as const;
+export type SearchType = (typeof SEARCH_TYPES)[number];
+export const SEARCH_TYPE_LABELS: Record<SearchType, string> = { all: 'All', sounds: 'Sounds', boards: 'Soundboards' };
+
 export const QUERY_MAX = 255;
 export const COMMENT_MAX = 2000;
 export const CATALOG_PAGE = 20;
+export const BOARD_SUGGESTIONS = 2;
+export const PREVIEW_SOUNDS = 8;
+export const PREVIEW_BOARDS = 4;
+export const EXPLORE_BOARDS = 6;
 export const IMAGE_MAX_BYTES = 1024 * 1024;
 export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif'];
 export const COMMAND_PREFIX = '/play ';
@@ -66,6 +75,7 @@ export interface Explore {
 
 export interface Suggestions {
   sounds: SoundCard[];
+  boards: Soundboard[];
   tags: TagCount[];
 }
 
@@ -79,9 +89,14 @@ export interface Creator {
   commentCount: number;
 }
 
+export interface CommentTarget {
+  kind: 'sound' | 'soundboard';
+  id: string;
+}
+
 export interface SoundComment {
   id: string;
-  soundId: string;
+  targetId: string;
   parentId: string | null;
   author: SoundUser | null;
   text: string | null;
@@ -124,8 +139,15 @@ export interface CommentVoteResult {
   vote: CatalogVote;
 }
 
+export interface BoardFilters {
+  q?: string;
+  limit?: number;
+  cursor?: string | null;
+}
+
 export interface CatalogFilters {
   q?: string;
+  limit?: number;
   tag?: string | null;
   uploaderId?: string;
   length?: LengthFilter;
@@ -148,8 +170,13 @@ export function catalogQuery(filters: CatalogFilters): Record<string, QueryValue
     minDurationMs: length.minDurationMs,
     maxDurationMs: length.maxDurationMs,
     sort: filters.sort,
+    limit: filters.limit,
     cursor: filters.cursor,
   };
+}
+
+export function boardQuery(filters: BoardFilters): Record<string, QueryValue> {
+  return { q: filters.q?.trim().slice(0, QUERY_MAX), limit: filters.limit, cursor: filters.cursor };
 }
 
 export function commentQuery(query: CommentQuery): Record<string, QueryValue> {
@@ -158,6 +185,39 @@ export function commentQuery(query: CommentQuery): Record<string, QueryValue> {
 
 export function playCommand(soundId: string) {
   return `${COMMAND_PREFIX}${soundId}`;
+}
+
+export function soundPath(soundId: string) {
+  return `${SOUNDS_PATH}/${soundId}/`;
+}
+
+export function boardPath(boardId: string) {
+  return `${SOUNDS_PATH}/board/${boardId}/`;
+}
+
+export function creatorPath(userId: string) {
+  return `${SOUNDS_PATH}/u/${userId}/`;
+}
+
+export function toSoundCard(sound: Sound): SoundCard {
+  return {
+    id: sound.id,
+    name: sound.name,
+    description: sound.description,
+    public: sound.public,
+    createdAt: sound.createdAt || null,
+    durationMs: sound.durationMs,
+    audioUrl: sound.url,
+    imageUrl: null,
+    uploader: sound.uploader,
+    tags: sound.tags,
+    plays: sound.plays,
+    listeners: sound.listeners,
+    likes: sound.likes,
+    dislikes: sound.dislikes,
+    commentCount: 0,
+    viewer: { ownedByMe: sound.ownedByMe, vote: sound.likedByMe ? 'LIKE' : sound.dislikedByMe ? 'DISLIKE' : null },
+  };
 }
 
 export function likeShare(likes: number, dislikes: number) {
@@ -223,7 +283,7 @@ export function parseExplore(value: unknown): Explore | null {
   return { popularTags, trending, latest };
 }
 
-export function parseSuggestions(value: unknown): Suggestions | null {
+export function parseSuggestions(value: unknown): Omit<Suggestions, 'boards'> | null {
   const suggestions = object(value);
   const sounds = list(suggestions?.sounds, parseSoundCard);
   const tags = list(suggestions?.tags, parseTagCount);
@@ -249,15 +309,15 @@ export function parseCreator(value: unknown): Creator | null {
 export function parseComment(value: unknown): SoundComment | null {
   const comment = object(value);
   const id = text(comment?.id);
-  const soundId = text(comment?.soundId);
+  const targetId = text(comment?.soundId) ?? text(comment?.soundboardId);
   const createdAt = text(comment?.createdAt);
   const author = comment?.author === null || comment?.author === undefined ? null : parseUser(comment.author);
   const viewer = parseViewer(comment?.viewer);
   const brokenAuthor = comment?.author !== null && comment?.author !== undefined && !author;
-  if ( !comment || !id || !soundId || !createdAt || brokenAuthor || viewer === undefined ) { return null; }
+  if ( !comment || !id || !targetId || !createdAt || brokenAuthor || viewer === undefined ) { return null; }
   return {
     id,
-    soundId,
+    targetId,
     parentId: text(comment.parentId),
     author,
     text: text(comment.text),

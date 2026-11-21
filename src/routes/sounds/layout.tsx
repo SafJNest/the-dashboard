@@ -1,7 +1,6 @@
-import { component$, Slot, useContextProvider, useStore, useStyles$ } from '@qwik.dev/core';
+import { component$, Slot, useStyles$ } from '@qwik.dev/core';
 import { routeAction$, routeLoader$, type RequestHandler } from '@qwik.dev/router';
 import { BeeDefs } from '../../components/bee/bee-defs';
-import { emptySearch, SearchContext } from '../../components/catalog/catalog-context';
 import { SiteFooter } from '../../components/site-footer/site-footer';
 import { SiteHeader } from '../../components/site-header/site-header';
 import { SoundPlayer } from '../../components/sounds/sound-player';
@@ -56,7 +55,6 @@ export default component$(() => {
   useStyles$(catalogStyles);
   const site = useSoundsSite();
   const viewer = peekValue(useViewer());
-  useContextProvider(SearchContext, useStore(emptySearch()));
 
   return (
     <div class="site">

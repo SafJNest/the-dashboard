@@ -1,7 +1,6 @@
 export const PERIODS = ['7d', '30d', '90d', 'all'] as const;
 export type Period = (typeof PERIODS)[number];
 export const DEFAULT_PERIOD: Period = '30d';
-export const PERIOD_COOKIE = 'beebot_period';
 export const PERIOD_LABELS: Record<Period, string> = { '7d': '7d', '30d': '30d', '90d': '90d', all: 'All time' };
 
 export const GLOBAL_GREET = '0';
@@ -9,9 +8,6 @@ export const MAX_TAGS = 5;
 export const DESCRIPTION_MAX = 500;
 export const SOUND_ID = /^\d{1,20}$/;
 export const GUILD_ID = /^\d{17,20}$/;
-
-export type Vote = 'like' | 'dislike';
-export type SoundSort = 'plays' | 'likes' | 'dislikes';
 
 export interface SoundUser {
   id: string;
@@ -45,6 +41,7 @@ export interface Sound {
   likes: number;
   dislikes: number;
   myPlays: number;
+  soundboardCount: number;
   likedByMe: boolean;
   dislikedByMe: boolean;
   ownedByMe: boolean;
@@ -62,11 +59,16 @@ export interface LibrarySummary {
   myPlays: number;
 }
 
+interface GuildSoundOverview {
+  topSounds: { soundId: string; value: number }[];
+  topListener: UserPlays | null;
+}
+
 export interface GuildSoundLibrary {
   guildId: string;
   counts: { all: number; mine: number; others: number };
   tags: TagCount[];
-  summary: LibrarySummary;
+  summary: LibrarySummary & { overview?: GuildSoundOverview };
   sounds: Sound[];
 }
 
@@ -191,14 +193,6 @@ export interface MySoundAnalytics {
   sounds: SoundAnalytics[];
 }
 
-export interface VoteState {
-  soundId: string;
-  likes: number;
-  dislikes: number;
-  likedByMe: boolean;
-  dislikedByMe: boolean;
-}
-
 export interface SoundPatch {
   name?: string;
   description?: string | null;
@@ -286,6 +280,7 @@ export function parseSound(value: unknown): Sound | null {
     likes: count(sound.likes),
     dislikes: count(sound.dislikes),
     myPlays: count(sound.myPlays),
+    soundboardCount: count(sound.soundboardCount),
     likedByMe: sound.likedByMe === true,
     dislikedByMe: sound.dislikedByMe === true,
     ownedByMe: sound.ownedByMe === true,
@@ -315,7 +310,11 @@ export function parseGuildSoundLibrary(value: unknown, guildId: string): GuildSo
   const summary = parseSummary(library?.summary);
   const sounds = list(library?.sounds, parseSound);
   if (!library || text(library.guildId) !== guildId || !counts || !tags || !summary || !sounds) return null;
-  return { guildId, counts: { all: count(counts.all), mine: count(counts.mine), others: count(counts.others) }, tags, summary, sounds };
+  const overview = object(object(library.summary)?.overview);
+  const topSounds = overview ? parseRanking(overview.topSounds, 'plays') : null;
+  const topListener = overview?.topListener ? parseUserPlays(overview.topListener) : null;
+  const guildSummary = topSounds ? { ...summary, overview: { topSounds, topListener } } : summary;
+  return { guildId, counts: { all: count(counts.all), mine: count(counts.mine), others: count(counts.others) }, tags, summary: guildSummary, sounds };
 }
 
 export function parseMySoundLibrary(value: unknown): MySoundLibrary | null {
@@ -493,26 +492,6 @@ export function parseMySoundAnalytics(value: unknown): MySoundAnalytics | null {
       soundCount: count(summary.soundCount),
     },
     sounds,
-  };
-}
-
-export function parseSoundSearch(value: unknown): Sound[] | null {
-  return list(object(value)?.sounds, parseSound);
-}
-
-export function parseTags(value: unknown): SoundTag[] | null {
-  return list(object(value)?.tags, parseTag);
-}
-
-export function parseVoteState(value: unknown, soundId: string): VoteState | null {
-  const vote = object(value);
-  if (!vote || text(vote.soundId) !== soundId) return null;
-  return {
-    soundId,
-    likes: count(vote.likes),
-    dislikes: count(vote.dislikes),
-    likedByMe: vote.likedByMe === true,
-    dislikedByMe: vote.dislikedByMe === true,
   };
 }
 

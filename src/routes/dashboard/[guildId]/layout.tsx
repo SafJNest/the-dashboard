@@ -87,7 +87,7 @@ export default component$(() => {
   const current = (stale ? account.value.guilds.find((item) => item.id === guildId) : loaded) ?? { id: guildId, name: 'Server', iconUrl: null };
   const settingsPath = `/dashboard/${guildId}/settings/`;
   const soundsPath = `/dashboard/${guildId}/sounds/`;
-  const soundboardsPath = Soundboards.path(guildId);
+  const soundboardsPath = Soundboards.guildPath(guildId);
   const inSettings = location.url.pathname.startsWith(settingsPath);
   const inSounds = location.url.pathname.startsWith(soundsPath);
   const inSoundboards = location.url.pathname.startsWith(soundboardsPath);

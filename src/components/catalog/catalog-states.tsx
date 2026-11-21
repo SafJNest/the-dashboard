@@ -2,7 +2,7 @@ import { Skeleton } from '../skeleton/skeleton';
 
 const PLACEHOLDERS = Array.from({ length: 6 }, (_, index) => index);
 const TAGS = Array.from({ length: 4 }, (_, index) => index);
-const FACTS = ['Plays', 'Listeners', 'Length', 'Liked by'];
+const FACTS = ['Plays', 'Listeners', 'Liked by'];
 const ROW_WIDTH_MIN = 45;
 const ROW_WIDTH_STEP = 17;
 const ROW_WIDTH_RANGE = 35;
