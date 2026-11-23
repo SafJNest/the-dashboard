@@ -142,7 +142,7 @@ export default component$(() => {
 
   return (
     <div class="dashboard" aria-busy={pending.value !== null}>
-      <AppHeader user={account.value.user} greetName={account.value.greets[GLOBAL_GREET]?.name ?? null} navigating={pending.value !== null} />
+      <AppHeader user={account.value.user} guilds={account.value.guilds} navigating={pending.value !== null} />
       <Slot />
     </div>
   );

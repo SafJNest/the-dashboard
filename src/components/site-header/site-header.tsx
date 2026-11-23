@@ -2,12 +2,13 @@ import { component$, useStyles$ } from '@qwik.dev/core';
 import { Link, useLocation } from '@qwik.dev/router';
 import { SOUNDS_PATH } from '../../lib/catalog';
 import { AccountMenu } from '../dashboard/account-menu';
+import type { DashboardGuild } from '../dashboard/servers';
 import { HexMark } from '../hex-mark/hex-mark';
 import styles from './site-header.css?inline';
 
 interface SiteHeaderProps {
   inviteUrl: string | null;
-  account?: { name: string; avatarUrl: string | null; globalGreetName?: string | null } | null;
+  account?: { name: string; avatarUrl: string | null; guilds: DashboardGuild[] } | null;
   signedIn?: boolean;
 }
 
@@ -36,7 +37,7 @@ export const SiteHeader = component$<SiteHeaderProps>(({ inviteUrl, account = nu
         </nav>
         <span class="site-header__separator" aria-hidden="true" />
         {account ? (
-          <AccountMenu user={account} greetName={account.globalGreetName ?? null} withLinks />
+          <AccountMenu user={account} guilds={account.guilds} />
         ) : signedIn ? (
           <a href="/dashboard/" class="button button--secondary">Dashboard</a>
         ) : (

@@ -1,18 +1,20 @@
-import { component$, useSignal, useStyles$ } from '@qwik.dev/core';
-import { Icon } from './icons';
-import styles from './header-menus.css?inline';
+import { component$, useServerData, useSignal, useStyles$ } from '@qwik.dev/core';
+import { isServer } from '@qwik.dev/core/build';
+import { Link, useLocation } from '@qwik.dev/router';
+import { Theme, type ThemeName } from '../../lib/theme';
+import { GuildAvatar } from './guild-avatar';
+import { Icon, type IconName } from './icons';
+import type { DashboardGuild } from './servers';
+import styles from './account-menu.css?inline';
 
 interface AccountMenuProps {
   user: { name: string; avatarUrl: string | null };
-  greetName: string | null;
-  withLinks: boolean;
+  guilds: DashboardGuild[];
 }
 
-const PROFILE_LINKS = [
-  { href: '/dashboard/', label: 'Dashboard' },
-  { href: '/dashboard/me/', label: 'Your profile' },
-  { href: '/dashboard/me/sounds/', label: 'My sounds' },
-  { href: '/dashboard/me/soundboards/', label: 'My soundboards' },
+const THEMES: { value: ThemeName; label: string; icon: IconName }[] = [
+  { value: 'dark', label: 'Dark', icon: 'moon' },
+  { value: 'light', label: 'Light', icon: 'sun' },
 ];
 
 export function UserAvatar({ user, size }: { user: AccountMenuProps['user']; size: number }) {
@@ -20,9 +22,15 @@ export function UserAvatar({ user, size }: { user: AccountMenuProps['user']; siz
   return <span class="avatar avatar--violet" aria-hidden="true">{user.name.slice(0, 1).toUpperCase()}</span>;
 }
 
-export const AccountMenu = component$<AccountMenuProps>(({ user, greetName, withLinks }) => {
+export const AccountMenu = component$<AccountMenuProps>(({ user, guilds }) => {
   useStyles$(styles);
+  const location = useLocation();
+  const requestHeaders = useServerData<Record<string, string>>('requestHeaders');
+  const menu = useSignal<HTMLElement>();
   const leaving = useSignal(false);
+  const theme = isServer ? Theme.fromCookie(requestHeaders?.cookie) : Theme.current();
+  const currentGuild = location.params.guildId;
+
   return (
     <>
       <button type="button" class="account-toggle" popovertarget="account-menu" aria-label={`Account menu for ${user.name}`}>
@@ -30,39 +38,70 @@ export const AccountMenu = component$<AccountMenuProps>(({ user, greetName, with
         <span>{user.name}</span>
         <Icon name="chevronDown" />
       </button>
-      <div id="account-menu" popover="auto" class="pop account-menu" aria-label="Account">
-        <div class="account-menu__who">
+      <div
+        id="account-menu"
+        ref={menu}
+        popover="auto"
+        class="pop account-menu"
+        aria-label="Account"
+        onClick$={(event) => (event.target as Element).closest('a[href]') && menu.value?.hidePopover()}
+      >
+        <Link href="/dashboard/me/" class="option account-menu__who">
           <UserAvatar user={user} size={36} />
-          <span>
+          <span class="account-menu__name">
             <strong>{user.name}</strong>
-            <span class="caption">Signed in with Discord</span>
+            <span class="caption">View profile</span>
           </span>
-        </div>
-        <ul class="pop__list">
-          {withLinks && PROFILE_LINKS.map((link) => (
-            <li key={link.href}><a href={link.href} class="option"><span class="option__title">{link.label}</span></a></li>
+          <Icon name="chevronRight" />
+        </Link>
+        <div class="segmented account-menu__theme" role="radiogroup" aria-label="Theme">
+          {THEMES.map((option) => (
+            <label key={option.value} class="segmented__item">
+              <input type="radio" name="theme" value={option.value} class="segmented__input" checked={option.value === theme} onChange$={() => Theme.apply(option.value)} />
+              <Icon name={option.icon} />
+              {option.label}
+            </label>
           ))}
-          {withLinks && <li><span class="option" aria-disabled="true"><span class="option__title">Playlists</span><span class="badge">Soon</span></span></li>}
+        </div>
+        <hr class="account-menu__rule" />
+        <section class="account-menu__section" aria-labelledby="account-menu-servers">
+          <h2 id="account-menu-servers" class="overline account-menu__label">Servers</h2>
+          {guilds.length > 0 && (
+            <ul class="pop__list account-menu__guilds">
+              {guilds.map((guild) => (
+                <li key={guild.id}>
+                  <Link href={`/dashboard/${guild.id}/settings/`} class="option" aria-current={guild.id === currentGuild ? 'true' : undefined}>
+                    <GuildAvatar name={guild.name} iconUrl={guild.iconUrl} size="sm" />
+                    <span class="option__title">{guild.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link href="/dashboard/" class="option">
+            <Icon name="servers" />
+            <span class="option__title">All servers</span>
+          </Link>
+        </section>
+        <hr class="account-menu__rule" />
+        <ul class="pop__list">
           <li>
-            <a href="/dashboard/me/" class="option">
-              <Icon name="greet" />
-              <span class="option__title">Greet</span>
-              <span class="caption">{greetName ?? 'Not set'}</span>
-            </a>
-          </li>
-          <li>
-            <span class="option account-menu__theme">
-              <span class="option__title">Theme</span>
-              <span class="segmented" role="radiogroup" aria-label="Theme">
-                <label class="segmented__item"><input type="radio" name="account-theme" class="visually-hidden" checked />Dark</label>
-                <label class="segmented__item" title="Coming soon"><input type="radio" name="account-theme" class="visually-hidden" disabled />Light</label>
-              </span>
+            <span class="option" aria-disabled="true">
+              <Icon name="playlists" />
+              <span class="option__title">Playlists</span>
+              <span class="badge">Soon</span>
             </span>
           </li>
-          <li><a href="/commands/" class="option"><span class="option__title">Commands and help</span></a></li>
+          <li>
+            <Link href="/commands/" class="option">
+              <Icon name="help" />
+              <span class="option__title">Commands and help</span>
+            </Link>
+          </li>
         </ul>
-        <form method="post" action="/auth/logout/" preventdefault:submit={leaving.value} onSubmit$={() => (leaving.value = true)}>
-          <button type="submit" class="option account-menu__logout" disabled={leaving.value} aria-busy={leaving.value}>
+        <hr class="account-menu__rule" />
+        <form method="post" action="/auth/logout/" class="account-menu__logout" preventdefault:submit={leaving.value} onSubmit$={() => (leaving.value = true)}>
+          <button type="submit" class="option" disabled={leaving.value} aria-busy={leaving.value}>
             <Icon name="leave" />
             <span class="option__title">{leaving.value ? 'Logging out…' : 'Log out'}</span>
           </button>

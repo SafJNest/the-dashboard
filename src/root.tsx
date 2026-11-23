@@ -3,6 +3,7 @@ import { DocumentHeadTags, RouterOutlet, useQwikRouter } from '@qwik.dev/router'
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 import { emptySearch, SearchContext } from './components/catalog/catalog-context';
+import { Theme } from './lib/theme';
 import './global.css';
 
 export default component$(() => {
@@ -17,6 +18,7 @@ export default component$(() => {
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script dangerouslySetInnerHTML={Theme.SCRIPT} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

@@ -17,10 +17,20 @@ export interface ChannelGroup {
 export interface GuildRole {
   id: string;
   name: string;
-  color: number;
+  color: string | null;
   position: number;
   managed: boolean;
   assignable: boolean;
+}
+
+interface RoleColorResponse {
+  red: number;
+  green: number;
+  blue: number;
+}
+
+interface GuildRoleResponse extends Omit<GuildRole, 'color'> {
+  color: RoleColorResponse | null;
 }
 
 export interface SettingsProblem {
@@ -133,8 +143,6 @@ export const DEFAULT_CHANNEL_SETTINGS: ChannelSettings = {
   leagueShard: null,
 };
 
-const DEFAULT_ROLE_COLOR = 0x1fffffff;
-
 export function emptyAlert(): GuildAlert {
   return {
     id: null,
@@ -159,9 +167,11 @@ export function parseGuild(value: unknown, guildId: string): Guild | null {
   if (!guild || guild.id !== guildId || typeof guild.name !== 'string' || !Array.isArray(guild.channels) ||
       !Array.isArray(guild.roles) || !guild.settings || typeof guild.settings !== 'object') return null;
   const { settings } = guild;
+  const roles = guild.roles as unknown as GuildRoleResponse[];
   return {
     ...guild,
     iconUrl: guild.iconUrl || null,
+    roles: roles.map(parseRole),
     settings: {
       ...settings,
       channels: settings.channels || {},
@@ -170,6 +180,24 @@ export function parseGuild(value: unknown, guildId: string): Guild | null {
       warning: { actions: settings.warning?.actions || [] },
     },
   };
+}
+
+function parseRole(role: GuildRoleResponse): GuildRole {
+  return {
+    id: role.id,
+    name: role.name,
+    color: parseRoleColor(role.color),
+    position: role.position,
+    managed: role.managed,
+    assignable: role.assignable,
+  };
+}
+
+function parseRoleColor(color: RoleColorResponse | null) {
+  if ( !color ) { return null; }
+
+  const channels = [color.red, color.green, color.blue];
+  return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
 }
 
 export function textChannels(guild: Guild) {
@@ -205,8 +233,7 @@ export function roleLock(role: GuildRole, canManage: boolean) {
 }
 
 export function roleColor(role: GuildRole | undefined) {
-  if (!role || role.color === DEFAULT_ROLE_COLOR) return undefined;
-  return `#${role.color.toString(16).padStart(6, '0')}`;
+  return role?.color ?? undefined;
 }
 
 export function initials(name: string) {

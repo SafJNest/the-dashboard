@@ -1,5 +1,5 @@
 import type { RequestEventBase } from '@qwik.dev/router';
-import { INVALID_RESPONSE, parseMe, publicFetch, type ApiFailure } from '../beebot.server';
+import { INVALID_RESPONSE, parseMe, publicFetch, type ApiFailure, type Server } from '../beebot.server';
 import {
   boardQuery,
   BOARD_SUGGESTIONS,
@@ -50,7 +50,7 @@ export interface CatalogViewer {
   name: string;
   avatarUrl: string | null;
   globalGreetId: string | null;
-  globalGreetName: string | null;
+  guilds: Server[];
 }
 
 export class CatalogClient {
@@ -97,7 +97,7 @@ export class CatalogClient {
         name: me.user.globalName ?? me.user.username,
         avatarUrl: me.user.avatarUrl,
         globalGreetId: greets?.[CatalogClient.GLOBAL_GREET]?.id ?? null,
-        globalGreetName: greets?.[CatalogClient.GLOBAL_GREET]?.name ?? null,
+        guilds: me.servers,
       };
     });
   }

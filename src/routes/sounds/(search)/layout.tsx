@@ -174,7 +174,7 @@ export default component$(() => {
     sounds.error = null;
     !cursor && (sounds.items = []);
     const limit = search.type === 'all' ? PREVIEW_SOUNDS : undefined;
-    const filters = { q: typed, tag: search.tag, sort: search.sort, length: search.length, limit, cursor };
+    const filters = { q: search.submitted ?? '', tag: search.tag, sort: search.sort, length: search.length, limit, cursor };
     const result = await searchSounds(controller.signal, filters).catch(() => null);
     if ( ticket !== sounds.ticket ) { return; }
     sounds.loading = false;
@@ -194,7 +194,7 @@ export default component$(() => {
     boards.error = null;
     !cursor && (boards.items = []);
     const limit = search.type === 'all' ? PREVIEW_BOARDS : undefined;
-    const result = await searchBoards(controller.signal, { q: typed, limit, cursor }).catch(() => null);
+    const result = await searchBoards(controller.signal, { q: search.submitted ?? '', limit, cursor }).catch(() => null);
     if ( ticket !== boards.ticket ) { return; }
     boards.loading = false;
     if ( !result ) { boards.error = SEARCH_FAILED; return; }

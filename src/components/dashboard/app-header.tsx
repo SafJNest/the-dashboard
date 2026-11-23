@@ -4,15 +4,15 @@ import { HexMark } from '../hex-mark/hex-mark';
 import { AccountMenu } from './account-menu';
 import { Icon } from './icons';
 import { QuickSearch } from './quick-search';
-import type { DashboardUser } from './servers';
+import type { DashboardGuild, DashboardUser } from './servers';
 
 interface AppHeaderProps {
   user: DashboardUser;
-  greetName: string | null;
+  guilds: DashboardGuild[];
   navigating: boolean;
 }
 
-export const AppHeader = component$<AppHeaderProps>(({ user, greetName, navigating }) => {
+export const AppHeader = component$<AppHeaderProps>(({ user, guilds, navigating }) => {
   const location = useLocation();
   const onProfile = location.url.pathname.startsWith('/dashboard/me/');
 
@@ -35,7 +35,7 @@ export const AppHeader = component$<AppHeaderProps>(({ user, greetName, navigati
         </nav>
         <span class="appbar__spacer" />
         <QuickSearch />
-        <AccountMenu user={user} greetName={greetName} withLinks={false} />
+        <AccountMenu user={user} guilds={guilds} />
       </div>
       <div class={['nav-progress', navigating && 'nav-progress--active']} aria-hidden="true" />
     </header>

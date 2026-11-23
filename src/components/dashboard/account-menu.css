@@ -1,0 +1,121 @@
+.account-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.5rem;
+  padding: 0 var(--bb-space-3) 0 var(--bb-space-1);
+  border: 1px solid var(--bb-border-default);
+  border-radius: var(--bb-radius-pill);
+  background: transparent;
+  color: var(--bb-fg-default);
+  font: var(--bb-weight-medium) var(--bb-text-md) / 1 var(--bb-font-ui);
+  cursor: pointer;
+  anchor-name: --account-menu;
+
+  & svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    color: var(--bb-fg-subtle);
+  }
+
+  &:hover {
+    background: var(--bb-bg-hover);
+  }
+
+  & .avatar {
+    --avatar-size: 1.875rem;
+  }
+}
+
+.pop.account-menu {
+  position-anchor: --account-menu;
+  left: auto;
+  right: anchor(right);
+  width: min(19rem, calc(100vw - 2 * var(--bb-space-4)));
+  max-height: min(36rem, calc(100dvh - 6rem));
+  border-color: var(--bb-border-default);
+  background: var(--bb-bg-surface);
+
+  & .option > svg {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    color: var(--bb-fg-subtle);
+  }
+}
+
+.option.account-menu__who {
+  gap: var(--bb-space-3);
+  padding-block: var(--bb-space-2);
+
+  & .avatar {
+    --avatar-size: 2.25rem;
+  }
+
+  &:hover > svg {
+    color: var(--bb-fg-default);
+  }
+}
+
+.account-menu__name {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+
+  & strong {
+    overflow: hidden;
+    font: var(--bb-weight-semibold) var(--bb-text-md) / 1.2 var(--bb-font-display);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.account-menu__theme {
+  width: 100%;
+
+  & .segmented__item {
+    gap: var(--bb-space-2);
+  }
+
+  & svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}
+
+.account-menu__rule {
+  margin: 0 calc(-1 * var(--bb-space-2));
+  border: 0;
+  border-top: 1px solid var(--bb-border-muted);
+}
+
+.account-menu__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.account-menu__label {
+  padding: var(--bb-space-1) 0.625rem;
+}
+
+.account-menu__guilds {
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.account-menu .option[aria-disabled="true"] {
+  background: transparent;
+  color: var(--bb-fg-disabled);
+  cursor: not-allowed;
+
+  & > svg {
+    color: inherit;
+  }
+}
+
+.account-menu__logout > .option {
+  flex: 1;
+}

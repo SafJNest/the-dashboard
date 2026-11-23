@@ -1,5 +1,4 @@
-# Istruzioni condivise
-
-Leggi e segui le istruzioni della repository in `AGENTS.md`, che è la fonte unica delle linee guida condivise con Codex.
-
 @AGENTS.md
+
+# Claude Code integration
+Use the shared project instructions above. Preserve existing CLAUDE.md rules if merging into a repository. Do not auto-delegate simple tasks.
