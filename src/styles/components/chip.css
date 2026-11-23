@@ -49,6 +49,6 @@
   width: 0.625rem;
   height: 0.625rem;
   border-radius: 50%;
-  background: var(--role-color, var(--bb-role-default));
+  background: var(--role-background, var(--role-color, var(--bb-role-default)));
   box-shadow: 0 0 0 1px var(--bb-border-strong);
 }

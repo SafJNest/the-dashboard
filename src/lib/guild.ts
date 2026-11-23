@@ -14,10 +14,15 @@ export interface ChannelGroup {
   channels: GuildChannel[];
 }
 
+type GuildRoleColor =
+  | { style: 'solid'; primary: string; secondary: null; tertiary: null }
+  | { style: 'gradient'; primary: string; secondary: string; tertiary: null }
+  | { style: 'holographic'; primary: string; secondary: string; tertiary: string };
+
 export interface GuildRole {
   id: string;
   name: string;
-  color: string | null;
+  color: GuildRoleColor | null;
   position: number;
   managed: boolean;
   assignable: boolean;
@@ -30,7 +35,7 @@ interface RoleColorResponse {
 }
 
 interface GuildRoleResponse extends Omit<GuildRole, 'color'> {
-  color: RoleColorResponse | null;
+  color: GuildRoleColor | RoleColorResponse | null;
 }
 
 export interface SettingsProblem {
@@ -193,11 +198,14 @@ function parseRole(role: GuildRoleResponse): GuildRole {
   };
 }
 
-function parseRoleColor(color: RoleColorResponse | null) {
-  if ( !color ) { return null; }
+function parseRoleColor(color: GuildRoleResponse['color']): GuildRoleColor | null {
+  if (!color) return null;
+  if ('style' in color) return color;
 
   const channels = [color.red, color.green, color.blue];
-  return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+  const primary = `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+
+  return { style: 'solid', primary, secondary: null, tertiary: null };
 }
 
 export function textChannels(guild: Guild) {
@@ -232,8 +240,17 @@ export function roleLock(role: GuildRole, canManage: boolean) {
   return canManage ? 'Above Beebot' : 'Locked';
 }
 
-export function roleColor(role: GuildRole | undefined) {
-  return role?.color ?? undefined;
+export function roleStyle(role: GuildRole | undefined) {
+  const color = role?.color;
+  if (!color) return undefined;
+
+  const style = { '--role-color': color.primary };
+  if (color.style === 'solid') return style;
+
+  const stops = [color.primary, color.secondary];
+  if (color.style === 'holographic') stops.push(color.tertiary);
+
+  return { ...style, '--role-background': `linear-gradient(135deg, ${stops.join(', ')})` };
 }
 
 export function initials(name: string) {

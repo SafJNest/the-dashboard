@@ -1,5 +1,5 @@
 import { $, component$, useSignal, type Signal } from '@qwik.dev/core';
-import { roleColor, roleLock, type GuildRole } from '../../lib/guild';
+import { roleLock, roleStyle, type GuildRole } from '../../lib/guild';
 import { Icon } from '../dashboard/icons';
 import { closeCombo, closeOnPick, Combo } from './combo';
 
@@ -41,7 +41,7 @@ export const RolePicker = component$<RolePickerProps>(({ id, label, hint, roles,
               const role = byId.get(roleId);
               const name = role?.name ?? 'Deleted role';
               return (
-                <span class="chip chip--role" key={roleId} style={{ '--role-color': roleColor(role) }}>
+                <span class="chip chip--role" key={roleId} style={roleStyle(role)}>
                   <span class="role-dot" />
                   {name}
                   <button
@@ -56,7 +56,7 @@ export const RolePicker = component$<RolePickerProps>(({ id, label, hint, roles,
               );
             })}
           {!multiple && selected.value.length > 0 && (
-            <span class="combo__selected" style={{ '--role-color': roleColor(current) }}>
+            <span class="combo__selected" style={roleStyle(current)}>
               <span class="role-dot" />
               <span>{current?.name ?? 'Deleted role'}</span>
             </span>
@@ -99,7 +99,7 @@ export const RolePicker = component$<RolePickerProps>(({ id, label, hint, roles,
                   class="choice choice--role"
                   key={role.id}
                   hidden={!matches(role.name)}
-                  style={{ '--role-color': roleColor(role) }}
+                  style={roleStyle(role)}
                   onClick$={multiple ? undefined : closeOnPick}
                 >
                   <input

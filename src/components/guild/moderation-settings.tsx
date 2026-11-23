@@ -1,5 +1,5 @@
 import { component$ } from '@qwik.dev/core';
-import { formatDuration, roleColor } from '../../lib/guild';
+import { formatDuration, roleStyle } from '../../lib/guild';
 import { useGuild } from '../../routes/dashboard/[guildId]/layout';
 import { Icon } from '../dashboard/icons';
 import { SectionIntro } from './settings-form';
@@ -53,7 +53,7 @@ export const ModerationSettings = component$(() => {
                           <span class={['badge', kind && `badge--${kind.tone}`]}>{kind?.label ?? action.actionMessage}</span>
                           {role && (
                             <span class="chip">
-                              <span class="role-dot" style={{ '--role-color': roleColor(role) }} />
+                              <span class="role-dot" style={roleStyle(role)} />
                               {role.name}
                             </span>
                           )}
